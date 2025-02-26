@@ -68,24 +68,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const processImageData = (url: string, data?: string): string => {
     console.log(`Processing image data. URL: ${url?.substring(0, 30)}..., Data provided: ${!!data}`);
     
-    // If it's already a URL (not a data URL), just return it
-    if (url.startsWith('http') || url.startsWith('/uploads/')) {
-      console.log(`URL is already in correct format: ${url.substring(0, 30)}...`);
+    // For external URLs (http/https), just return them as is
+    if (url.startsWith('http')) {
+      console.log(`External URL, returning as is: ${url.substring(0, 30)}...`);
       return url;
     }
     
-    // Generate a filename for the image
-    const timestamp = Date.now();
-    const randomStr = crypto.randomBytes(4).toString('hex');
-    const filename = `image_${timestamp}_${randomStr}.jpg`;
-    console.log(`Generated filename: ${filename}`);
+    // Generate a filename for the image - either extract from URL or create new one
+    let filename;
+    if (url.startsWith('/uploads/')) {
+      // Extract the filename from the URL
+      filename = url.split('/uploads/')[1];
+      console.log(`Extracted filename from URL: ${filename}`);
+    } else {
+      // Generate a new filename
+      const timestamp = Date.now();
+      const randomStr = crypto.randomBytes(4).toString('hex');
+      filename = `image_${timestamp}_${randomStr}.jpg`;
+      console.log(`Generated new filename: ${filename}`);
+    }
     
-    // Save the image data to the in-memory store
+    // Save the image data to the in-memory store (if provided)
     if (data && data.startsWith('data:')) {
       console.log(`Storing image data in memory with key: ${filename}`);
       imageDataStore.set(filename, data);
       
-      // Uncomment to save file to disk in a production app
+      // Always save file to disk
       try {
         const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
