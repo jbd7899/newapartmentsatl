@@ -148,172 +148,7 @@ const locationMaps = {
   "dallas": "https://www.google.com/maps/d/u/0/embed?mid=1v6kgd00ViRSvEjteA1vY0_iVvggVB_0&ehbc=2E312F&noprof=1"
 };
 
-// Custom property cards for each location
-const customProperties = {
-  "dallas": [
-    {
-      name: "4806 Live Oak St",
-      description: "Modern living in the heart of Dallas. Located in the historic Bryan Place neighborhood, walking distance to Deep Ellum's entertainment district and the Dallas Farmers Market. Easy access to both I-75 and I-30 makes commuting a breeze.",
-      imageUrl: "https://i.imgur.com/psQEwWF.jpg",
-      link: "/properties/4806-live-oak.html"
-    },
-    {
-      name: "6212 Martel Ave",
-      description: "Charming home in a peaceful neighborhood. Situated in the desirable M Streets area, known for its historic Tudor-style homes and tree-lined streets. Minutes from SMU campus and the shops and restaurants along Greenville Avenue.",
-      imageUrl: "https://i.imgur.com/gsremPD.jpg",
-      link: "/properties/6212-martel.html"
-    },
-    {
-      name: "6463 Trammel Dr",
-      description: "Charming home in a peaceful neighborhood. Located in the historic Wilshire Heights area, known for its charming architecture and close-knit community. Just minutes from Knox-Henderson and Mockingbird Station, with easy access to US-75.",
-      imageUrl: "https://i.imgur.com/GmGrXBV.jpg",
-      link: "/properties/6463-trammel.html"
-    },
-    {
-      name: "4417 Sycamore St",
-      description: "Historic charm with modern amenities. Nestled in the heart of Old East Dallas, walking distance to popular Munger Place Historic District and Peak's Addition. Minutes from Baylor Medical Center and downtown Dallas via I-30.",
-      imageUrl: "https://i.imgur.com/P62glux.jpg",
-      link: "/properties/4417-sycamore.html"
-    },
-    {
-      name: "6236 Winton St",
-      description: "Beautiful home with contemporary design. Located in the family-friendly Greenville Avenue area, just blocks from trendy Lower Greenville's restaurants and nightlife. Quick access to US-75 and Mockingbird Station make commuting simple.",
-      imageUrl: "https://i.imgur.com/Pw0RRJ6.jpg",
-      link: "/properties/6236-winton.html"
-    },
-    {
-      name: "6646 E Lovers Ln",
-      description: "Elegant living near shopping and dining. Situated in the desirable Lakewood/Lake Highlands area, minutes from White Rock Lake and the Dallas Arboretum. Convenient access to Northwest Highway and Skillman Street for easy commuting.",
-      imageUrl: "https://i.imgur.com/5QfQiJD.png",
-      link: "/properties/1107-lovers.html"
-    },
-    {
-      name: "5503 Winton St",
-      description: "Charming home with modern upgrades. Located in the heart of the M Streets neighborhood, walking distance to Greenville Avenue's best restaurants and bars. Just minutes from both SMU campus and White Rock Lake recreational areas.",
-      imageUrl: "https://i.imgur.com/ZC9OEET.jpg",
-      link: "/properties/5503-winton.html"
-    },
-    {
-      name: "5501 Winton St",
-      description: "Comfortable living in a prime location. Situated in the popular M Streets area, known for its charming architecture and community feel. Minutes from Knox-Henderson's boutique shopping and dining scene.",
-      imageUrl: "https://i.imgur.com/KyxXN2C.jpg",
-      link: "/properties/5501-winton.html"
-    },
-    {
-      name: "1015 Cameron Ave",
-      description: "Spacious home with contemporary finishes. Steps from Hollywood Heights and the Santa Fe Trail, with Tennyson Park right around the corner. Easy access to White Rock Lake and the vibrant Lakewood shopping district.",
-      imageUrl: "https://i.imgur.com/kQrkgX6.jpg",
-      link: "/properties/1015-cameron.html"
-    },
-    {
-      name: "615 Parkview Ave",
-      description: "Cozy near local parks and bustling Dallas districts. Steps from Hollywood Heights and the Santa Fe Trail, with easy access to Tennyson Park and its recreational amenities. Minutes from both White Rock Lake and the Lakewood shopping district.",
-      imageUrl: "https://i.imgur.com/eER5hbA.jpg",
-      link: "/properties/615-parkview.html"
-    },
-    {
-      name: "915 Grigsby Ave",
-      description: "Modern living in a quiet neighborhood. Ideally situated near the historic Swiss Avenue District, just steps from bustling Lower Greenville's restaurants and entertainment. Minutes from Baylor Medical Center and downtown Dallas, with easy access to I-75 and Live Oak Street's direct route to the city center.",
-      imageUrl: "https://i.imgur.com/Mzh4Dn2.jpg",
-      link: "/properties/915-grigsby.html"
-    },
-    {
-      name: "1900 Lucille Ave",
-      description: "Contemporary living in a prime location. Situated in the vibrant East Village neighborhood, walking distance to both Knox-Henderson and Lower Greenville's entertainment districts. Minutes from Cityplace/Uptown Station with easy access to downtown Dallas.",
-      imageUrl: "https://i.imgur.com/cOicEI4.png",
-      link: "/properties/1900-lucille.html"
-    }
-  ],
-  "virginia-highland": [
-    {
-      name: "1031 Lanier Blvd NE",
-      description: "Classic style in the heart of Virginia Highland. Located on tree-lined Lanier Boulevard, just steps from the vibrant N. Highland Avenue shopping and dining district. Walking distance to Piedmont Park and the Atlanta BeltLine's Eastside Trail.",
-      imageUrl: "https://i.imgur.com/OWMqzbK.png",
-      link: "/properties/1031-lanier.html"
-    },
-    {
-      name: "869 St Charles Ave NE",
-      description: "Historic architecture with modern comforts. Nestled on quiet St. Charles Avenue, just two blocks from the renowned Murphy's restaurant and Virginia Highland's boutique shopping. Minutes from both Freedom Park Trail and the Carter Center.",
-      imageUrl: "https://i.imgur.com/Qqrynp5.png",
-      link: "/properties/869-st-charles.html"
-    },
-    {
-      name: "823 Greenwood Ave NE",
-      description: "Peaceful living steps from local dining. Located on charming Greenwood Avenue, walking distance to Ponce City Market and the Atlanta BeltLine. Easy access to Virginia Highland's coffee shops and parks, with quick commutes to Emory and downtown.",
-      imageUrl: "https://i.imgur.com/GQPUMr8.png",
-      link: "/properties/823-greenwood.html"
-    }
-  ],
-  "midtown": [
-    {
-      name: "253 14th St NE",
-      description: "Charming apartments near Piedmont Park. Prime location on quiet 14th Street, just steps from Atlanta's largest greenspace and the bustling Midtown Mile. Walking distance to the High Museum and Colony Square's shopping and dining.",
-      imageUrl: "https://i.imgur.com/O9Fu46o.png",
-      link: "/properties/253-14th-street.html"
-    },
-    {
-      name: "965 Myrtle St NE",
-      description: "Historic building with modern comforts. Located on tree-lined Myrtle Street, walking distance to the Atlanta Botanical Garden and Piedmont Park. Minutes from Georgia Tech campus and Midtown MARTA station.",
-      imageUrl: "https://i.imgur.com/9L78Ghe.png",
-      link: "/properties/965-myrtle.html"
-    },
-    {
-      name: "903 Myrtle St NE",
-      description: "Quiet living in the heart of Midtown. Perfectly positioned between Piedmont Park and Georgia Tech, with easy access to the Midtown Arts District. Steps from popular restaurants and the 10th Street MARTA station.",
-      imageUrl: "https://i.imgur.com/Qt30zdg.png",
-      link: "/properties/903-myrtle.html"
-    },
-    {
-      name: "721 Argonne Ave NE",
-      description: "Spacious apartments with modern upgrades. Situated on peaceful Argonne Avenue, just blocks from Piedmont Park and the Atlanta BeltLine's Eastside Trail. Quick access to both Tech Square and the Fox Theatre entertainment district.",
-      imageUrl: "https://i.imgur.com/eFdi7sd.jpg",
-      link: "/properties/721-argonne.html"
-    },
-    {
-      name: "717 Argonne Ave NE",
-      description: "Cozy apartments in a lively neighborhood. Located on charming Argonne Avenue, walking distance to Piedmont Park's recreational amenities and events. Minutes from Midtown's arts venues and Ponce City Market.",
-      imageUrl: "https://i.imgur.com/ASrp6Cl.jpg",
-      link: "/properties/717-argonne.html"
-    },
-    {
-      name: "718 Argonne Ave NE",
-      description: "Historic charm meets modern living. Nestled on quiet Argonne Avenue, steps from the Midtown Arts District and numerous coffee shops. Easy access to both the BeltLine and Piedmont Park's weekend farmers market.",
-      imageUrl: "https://i.imgur.com/DI66TQ0.png",
-      link: "/properties/718-argonne.html"
-    },
-    {
-      name: "769 Argonne Ave NE",
-      description: "Comfortable apartments near local hotspots. Located on tree-lined Argonne Avenue, close to Piedmont Park's active lifestyle amenities and cultural events. Walking distance to the High Museum and Atlanta Symphony Orchestra.",
-      imageUrl: "https://i.imgur.com/CGq20NX.png",
-      link: "/properties/769-argonne.html"
-    }
-  ]
-};
 
-const PropertyCard = ({ property }: { property: any }) => {
-  return (
-    <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow group">
-      <div className="relative h-64">
-        <img 
-          src={property.imageUrl} 
-          alt={property.name} 
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <CardContent className="p-6">
-        <h3 className="font-heading font-bold text-xl mb-2">{property.name}</h3>
-        <p className="text-slate-600 mb-4 line-clamp-3">{property.description}</p>
-        
-        <Link to={property.link || '#'} className="text-primary font-medium inline-flex items-center group-hover:underline">
-          View Property
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </Link>
-      </CardContent>
-    </Card>
-  );
-};
 
 const LocationPage = ({ location }: LocationPageProps) => {
   const [, setLocation] = useLocation();
@@ -365,7 +200,6 @@ const LocationPage = ({ location }: LocationPageProps) => {
   const locationHotspot = locationHotspots[location as keyof typeof locationHotspots] || [];
   const locationDescription = locationDescriptions[location as keyof typeof locationDescriptions] || "";
   const mapUrl = locationMaps[location as keyof typeof locationMaps] || "";
-  const customPropertyList = customProperties[location as keyof typeof customProperties] || [];
 
   return (
     <>
@@ -387,16 +221,10 @@ const LocationPage = ({ location }: LocationPageProps) => {
         <div className="container mx-auto px-4">
           <h2 className="font-heading font-bold text-3xl text-center mb-12">Our {locationData.name} Properties</h2>
           
-          {customPropertyList.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {customPropertyList.map((property, index) => (
-                <PropertyCard key={index} property={property} />
-              ))}
-            </div>
-          ) : properties && properties.length > 0 ? (
+          {properties && properties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {properties.map((property: Property) => (
-                <Card key={property.id} className="overflow-hidden">
+                <Card key={property.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow group">
                   <div className="relative h-64">
                     <img 
                       src={property.imageUrl} 
@@ -406,7 +234,7 @@ const LocationPage = ({ location }: LocationPageProps) => {
                   </div>
                   <CardContent className="p-6">
                     <h3 className="font-heading font-bold text-xl mb-2">{property.name}</h3>
-                    <p className="text-slate-600 mb-4">{property.description}</p>
+                    <p className="text-slate-600 mb-4 line-clamp-3">{property.description}</p>
                     
                     <div className="flex flex-wrap gap-4 mb-4">
                       <div className="flex items-center text-slate-700">
@@ -425,7 +253,12 @@ const LocationPage = ({ location }: LocationPageProps) => {
                     
                     <div className="flex justify-between items-center">
                       <div className="text-xl font-semibold">${property.rent}/month</div>
-                      <Button>View Details</Button>
+                      <Link to={`/properties/${property.id}`} className="text-primary font-medium inline-flex items-center group-hover:underline">
+                        View Property
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
