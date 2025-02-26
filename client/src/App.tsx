@@ -16,6 +16,7 @@ import NotFound from "@/pages/not-found";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminPropertiesPage from "./pages/AdminPropertiesPage";
 import AdminImagesPage from "./pages/AdminImagesPage";
+import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import AdminPlaceholderPage from "./pages/AdminPlaceholderPage";
 
 function Router() {

@@ -87,10 +87,17 @@ export class MemStorage implements IStorage {
     const id = this.nextInquiryId++;
     const createdAt = new Date();
     
+    // Ensure all required fields are present with proper defaults
     const newInquiry: Inquiry = {
       id,
-      ...inquiry,
-      createdAt,
+      name: inquiry.name,
+      email: inquiry.email,
+      message: inquiry.message,
+      phone: inquiry.phone || null,
+      propertyId: inquiry.propertyId || null,
+      propertyName: inquiry.propertyName || null,
+      status: inquiry.status || "new",
+      createdAt
     };
     
     this.inquiriesData.set(id, newInquiry);

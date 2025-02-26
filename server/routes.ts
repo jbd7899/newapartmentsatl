@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { insertInquirySchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes with /api prefix
@@ -87,6 +88,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(features);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch features" });
+    }
+  });
+
+  // Get all inquiries
+  app.get("/api/inquiries", async (req: Request, res: Response) => {
+    try {
+      const inquiries = await storage.getInquiries();
+      res.json(inquiries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch inquiries" });
+    }
+  });
+  
+  // Create new inquiry
+  app.post("/api/inquiries", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = insertInquirySchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid inquiry data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      // Get property details if propertyId is provided
+      let propertyName = req.body.propertyName;
+      if (req.body.propertyId && !propertyName) {
+        const property = await storage.getProperty(req.body.propertyId);
+        if (property) {
+          propertyName = property.name;
+        }
+      }
+      
+      // Create the inquiry
+      const inquiry = await storage.createInquiry({
+        ...validationResult.data,
+        propertyName
+      });
+      
+      res.status(201).json(inquiry);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create inquiry" });
+    }
+  });
+  
+  // Update inquiry status
+  app.patch("/api/inquiries/:id/status", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid inquiry ID" });
+      }
+      
+      const { status } = req.body;
+      
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: "Status is required" });
+      }
+      
+      if (!['new', 'contacted', 'resolved'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const updatedInquiry = await storage.updateInquiryStatus(id, status);
+      
+      if (!updatedInquiry) {
+        return res.status(404).json({ message: "Inquiry not found" });
+      }
+      
+      res.json(updatedInquiry);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update inquiry status" });
     }
   });
 

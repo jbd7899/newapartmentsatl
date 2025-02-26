@@ -7,7 +7,8 @@ import {
   Home, 
   Users, 
   Settings, 
-  LogOut 
+  LogOut,
+  MessageSquare
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -33,6 +34,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       title: "Images",
       icon: <ImageIcon className="w-5 h-5 mr-3" />,
       link: "/admin/images"
+    },
+    {
+      title: "Inquiries",
+      icon: <MessageSquare className="w-5 h-5 mr-3" />,
+      link: "/admin/inquiries"
     },
     {
       title: "Users",
