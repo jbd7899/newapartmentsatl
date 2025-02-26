@@ -166,39 +166,64 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 <p className="text-lg text-slate-700 mb-8">{property.description}</p>
                 
                 <h3 className="font-heading font-bold text-2xl mb-4">Property Highlights</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                  <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                    <Building className="h-6 w-6 text-primary mr-3" />
-                    <div>
-                      <div className="text-sm text-slate-500">Bedrooms</div>
-                      <div className="font-semibold">{property.bedrooms}</div>
+                
+                {property.isMultifamily ? (
+                  <div className="grid grid-cols-1 gap-4 mb-8">
+                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                      <Building className="h-6 w-6 text-primary mr-3" />
+                      <div>
+                        <div className="text-sm text-slate-500">Property Type</div>
+                        <div className="font-semibold">
+                          Multi-family Property • {property.unitCount || 0} {property.unitCount === 1 ? 'Unit' : 'Units'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                      <p className="text-blue-700">
+                        This is a multi-family property. For details on bedrooms, bathrooms, square footage, and pricing, 
+                        please see the individual units listed below.
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                    <ParkingCircle className="h-6 w-6 text-primary mr-3" />
-                    <div>
-                      <div className="text-sm text-slate-500">Bathrooms</div>
-                      <div className="font-semibold">{property.bathrooms}</div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                      <Building className="h-6 w-6 text-primary mr-3" />
+                      <div>
+                        <div className="text-sm text-slate-500">Bedrooms</div>
+                        <div className="font-semibold">{property.bedrooms}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                      <ParkingCircle className="h-6 w-6 text-primary mr-3" />
+                      <div>
+                        <div className="text-sm text-slate-500">Bathrooms</div>
+                        <div className="font-semibold">{property.bathrooms}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                      <Home className="h-6 w-6 text-primary mr-3" />
+                      <div>
+                        <div className="text-sm text-slate-500">Square Footage</div>
+                        <div className="font-semibold">{property.sqft} sq ft</div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                    <Home className="h-6 w-6 text-primary mr-3" />
-                    <div>
-                      <div className="text-sm text-slate-500">Square Footage</div>
-                      <div className="font-semibold">{property.sqft} sq ft</div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
-                <h3 className="font-heading font-bold text-2xl mb-4">Features & Amenities</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-                  {featuresList.map((feature, index) => (
-                    <div key={index} className="flex items-center">
-                      <Check className="h-5 w-5 text-green-500 mr-2" />
-                      <span>{feature}</span>
+                {!property.isMultifamily && (
+                  <>
+                    <h3 className="font-heading font-bold text-2xl mb-4">Features & Amenities</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                      {featuresList.map((feature, index) => (
+                        <div key={index} className="flex items-center">
+                          <Check className="h-5 w-5 text-green-500 mr-2" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -206,7 +231,12 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
           <div>
             <Card>
               <CardContent className="p-6">
-                {property.rent ? (
+                {property.isMultifamily ? (
+                  <div className="text-center mb-6">
+                    <div className="text-lg font-medium text-slate-700">Multiple unit options</div>
+                    <div className="text-slate-500">See unit details below</div>
+                  </div>
+                ) : property.rent ? (
                   <div className="text-center mb-6">
                     <div className="text-3xl font-bold text-primary">${property.rent}</div>
                     <div className="text-slate-500">per month</div>
@@ -214,7 +244,7 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 ) : (
                   <div className="text-center mb-6">
                     <div className="text-lg font-medium text-slate-700">Contact for Pricing</div>
-                    <div className="text-slate-500">Multiple units available</div>
+                    <div className="text-slate-500">Pricing details available on request</div>
                   </div>
                 )}
                 
@@ -320,18 +350,23 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 <div>
                   <div className="text-sm text-slate-500 mb-2">Bedrooms</div>
                   <div className="flex gap-2">
-                    {[...new Set(propertyUnits.map(unit => unit.bedrooms))].sort().map((bedCount) => (
-                      <Badge key={bedCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
-                        <Bed className="h-3 w-3 mr-1" /> {bedCount}
-                      </Badge>
-                    ))}
+                    {propertyUnits
+                        .map(unit => unit.bedrooms)
+                        .filter((value, index, self) => self.indexOf(value) === index)
+                        .sort()
+                        .map((bedCount) => (
+                          <Badge key={bedCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
+                            <Bed className="h-3 w-3 mr-1" /> {bedCount}
+                          </Badge>
+                        ))
+                    }
                   </div>
                 </div>
                 
                 <div>
                   <div className="text-sm text-slate-500 mb-2">Bathrooms</div>
                   <div className="flex gap-2">
-                    {[...new Set(propertyUnits.map(unit => unit.bathrooms))].sort().map((bathCount) => (
+                    {Array.from(new Set(propertyUnits.map(unit => unit.bathrooms))).sort().map((bathCount) => (
                       <Badge key={bathCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
                         <Bath className="h-3 w-3 mr-1" /> {bathCount}
                       </Badge>

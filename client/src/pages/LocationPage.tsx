@@ -243,23 +243,34 @@ const LocationPage = ({ location }: LocationPageProps) => {
                       </span>
                     </div>
                     
-                    <div className="flex flex-wrap gap-4 mb-4">
-                      <div className="flex items-center text-slate-700">
-                        <Building className="h-4 w-4 mr-2 text-primary" />
-                        <span>{property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}</span>
+                    {property.isMultifamily ? (
+                      <div className="flex flex-wrap gap-4 mb-4">
+                        <div className="flex items-center text-slate-700">
+                          <Building className="h-4 w-4 mr-2 text-primary" />
+                          <span>{property.unitCount || 0} {property.unitCount === 1 ? 'Unit' : 'Units'}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-slate-700">
-                        <ParkingCircle className="h-4 w-4 mr-2 text-primary" />
-                        <span>{property.bathrooms} {property.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-4 mb-4">
+                        <div className="flex items-center text-slate-700">
+                          <Building className="h-4 w-4 mr-2 text-primary" />
+                          <span>{property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}</span>
+                        </div>
+                        <div className="flex items-center text-slate-700">
+                          <ParkingCircle className="h-4 w-4 mr-2 text-primary" />
+                          <span>{property.bathrooms} {property.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}</span>
+                        </div>
+                        <div className="flex items-center text-slate-700">
+                          <MapIcon className="h-4 w-4 mr-2 text-primary" />
+                          <span>{property.sqft} sq ft</span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-slate-700">
-                        <MapIcon className="h-4 w-4 mr-2 text-primary" />
-                        <span>{property.sqft} sq ft</span>
-                      </div>
-                    </div>
+                    )}
                     
                     <div className="flex justify-between items-center">
-                      {property.rent ? (
+                      {property.isMultifamily ? (
+                        <div className="text-lg text-slate-700">See unit details</div>
+                      ) : property.rent ? (
                         <div className="text-xl font-semibold">${property.rent}/month</div>
                       ) : (
                         <div className="text-lg text-slate-700">Contact for Pricing</div>
