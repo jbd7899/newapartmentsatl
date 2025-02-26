@@ -1,10 +1,80 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchema } from "@shared/schema";
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Create uploads directory if it doesn't exist
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  // In-memory map to store image data for base64 images
+  const imageDataStore = new Map<string, string>();
+  
+  // Serve files from uploads directory
+  app.get('/uploads/:filename', (req: Request, res: Response) => {
+    const filename = req.params.filename;
+    if (!filename) {
+      return res.status(404).send('File not found');
+    }
+    
+    // Try to get the image data from the in-memory store first
+    const imageData = imageDataStore.get(filename);
+    if (imageData) {
+      // Extract the MIME type from the data URL
+      const mimeMatch = imageData.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      
+      // Extract the base64 data
+      const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      // Set proper content type
+      res.contentType(mime);
+      return res.send(buffer);
+    }
+    
+    // If not in memory, try to read from the file system
+    const filePath = path.join(uploadsDir, filename);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    
+    return res.status(404).send('File not found');
+  });
+  
+  // Process image data and save to store
+  const processImageData = (url: string, data?: string): string => {
+    // If it's already a URL (not a data URL), just return it
+    if (url.startsWith('http') || url.startsWith('/uploads/')) {
+      return url;
+    }
+    
+    // For data URLs, extract the filename from the URL or generate a new one
+    const filename = url.includes('/uploads/') 
+      ? url.split('/uploads/')[1]
+      : `image_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.jpg`;
+    
+    // Save the image data to the in-memory store
+    if (data && data.startsWith('data:')) {
+      imageDataStore.set(filename, data);
+      
+      // In a real app, we would also save the file to disk
+      // const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
+      // const buffer = Buffer.from(base64Data, 'base64');
+      // fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+    }
+    
+    // Return the URL for the image
+    return `/uploads/${filename}`;
+  };
+  
   // API routes with /api prefix
   
   // Get all locations
@@ -242,8 +312,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add a new property image
   app.post("/api/property-images", async (req: Request, res: Response) => {
     try {
+      // Check if we're getting data URL along with the URL
+      const { data, ...restOfBody } = req.body;
+      
+      // Process the URL if needed (convert data URLs to file URLs)
+      let processedUrl = req.body.url;
+      if (data && typeof data === 'string') {
+        processedUrl = processImageData(req.body.url, data);
+      }
+      
+      // Prepare the body with the processed URL
+      const bodyWithProcessedUrl = {
+        ...restOfBody,
+        url: processedUrl
+      };
+      
       // Validate request body
-      const validationResult = insertPropertyImageSchema.safeParse(req.body);
+      const validationResult = insertPropertyImageSchema.safeParse(bodyWithProcessedUrl);
       
       if (!validationResult.success) {
         return res.status(400).json({ 
@@ -253,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify property exists
-      const property = await storage.getProperty(req.body.propertyId);
+      const property = await storage.getProperty(bodyWithProcessedUrl.propertyId);
       if (!property) {
         return res.status(404).json({ message: "Property not found" });
       }
@@ -261,6 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const image = await storage.createPropertyImage(validationResult.data);
       res.status(201).json(image);
     } catch (error) {
+      console.error('Error creating property image:', error);
       res.status(500).json({ message: "Failed to create property image" });
     }
   });
