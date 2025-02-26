@@ -17,6 +17,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // In-memory map to store image data for base64 images
   const imageDataStore = new Map<string, string>();
   
+  // Function to load images from disk to memory
+  const loadImagesFromDisk = () => {
+    console.log('Loading images from disk to memory cache...');
+    try {
+      // Check if uploads directory exists
+      if (!fs.existsSync(uploadsDir)) {
+        console.log('Uploads directory does not exist, skipping image loading');
+        return;
+      }
+      
+      // Read all files in the uploads directory
+      const files = fs.readdirSync(uploadsDir);
+      console.log(`Found ${files.length} files in uploads directory`);
+      
+      // Load each file into memory
+      files.forEach(filename => {
+        try {
+          const filePath = path.join(uploadsDir, filename);
+          const stats = fs.statSync(filePath);
+          
+          // Only process files (not directories)
+          if (stats.isFile()) {
+            console.log(`Loading file: ${filename}`);
+            const fileData = fs.readFileSync(filePath);
+            const base64Data = fileData.toString('base64');
+            
+            // Determine MIME type based on file extension
+            let mimeType = 'image/jpeg'; // Default
+            if (filename.endsWith('.png')) mimeType = 'image/png';
+            if (filename.endsWith('.gif')) mimeType = 'image/gif';
+            if (filename.endsWith('.webp')) mimeType = 'image/webp';
+            
+            // Store in memory
+            const dataUrl = `data:${mimeType};base64,${base64Data}`;
+            imageDataStore.set(filename, dataUrl);
+            console.log(`Loaded ${filename} into memory cache (${fileData.length} bytes)`);
+          }
+        } catch (error) {
+          console.error(`Error loading file ${filename}:`, error);
+        }
+      });
+      
+      console.log(`Successfully loaded ${imageDataStore.size} images into memory cache`);
+    } catch (error) {
+      console.error('Error loading images from disk:', error);
+    }
+  };
+  
+  // Load images from disk on server start
+  loadImagesFromDisk();
+  
   // Serve files from uploads directory
   app.get('/uploads/:filename', (req: Request, res: Response) => {
     const filename = req.params.filename;
