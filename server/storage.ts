@@ -1,10 +1,11 @@
 import { 
-  locations, properties, features, inquiries, propertyImages,
+  locations, properties, features, inquiries, propertyImages, neighborhoods,
   type Location, type InsertLocation, 
   type Property, type InsertProperty,
   type Feature, type InsertFeature,
   type Inquiry, type InsertInquiry,
-  type PropertyImage, type InsertPropertyImage
+  type PropertyImage, type InsertPropertyImage,
+  type Neighborhood, type InsertNeighborhood
 } from "@shared/schema";
 
 // Storage Interface
@@ -12,6 +13,11 @@ export interface IStorage {
   // Locations
   getLocations(): Promise<Location[]>;
   getLocationBySlug(slug: string): Promise<Location | undefined>;
+  
+  // Neighborhoods
+  getNeighborhoodByLocationId(locationId: number): Promise<Neighborhood | undefined>;
+  createNeighborhood(neighborhood: InsertNeighborhood): Promise<Neighborhood>;
+  updateNeighborhood(id: number, data: Partial<InsertNeighborhood>): Promise<Neighborhood | undefined>;
   
   // Properties
   getProperties(): Promise<Property[]>;
@@ -42,8 +48,10 @@ export class MemStorage implements IStorage {
   private featuresData: Map<number, Feature>;
   private inquiriesData: Map<number, Inquiry>;
   private propertyImagesData: Map<number, PropertyImage>;
+  private neighborhoodsData: Map<number, Neighborhood>;
   private nextInquiryId: number = 1;
   private nextPropertyImageId: number = 1;
+  private nextNeighborhoodId: number = 1;
 
   constructor() {
     this.locationsData = new Map();
@@ -51,6 +59,7 @@ export class MemStorage implements IStorage {
     this.featuresData = new Map();
     this.inquiriesData = new Map();
     this.propertyImagesData = new Map();
+    this.neighborhoodsData = new Map();
     
     // Seed initial data
     this.seedData();

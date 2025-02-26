@@ -12,6 +12,26 @@ export const locations = pgTable("locations", {
   linkText: text("link_text").notNull(),
 });
 
+// Neighborhood information
+export const neighborhoods = pgTable("neighborhoods", {
+  id: serial("id").primaryKey(),
+  locationId: integer("location_id").notNull().unique(),
+  mapImageUrl: text("map_image_url"),
+  highlights: text("highlights"),
+  attractions: text("attractions"),
+  transportationInfo: text("transportation_info"),
+  diningOptions: text("dining_options"),
+  schoolsInfo: text("schools_info"),
+  parksAndRecreation: text("parks_and_recreation"),
+  historicalInfo: text("historical_info"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertNeighborhoodSchema = createInsertSchema(neighborhoods).omit({
+  id: true,
+  createdAt: true
+});
+
 export const insertLocationSchema = createInsertSchema(locations).omit({
   id: true
 });
@@ -51,6 +71,9 @@ export const insertFeatureSchema = createInsertSchema(features).omit({
 // Type definitions
 export type Location = typeof locations.$inferSelect;
 export type InsertLocation = z.infer<typeof insertLocationSchema>;
+
+export type Neighborhood = typeof neighborhoods.$inferSelect;
+export type InsertNeighborhood = z.infer<typeof insertNeighborhoodSchema>;
 
 export type Property = typeof properties.$inferSelect;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
