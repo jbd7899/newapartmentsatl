@@ -1,0 +1,186 @@
+import { useEffect } from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { getProperty, getLocations } from "@/lib/data";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Building, Bike, MapPin, ParkingCircle, Home, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Property, Location } from "@shared/schema";
+
+interface PropertyPageProps {
+  id: string;
+}
+
+const PropertyPage = ({ id }: PropertyPageProps) => {
+  const [, setLocation] = useLocation();
+  
+  const { data: property, isLoading: isLoadingProperty, error: propertyError } = useQuery({
+    queryKey: [`/api/properties/${id}`],
+    queryFn: () => getProperty(parseInt(id))
+  });
+
+  const { data: locations = [] } = useQuery({
+    queryKey: ['/api/locations'],
+    queryFn: getLocations
+  });
+
+  // If invalid property ID, redirect to 404
+  useEffect(() => {
+    if (propertyError) {
+      setLocation("/not-found");
+    }
+  }, [propertyError, setLocation]);
+
+  if (isLoadingProperty) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="h-80 bg-gray-200 animate-pulse rounded-lg mb-8"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="h-60 bg-gray-200 animate-pulse rounded-lg"></div>
+          <div className="h-60 bg-gray-200 animate-pulse rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="font-heading font-bold text-3xl mb-4">Property Not Found</h1>
+        <p className="mb-8">The property you're looking for doesn't exist or has been removed.</p>
+        <Button onClick={() => setLocation("/")}>
+          Return Home
+        </Button>
+      </div>
+    );
+  }
+
+  // Find the location for this property
+  const propertyLocation = locations.find((loc: Location) => loc.id === property.locationId);
+
+  // Format features from string to array
+  const featuresList = property.features.split(", ");
+
+  return (
+    <>
+      {/* Property Hero */}
+      <div className="relative h-[60vh] bg-cover bg-center" style={{ backgroundImage: `url(${property.imageUrl})` }}>
+        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white px-4">
+            <h1 className="font-heading font-bold text-4xl md:text-5xl mb-4">{property.name}</h1>
+            <p className="text-xl max-w-2xl mx-auto mb-6">{property.address}</p>
+            {propertyLocation && (
+              <Badge className="px-4 py-2 text-lg" variant="secondary">
+                {propertyLocation.name}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Property Details */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="font-heading font-bold text-3xl mb-6">About This Property</h2>
+                <p className="text-lg text-slate-700 mb-8">{property.description}</p>
+                
+                <h3 className="font-heading font-bold text-2xl mb-4">Property Highlights</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                  <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                    <Building className="h-6 w-6 text-primary mr-3" />
+                    <div>
+                      <div className="text-sm text-slate-500">Bedrooms</div>
+                      <div className="font-semibold">{property.bedrooms}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                    <ParkingCircle className="h-6 w-6 text-primary mr-3" />
+                    <div>
+                      <div className="text-sm text-slate-500">Bathrooms</div>
+                      <div className="font-semibold">{property.bathrooms}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+                    <Home className="h-6 w-6 text-primary mr-3" />
+                    <div>
+                      <div className="text-sm text-slate-500">Square Footage</div>
+                      <div className="font-semibold">{property.sqft} sq ft</div>
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="font-heading font-bold text-2xl mb-4">Features & Amenities</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                  {featuresList.map((feature, index) => (
+                    <div key={index} className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-2" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <div className="text-3xl font-bold text-primary">${property.rent}</div>
+                  <div className="text-slate-500">per month</div>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Status</span>
+                    <span className="font-semibold">
+                      {property.available ? 
+                        <span className="text-green-600">Available</span> : 
+                        <span className="text-red-600">Unavailable</span>
+                      }
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Property Type</span>
+                    <span className="font-semibold">Apartment</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-slate-500">Year Built</span>
+                    <span className="font-semibold">1930 (Renovated)</span>
+                  </div>
+                </div>
+                
+                <Button className="w-full mb-3">Schedule a Tour</Button>
+                <Button variant="outline" className="w-full">Request Info</Button>
+              </CardContent>
+            </Card>
+
+            {propertyLocation && (
+              <Card className="mt-6">
+                <CardContent className="p-6">
+                  <h3 className="font-heading font-bold text-xl mb-4">
+                    <MapPin className="inline-block h-5 w-5 mr-2 text-primary" />
+                    Neighborhood
+                  </h3>
+                  <p className="text-slate-700 mb-4">
+                    This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
+                  </p>
+                  <Button variant="link" onClick={() => setLocation(`/${propertyLocation.slug}`)}>
+                    Explore {propertyLocation.name}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default PropertyPage;

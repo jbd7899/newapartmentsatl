@@ -7,6 +7,7 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import HomePage from "./pages/HomePage";
 import LocationPage from "./pages/LocationPage";
+import PropertyPage from "./pages/PropertyPage";
 import ApartmentFinderPage from "./pages/ApartmentFinderPage";
 import ResidentPortalPage from "./pages/ResidentPortalPage";
 import NotFound from "@/pages/not-found";
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/dallas" component={() => <LocationPage location="dallas" />} />
       <Route path="/apartment-finder" component={ApartmentFinderPage} />
       <Route path="/portal" component={ResidentPortalPage} />
+      <Route path="/properties/:id">{(params) => <PropertyPage id={params.id} />}</Route>
       <Route component={NotFound} />
     </Switch>
   );
