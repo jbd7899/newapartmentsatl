@@ -50,14 +50,14 @@ const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  price: z.coerce.number().min(500, "Price must be at least $500"),
+  rent: z.coerce.number().min(500, "Rent must be at least $500"),
   bedrooms: z.coerce.number().min(0, "Must be 0 or more"),
   bathrooms: z.coerce.number().min(0, "Must be 0 or more"),
   sqft: z.coerce.number().min(200, "Size must be at least 200 sq. ft."),
   locationId: z.coerce.number().int().positive("Please select a location"),
   imageUrl: z.string().url("Must be a valid URL"),
-  latitude: z.coerce.number().min(-90).max(90, "Must be between -90 and 90"),
-  longitude: z.coerce.number().min(-180).max(180, "Must be between -180 and 180"),
+  features: z.string().default(""),
+  available: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -104,14 +104,14 @@ const AdminPropertiesPage = () => {
         name: "",
         description: "",
         address: "",
-        price: 1500,
+        rent: 1500,
         bedrooms: 1,
         bathrooms: 1,
         sqft: 800,
         locationId: 0,
         imageUrl: "https://i.imgur.com/JfcBN2B.jpg",
-        latitude: 0,
-        longitude: 0
+        features: "Modern,Updated,Spacious",
+        available: true
       }
     });
     
@@ -200,10 +200,10 @@ const AdminPropertiesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="price"
+              name="rent"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price ($/month)</FormLabel>
+                  <FormLabel>Rent ($/month)</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -241,7 +241,7 @@ const AdminPropertiesPage = () => {
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="sqft"
@@ -258,27 +258,16 @@ const AdminPropertiesPage = () => {
             
             <FormField
               control={form.control}
-              name="latitude"
+              name="features"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Latitude</FormLabel>
+                  <FormLabel>Features</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.000001" {...field} />
+                    <Input {...field} placeholder="Modern,Updated,Spacious" />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="longitude"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Longitude</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.000001" {...field} />
-                  </FormControl>
+                  <FormDescription>
+                    Enter features separated by commas
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -298,6 +287,29 @@ const AdminPropertiesPage = () => {
                   Provide a URL to an image for this property
                 </FormDescription>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="available"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <FormLabel className="m-0">Available for rent</FormLabel>
+                  </div>
+                </FormControl>
+                <FormDescription className="text-xs">
+                  Check if this property is currently available
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -419,7 +431,7 @@ const AdminPropertiesPage = () => {
                         {propertyLocation?.name || "Unknown"}
                       </td>
                       <td className="px-6 py-4">
-                        ${property.price.toLocaleString()}
+                        ${typeof property.rent === 'number' ? property.rent.toLocaleString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
                         {property.bedrooms} bd / {property.bathrooms} ba

@@ -1,0 +1,28 @@
+[vite] connecting...
+[vite] connected.
+undefined is not an object (evaluating 'property.price.toLocaleString')
+undefined is not an object (evaluating 'property.price.toLocaleString')
+map@[native code]
+AdminPropertiesPage@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/src/pages/AdminPropertiesPage.tsx:873:174
+renderWithHooks@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:11548:35
+updateFunctionComponent@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:14582:43
+callCallback2@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:3674:27
+dispatchEvent@[native code]
+invokeGuardedCallbackDev@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:3699:37
+invokeGuardedCallback@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:3733:44
+beginWork$1@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:19765:36
+performUnitOfWork@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:19198:31
+workLoopSync@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:19137:30
+renderRootSync@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:19116:27
+recoverFromConcurrentError@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:18736:42
+performSyncWorkOnRoot@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:18879:54
+flushSyncCallbacks@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:9119:38
+@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js:18627:39
+The above error occurred in the <AdminPropertiesPage> component:
+
+AdminPropertiesPage@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/src/pages/AdminPropertiesPage.tsx:76:47
+Route@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:191:14
+Switch@https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:248:27
+Router
+main
+div
