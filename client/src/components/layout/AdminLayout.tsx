@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   MessageSquare,
-  LandmarkIcon
+  LandmarkIcon,
+  Layers
 } from "lucide-react";
 
 interface AdminLayoutProps {

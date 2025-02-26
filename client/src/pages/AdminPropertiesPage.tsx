@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getLocations, getProperties } from "@/lib/data";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,6 +60,8 @@ const formSchema = z.object({
   features: z.string().default(""),
   available: z.boolean().default(true),
   propertyType: z.enum(["single-family", "multi-family", "townhome"]).default("multi-family"),
+  isMultifamily: z.boolean().default(false),
+  unitCount: z.coerce.number().min(0, "Must be 0 or more").default(0),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -100,8 +103,20 @@ const AdminPropertiesPage = () => {
     const form = useForm<FormValues>({
       resolver: zodResolver(formSchema),
       defaultValues: property ? {
-        ...property,
-        propertyType: (property.propertyType || "multi-family") as "single-family" | "multi-family" | "townhome"
+        name: property.name,
+        description: property.description, 
+        address: property.address,
+        rent: property.rent,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        sqft: property.sqft,
+        locationId: property.locationId,
+        imageUrl: property.imageUrl,
+        features: property.features,
+        available: property.available,
+        propertyType: (property.propertyType || "multi-family") as "single-family" | "multi-family" | "townhome",
+        isMultifamily: property.isMultifamily,
+        unitCount: property.unitCount || 0
       } : {
         name: "",
         description: "",
@@ -114,11 +129,27 @@ const AdminPropertiesPage = () => {
         imageUrl: "https://i.imgur.com/JfcBN2B.jpg",
         features: "Modern,Updated,Spacious",
         available: true,
-        propertyType: "multi-family"
+        propertyType: "multi-family",
+        isMultifamily: false,
+        unitCount: 0
       }
     });
     
+    // Watch for property type changes
+    const propertyType = form.watch("propertyType");
+    const isMultifamily = propertyType === "multi-family";
+    
+    // Update isMultifamily field when property type changes
+    useEffect(() => {
+      form.setValue("isMultifamily", isMultifamily);
+    }, [form, propertyType, isMultifamily]);
+    
     function onSubmit(data: FormValues) {
+      // Ensure consistent data
+      data.isMultifamily = data.propertyType === "multi-family";
+      if (!data.isMultifamily) {
+        data.unitCount = 0;
+      }
       onSave(data);
     }
     
@@ -322,6 +353,43 @@ const AdminPropertiesPage = () => {
             )}
           />
 
+          {/* Conditionally show unit count for multifamily properties */}
+          {isMultifamily && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-700">
+                      This is a multi-family property. After saving, you can add individual units and their details from the Property Units page.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="unitCount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Units</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        min={1}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Specify how many units this multifamily property has
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
           <FormField
             control={form.control}
             name="available"
@@ -473,7 +541,15 @@ const AdminPropertiesPage = () => {
                         ${typeof property.rent === 'number' ? property.rent.toLocaleString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
-                        {property.bedrooms} bd / {property.bathrooms} ba
+                        {property.isMultifamily ? (
+                          <span className="text-blue-600">
+                            {property.unitCount || 0} units
+                          </span>
+                        ) : (
+                          <span>
+                            {property.bedrooms} bd / {property.bathrooms} ba
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
@@ -493,6 +569,20 @@ const AdminPropertiesPage = () => {
                             <Pencil className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
                           </Button>
+                          {property.isMultifamily && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => window.open(`/admin/property-units`, '_blank')}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-blue-500">
+                                <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+                                <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
+                                <path d="M9 22V12h6v10" />
+                              </svg>
+                              <span className="sr-only">Manage Units</span>
+                            </Button>
+                          )}
                           <Button 
                             variant="ghost" 
                             size="sm"
