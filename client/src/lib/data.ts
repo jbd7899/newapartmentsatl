@@ -1,4 +1,4 @@
-import { Location, Property, Feature, Inquiry, InsertInquiry, PropertyImage, InsertPropertyImage, Neighborhood } from "@shared/schema";
+import { Location, Property, Feature, Inquiry, InsertInquiry, PropertyImage, InsertPropertyImage, Neighborhood, PropertyUnit, InsertPropertyUnit, UnitImage, InsertUnitImage } from "@shared/schema";
 import { apiRequest } from "./queryClient";
 
 // Data fetching functions for client
@@ -170,5 +170,85 @@ export async function updateNeighborhood(slug: string, data: any): Promise<Neigh
     url: `/api/locations/${slug}/neighborhood`,
     method: 'PATCH',
     body: data,
+  });
+}
+
+// Property Units functions
+export async function getPropertyUnits(propertyId: number): Promise<PropertyUnit[]> {
+  const response = await fetch(`/api/properties/${propertyId}/units`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch units for property: ${propertyId}`);
+  }
+  return response.json();
+}
+
+export async function getPropertyUnit(id: number): Promise<PropertyUnit> {
+  const response = await fetch(`/api/property-units/${id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch property unit: ${id}`);
+  }
+  return response.json();
+}
+
+export async function createPropertyUnit(unit: InsertPropertyUnit): Promise<PropertyUnit> {
+  return apiRequest<PropertyUnit>({
+    url: '/api/property-units',
+    method: 'POST',
+    body: unit,
+  });
+}
+
+export async function updatePropertyUnit(id: number, data: Partial<InsertPropertyUnit>): Promise<PropertyUnit> {
+  return apiRequest<PropertyUnit>({
+    url: `/api/property-units/${id}`,
+    method: 'PATCH',
+    body: data,
+  });
+}
+
+export async function deletePropertyUnit(id: number): Promise<void> {
+  return apiRequest<void>({
+    url: `/api/property-units/${id}`,
+    method: 'DELETE',
+  });
+}
+
+// Unit Images functions
+export async function getUnitImages(unitId: number): Promise<UnitImage[]> {
+  const response = await fetch(`/api/property-units/${unitId}/images`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch images for unit: ${unitId}`);
+  }
+  return response.json();
+}
+
+export async function createUnitImage(image: InsertUnitImage & { data?: string }): Promise<UnitImage> {
+  return apiRequest<UnitImage>({
+    url: '/api/unit-images',
+    method: 'POST',
+    body: image,
+  });
+}
+
+export async function updateUnitImageOrder(id: number, displayOrder: number): Promise<UnitImage> {
+  return apiRequest<UnitImage>({
+    url: `/api/unit-images/${id}/order`,
+    method: 'PATCH',
+    body: { displayOrder },
+  });
+}
+
+export async function updateUnitImageFeatured(id: number, isFeatured: boolean): Promise<UnitImage> {
+  return apiRequest<UnitImage>({
+    url: `/api/unit-images/${id}/featured`,
+    method: 'PATCH',
+    body: { isFeatured },
+  });
+}
+
+export async function deleteUnitImage(id: number): Promise<void> {
+  return apiRequest<void>({
+    url: `/api/unit-images/${id}`,
+    method: 'DELETE',
   });
 }
