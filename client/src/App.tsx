@@ -35,6 +35,7 @@ function Router() {
       <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/admin/properties" component={AdminPropertiesPage} />
       <Route path="/admin/images" component={AdminImagesPage} />
+      <Route path="/admin/inquiries" component={AdminInquiriesPage} />
       <Route path="/admin/users" component={AdminPlaceholderPage} />
       <Route path="/admin/settings" component={AdminPlaceholderPage} />
       
