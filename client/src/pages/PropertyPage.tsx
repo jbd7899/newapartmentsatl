@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { getProperty, getLocations, getPropertyImagesByProperty } from "@/lib/data";
+import { getProperty, getLocations, getPropertyImagesByProperty, getPropertyUnits, getUnitImages } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, MapPin, ParkingCircle, Home, Check, Image as ImageIcon } from "lucide-react";
+import { Building, MapPin, ParkingCircle, Home, Check, Image as ImageIcon, Bed, Bath } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Property, Location, PropertyImage } from "@shared/schema";
+import { Property, Location, PropertyImage, PropertyUnit, UnitImage } from "@shared/schema";
 import NeighborhoodSection from "@/components/NeighborhoodSection";
 import PropertyGallery, { GalleryImage } from "@/components/PropertyGallery";
+import UnitCard from "@/components/UnitCard";
+import UnitGallery from "@/components/UnitGallery";
 
 interface PropertyPageProps {
   id: string;
@@ -17,6 +19,7 @@ interface PropertyPageProps {
 const PropertyPage = ({ id }: PropertyPageProps) => {
   const [, setLocation] = useLocation();
   const [showGallery, setShowGallery] = useState(false);
+  const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null);
   
   const { data: property, isLoading: isLoadingProperty, error: propertyError } = useQuery({
     queryKey: [`/api/properties/${id}`],
@@ -34,6 +37,41 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
     queryFn: () => getPropertyImagesByProperty(parseInt(id)),
     enabled: !!property
   });
+  
+  // Fetch property units if this is a multifamily property
+  const { data: propertyUnits = [], isLoading: unitsLoading } = useQuery({
+    queryKey: ['/api/properties', parseInt(id), 'units'],
+    queryFn: () => getPropertyUnits(parseInt(id)),
+    enabled: !!property && !!property.isMultifamily
+  });
+  
+  // Create a map to store unit images for each unit
+  const [unitImagesMap, setUnitImagesMap] = useState<Record<number, UnitImage[]>>({});
+  
+  // Fetch unit images for each unit
+  useEffect(() => {
+    const fetchUnitImages = async () => {
+      if (propertyUnits.length > 0) {
+        const imagesMap: Record<number, UnitImage[]> = {};
+        
+        for (const unit of propertyUnits) {
+          try {
+            const images = await getUnitImages(unit.id);
+            imagesMap[unit.id] = images;
+          } catch (error) {
+            console.error(`Failed to fetch images for unit ${unit.id}:`, error);
+            imagesMap[unit.id] = [];
+          }
+        }
+        
+        setUnitImagesMap(imagesMap);
+      }
+    };
+    
+    if (propertyUnits.length > 0) {
+      fetchUnitImages();
+    }
+  }, [propertyUnits]);
   
   // Convert property images to gallery format, sorted by display order
   const galleryImages: GalleryImage[] = propertyImages
@@ -235,6 +273,89 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         </div>
       </div>
       
+      {/* Display available units if this is a multifamily property */}
+      {property.isMultifamily && (
+        <div className="container mx-auto px-4 py-16">
+          <div className="mb-8">
+            <h2 className="font-heading font-bold text-3xl mb-4">Available Units</h2>
+            <p className="text-slate-700">
+              {propertyUnits.filter(unit => unit.available).length} unit{propertyUnits.filter(unit => unit.available).length !== 1 ? 's' : ''} available at {property.name}
+            </p>
+          </div>
+          
+          {unitsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-80 bg-gray-200 animate-pulse rounded-lg"></div>
+              ))}
+            </div>
+          ) : propertyUnits.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-lg">
+              <h3 className="text-xl font-semibold mb-2">No Units Available</h3>
+              <p className="text-slate-600">Check back soon for new availability.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {propertyUnits.map((unit) => (
+                <UnitCard 
+                  key={unit.id}
+                  unit={unit}
+                  unitImages={unitImagesMap[unit.id] || []}
+                  onShowGallery={() => setSelectedUnitId(unit.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Filtering options for units */}
+      {property.isMultifamily && propertyUnits.length > 0 && (
+        <div className="container mx-auto px-4 pb-16">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-heading font-bold text-xl mb-6">Filter Available Units</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <div className="text-sm text-slate-500 mb-2">Bedrooms</div>
+                  <div className="flex gap-2">
+                    {[...new Set(propertyUnits.map(unit => unit.bedrooms))].sort().map((bedCount) => (
+                      <Badge key={bedCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
+                        <Bed className="h-3 w-3 mr-1" /> {bedCount}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="text-sm text-slate-500 mb-2">Bathrooms</div>
+                  <div className="flex gap-2">
+                    {[...new Set(propertyUnits.map(unit => unit.bathrooms))].sort().map((bathCount) => (
+                      <Badge key={bathCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
+                        <Bath className="h-3 w-3 mr-1" /> {bathCount}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="text-sm text-slate-500 mb-2">Availability</div>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-green-500 hover:text-white">
+                      Available Now
+                    </Badge>
+                    <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
+                      All Units
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       {/* Neighborhood Section */}
       {propertyLocation && (
         <NeighborhoodSection 
@@ -248,6 +369,21 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         <PropertyGallery
           images={galleryImages.length > 0 ? galleryImages : sampleImages}
           onClose={() => setShowGallery(false)}
+          propertyName={property.name}
+        />
+      )}
+      
+      {/* Unit Gallery Modal */}
+      {selectedUnitId !== null && (
+        <UnitGallery
+          images={
+            unitImagesMap[selectedUnitId]?.map(img => ({
+              url: img.url,
+              alt: img.alt || `Unit Image`
+            })) || sampleImages
+          }
+          onClose={() => setSelectedUnitId(null)}
+          unitNumber={propertyUnits.find(unit => unit.id === selectedUnitId)?.unitNumber || ''}
           propertyName={property.name}
         />
       )}

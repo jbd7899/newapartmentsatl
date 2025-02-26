@@ -15,6 +15,7 @@ import NotFound from "@/pages/not-found";
 // Admin Pages
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminPropertiesPage from "./pages/AdminPropertiesPage";
+import AdminPropertyUnitsPage from "./pages/AdminPropertyUnitsPage";
 import AdminImagesPage from "./pages/AdminImagesPage";
 import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import AdminNeighborhoodsPage from "./pages/AdminNeighborhoodsPage";
@@ -35,6 +36,7 @@ function Router() {
       {/* Admin Routes */}
       <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/admin/properties" component={AdminPropertiesPage} />
+      <Route path="/admin/property-units" component={AdminPropertyUnitsPage} />
       <Route path="/admin/images" component={AdminImagesPage} />
       <Route path="/admin/inquiries" component={AdminInquiriesPage} />
       <Route path="/admin/neighborhoods" component={AdminNeighborhoodsPage} />
