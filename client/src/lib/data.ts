@@ -1,4 +1,4 @@
-import { Location, Property, Feature, Inquiry, InsertInquiry, PropertyImage, InsertPropertyImage } from "@shared/schema";
+import { Location, Property, Feature, Inquiry, InsertInquiry, PropertyImage, InsertPropertyImage, Neighborhood } from "@shared/schema";
 import { apiRequest } from "./queryClient";
 
 // Data fetching functions for client
@@ -22,6 +22,14 @@ export async function getPropertiesByLocation(slug: string): Promise<Property[]>
   const response = await fetch(`/api/locations/${slug}/properties`);
   if (!response.ok) {
     throw new Error(`Failed to fetch properties for location: ${slug}`);
+  }
+  return response.json();
+}
+
+export async function getNeighborhoodByLocation(slug: string): Promise<Neighborhood> {
+  const response = await fetch(`/api/locations/${slug}/neighborhood`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch neighborhood information for location: ${slug}`);
   }
   return response.json();
 }

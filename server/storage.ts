@@ -146,6 +146,48 @@ export class MemStorage implements IStorage {
       location => location.slug === slug
     );
   }
+  
+  // Neighborhood methods
+  async getNeighborhoodByLocationId(locationId: number): Promise<Neighborhood | undefined> {
+    return Array.from(this.neighborhoodsData.values()).find(
+      neighborhood => neighborhood.locationId === locationId
+    );
+  }
+  
+  async createNeighborhood(neighborhood: InsertNeighborhood): Promise<Neighborhood> {
+    const id = this.nextNeighborhoodId++;
+    const createdAt = new Date();
+    
+    const newNeighborhood: Neighborhood = {
+      id,
+      locationId: neighborhood.locationId,
+      mapImageUrl: neighborhood.mapImageUrl || null,
+      highlights: neighborhood.highlights || null,
+      attractions: neighborhood.attractions || null,
+      transportationInfo: neighborhood.transportationInfo || null,
+      diningOptions: neighborhood.diningOptions || null,
+      schoolsInfo: neighborhood.schoolsInfo || null,
+      parksAndRecreation: neighborhood.parksAndRecreation || null,
+      historicalInfo: neighborhood.historicalInfo || null,
+      createdAt
+    };
+    
+    this.neighborhoodsData.set(id, newNeighborhood);
+    return newNeighborhood;
+  }
+  
+  async updateNeighborhood(id: number, data: Partial<InsertNeighborhood>): Promise<Neighborhood | undefined> {
+    const neighborhood = this.neighborhoodsData.get(id);
+    if (!neighborhood) return undefined;
+    
+    const updatedNeighborhood: Neighborhood = {
+      ...neighborhood,
+      ...data
+    };
+    
+    this.neighborhoodsData.set(id, updatedNeighborhood);
+    return updatedNeighborhood;
+  }
 
   // Property methods
   async getProperties(): Promise<Property[]> {
@@ -648,11 +690,55 @@ export class MemStorage implements IStorage {
     // Set the next inquiry ID based on our seed data
     this.nextInquiryId = inquiries.length + 1;
 
+    // Neighborhoods data
+    const neighborhoods: Neighborhood[] = [
+      {
+        id: 1,
+        locationId: 1, // Midtown
+        mapImageUrl: "https://i.imgur.com/rXMUihK.png", // Example map image
+        highlights: "Midtown Atlanta is a vibrant, urban district known for its mix of business headquarters, cultural attractions, and residential communities. It's often regarded as Atlanta's 'heart of the arts' with numerous theaters, galleries, and museums.",
+        attractions: "Piedmont Park, High Museum of Art, Atlanta Botanical Garden, Fox Theatre, The Center for Puppetry Arts, Margaret Mitchell House, Colony Square, Federal Reserve Bank of Atlanta",
+        transportationInfo: "Midtown is served by MARTA's North-South rail line with stations at North Avenue, Midtown, and Arts Center. Multiple bus routes connect throughout the area. The Atlanta Streetcar connects to Downtown, and the neighborhood is bisected by the Atlanta BeltLine's Eastside Trail.",
+        diningOptions: "South City Kitchen, Empire State South, The Varsity, Mary Mac's Tea Room, Ecco, Lure, The Lawrence, Cypress Street Pint & Plate, The Canteen, Tabla, Poor Calvin's, Bon Ton, and numerous other restaurants spanning all cuisines and price points.",
+        schoolsInfo: "Public schools include Springdale Park Elementary, Morningside Elementary, and Midtown High School. Private options include The Children's School and Paideia. Georgia Tech and SCAD Atlanta provide higher education.",
+        parksAndRecreation: "Piedmont Park (189 acres) is the crown jewel with sports facilities, trails, and Lake Clara Meer. The Atlanta BeltLine's Eastside Trail runs along the eastern edge of Midtown. Also features Renaissance Park and Central Park.",
+        historicalInfo: "Originally a residential district of mansions built by Atlanta's elite in the early 1900s, Midtown experienced decline after WWII. A renaissance began in the 1980s transforming it into a prime commercial and cultural district while preserving many historic buildings. The area includes the Midtown Historic District and several other listings on the National Register of Historic Places.",
+        createdAt: new Date()
+      },
+      {
+        id: 2,
+        locationId: 2, // Virginia-Highland
+        mapImageUrl: "https://i.imgur.com/3PNfb3a.png",
+        highlights: "Virginia-Highland (often shortened to 'Va-Hi') is known for its historic bungalows, craftsman homes, and walkable village areas with boutique shopping and local restaurants. It's one of Atlanta's most pedestrian-friendly neighborhoods with a relaxed community atmosphere.",
+        attractions: "John Howell Park, Orme Park, Murphy's Restaurant, Highland Row Antiques, Virginia-Highland shops and boutiques, access to the Atlanta BeltLine",
+        transportationInfo: "Served by MARTA bus routes connecting to the Midtown MARTA station. The neighborhood is highly walkable with easy access to the BeltLine's Eastside Trail.",
+        diningOptions: "Murphy's, Highland Tap, Atkins Park, La Tavola, Fontaine's, DBA Barbecue, Paolo's Gelato, Taco Mac, Yeah! Burger, Osteria 832, and several coffee shops including Dancing Goats and San Francisco Coffee.",
+        schoolsInfo: "Served by Atlanta Public Schools including Springdale Park Elementary, Inman Middle School, and Midtown High School. Several private schools are also nearby.",
+        parksAndRecreation: "John Howell Park, Orme Park, and easy access to Piedmont Park and the Atlanta BeltLine's Eastside Trail for walking, running, and cycling.",
+        historicalInfo: "Developed primarily in the early 1900s, Virginia-Highland was named for the intersection of Virginia and Highland Avenues. The neighborhood architecture includes Craftsman bungalows, Tudor Revival, and Colonial Revival homes. It was at the center of highway revolts in the 1970s that prevented I-485 from cutting through the neighborhood, helping preserve its historic character.",
+        createdAt: new Date()
+      },
+      {
+        id: 3,
+        locationId: 3, // Dallas
+        mapImageUrl: "https://i.imgur.com/GGXMOqb.png",
+        highlights: "We offer properties in several historic and desirable neighborhoods of Dallas, including the M Streets, Lower Greenville, and Old East Dallas areas. These neighborhoods feature a mix of historic and updated homes in tree-lined residential areas with convenient access to dining, entertainment, and downtown Dallas.",
+        attractions: "Lower Greenville entertainment district, Granada Theater, White Rock Lake, Dallas Arboretum, Deep Ellum, Knox-Henderson shopping district, SMU campus",
+        transportationInfo: "Major thoroughfares include Greenville Avenue, Skillman Street, and US-75 (Central Expressway). DART light rail stations at Mockingbird and SMU provide public transit access.",
+        diningOptions: "Lower Greenville and Knox-Henderson areas offer numerous dining options including Gemma, HG Sply Co., Rapscallion, Truck Yard, Knife, Chelsea Corner, and The Old Monk.",
+        schoolsInfo: "Dallas Independent School District serves the area with several well-regarded elementary, middle, and high schools. SMU and Richland College provide higher education options.",
+        parksAndRecreation: "White Rock Lake Park offers 1,015 acres of outdoor recreation including a 9.3-mile trail. Glencoe Park, Tietze Park, and Cole Park provide neighborhood green spaces.",
+        historicalInfo: "The M Streets (formally Greenland Hills) is known for its Tudor-style homes from the 1920s. Lower Greenville developed as a streetcar suburb in the early 1900s. Old East Dallas was originally a separate city before being annexed by Dallas in 1890 and contains several historic districts including Swiss Avenue, Munger Place, and Peak's Suburban Addition.",
+        createdAt: new Date()
+      }
+    ];
+    
     // Populate data maps
     locations.forEach(location => this.locationsData.set(location.id, location));
     features.forEach(feature => this.featuresData.set(feature.id, feature));
     properties.forEach(property => this.propertiesData.set(property.id, property));
     inquiries.forEach(inquiry => this.inquiriesData.set(inquiry.id, inquiry));
+    neighborhoods.forEach(neighborhood => this.neighborhoodsData.set(neighborhood.id, neighborhood));
     
     // Seed property images
     const propertyImages: PropertyImage[] = [

@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertInquirySchema, insertPropertyImageSchema } from "@shared/schema";
+import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes with /api prefix
@@ -47,6 +47,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(properties);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  });
+  
+  // Get neighborhood information by location
+  app.get("/api/locations/:slug/neighborhood", async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const location = await storage.getLocationBySlug(slug);
+      
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      const neighborhood = await storage.getNeighborhoodByLocationId(location.id);
+      
+      if (!neighborhood) {
+        return res.status(404).json({ message: "Neighborhood information not found" });
+      }
+      
+      res.json(neighborhood);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch neighborhood information" });
     }
   });
 
