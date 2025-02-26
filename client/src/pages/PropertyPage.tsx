@@ -366,11 +366,16 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 <div>
                   <div className="text-sm text-slate-500 mb-2">Bathrooms</div>
                   <div className="flex gap-2">
-                    {Array.from(new Set(propertyUnits.map(unit => unit.bathrooms))).sort().map((bathCount) => (
-                      <Badge key={bathCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
-                        <Bath className="h-3 w-3 mr-1" /> {bathCount}
-                      </Badge>
-                    ))}
+                    {propertyUnits
+                        .map(unit => unit.bathrooms)
+                        .filter((value, index, self) => self.indexOf(value) === index)
+                        .sort()
+                        .map((bathCount) => (
+                          <Badge key={bathCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
+                            <Bath className="h-3 w-3 mr-1" /> {bathCount}
+                          </Badge>
+                        ))
+                    }
                   </div>
                 </div>
                 
