@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   UploadCloud, 
   FileImage, 
@@ -36,11 +37,13 @@ import {
   Image as ImageIcon,
   FolderOpen,
   FilePlus2,
-  ImagePlus
+  ImagePlus,
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Property, PropertyImage } from "@shared/schema";
+import imageCompression from "browser-image-compression";
 
 // File Upload Form component
 const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => void, properties: Property[] }) => {
@@ -50,6 +53,7 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
   const [alt, setAlt] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [compressImages, setCompressImages] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -71,7 +75,7 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
   };
   
   // Process the selected files
-  const handleFiles = (selectedFiles: File[]) => {
+  const handleFiles = async (selectedFiles: File[]) => {
     // Filter for image files only
     const imageFiles = selectedFiles.filter(file => file.type.startsWith('image/'));
     
@@ -86,41 +90,86 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
     
     // Check file size (max 10MB per file)
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
-    const oversizedFiles = imageFiles.filter(file => file.size > MAX_FILE_SIZE);
     
-    if (oversizedFiles.length > 0) {
+    if (compressImages) {
+      toast({
+        title: "Processing",
+        description: "Compressing images...",
+      });
+    }
+    
+    // Process all images
+    try {
+      // For each file
+      for (const file of imageFiles) {
+        // Start with the original file
+        let processedFile = file;
+        
+        // If compression is enabled and the file is too large, compress it
+        if (compressImages && file.size > MAX_FILE_SIZE) {
+          try {
+            // Compression options
+            const options = {
+              maxSizeMB: 1,             // Compress to max 1MB
+              maxWidthOrHeight: 1920,   // Limit width/height to 1920px
+              useWebWorker: true,
+              fileType: file.type,      // Maintain original file type
+            };
+            
+            // Compress the file
+            processedFile = await imageCompression(file, options);
+            
+            // Log compression results
+            console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)}MB, Compressed size: ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`);
+            
+            // Show compression success toast for large files
+            if (file.size > MAX_FILE_SIZE) {
+              const originalSize = (file.size / 1024 / 1024).toFixed(1);
+              const newSize = (processedFile.size / 1024 / 1024).toFixed(1);
+              const reductionPercent = (100 - (processedFile.size / file.size * 100)).toFixed(0);
+              
+              toast({
+                title: "Image Compressed",
+                description: `Reduced: ${originalSize}MB → ${newSize}MB (${reductionPercent}% smaller)`,
+              });
+            }
+          } catch (err) {
+            console.error("Image compression failed:", err);
+            // If compression fails and file is too large, skip it
+            if (file.size > MAX_FILE_SIZE) {
+              toast({
+                title: "Warning",
+                description: `Skipping ${file.name} - too large and could not be compressed`,
+                variant: "destructive",
+              });
+              continue; // Skip this file
+            }
+          }
+        } else if (!compressImages && file.size > MAX_FILE_SIZE) {
+          // If compression is disabled but file is too large
+          toast({
+            title: "Warning",
+            description: `${file.name} is large (${(file.size / 1024 / 1024).toFixed(1)}MB). Enable compression for better performance.`,
+            variant: "destructive",
+          });
+        }
+        
+        // Add the processed file
+        setFiles(prevFiles => [...prevFiles, processedFile]);
+        
+        // Generate preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(processedFile);
+      }
+    } catch (error) {
+      console.error("Error processing files:", error);
       toast({
         title: "Error",
-        description: `${oversizedFiles.length} file(s) exceed the maximum size of 10MB`,
+        description: "There was a problem processing your images",
         variant: "destructive",
-      });
-      
-      // Continue with files that are within size limit
-      const validFiles = imageFiles.filter(file => file.size <= MAX_FILE_SIZE);
-      if (validFiles.length === 0) return;
-      
-      // Add the valid files to the existing files
-      setFiles(prevFiles => [...prevFiles, ...validFiles]);
-      
-      // Generate previews for the images
-      validFiles.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviews(prev => [...prev, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
-    } else {
-      // All files are valid, add them to the existing files
-      setFiles(prevFiles => [...prevFiles, ...imageFiles]);
-      
-      // Generate previews for the images
-      imageFiles.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviews(prev => [...prev, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
       });
     }
   };
@@ -227,6 +276,23 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
           required 
         />
         <p className="text-xs text-gray-500">Provide a descriptive text for the images.</p>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="compress-images" 
+            checked={compressImages}
+            onCheckedChange={(checked) => setCompressImages(checked as boolean)}
+          />
+          <Label 
+            htmlFor="compress-images" 
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+          >
+            <Sparkles className="h-4 w-4 text-yellow-500 mr-1" />
+            Automatically compress large images
+          </Label>
+        </div>
       </div>
       
       <div 
