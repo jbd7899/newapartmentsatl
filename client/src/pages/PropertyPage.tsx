@@ -95,8 +95,8 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 </Badge>
               )}
               <Button 
-                variant="outline" 
-                className="text-white hover:text-white border-white hover:bg-white/10"
+                variant="secondary" 
+                className="font-semibold bg-white text-black hover:bg-white/90"
                 onClick={() => setShowGallery(true)}
               >
                 <ImageIcon className="mr-2 h-4 w-4" />
@@ -192,7 +192,7 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 <Button className="w-full mb-3">Schedule a Tour</Button>
                 <Button variant="outline" className="w-full mb-3">Request Info</Button>
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   className="w-full flex items-center justify-center"
                   onClick={() => setShowGallery(true)}
                 >
