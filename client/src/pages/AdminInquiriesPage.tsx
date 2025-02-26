@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,15 +34,17 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import type { Inquiry } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { getInquiries, updateInquiryStatus } from "@/lib/data";
 
 const AdminInquiriesPage = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch inquiries
-  const { data: inquiries, isLoading, refetch } = useQuery({
+  const { data: inquiries = [], isLoading } = useQuery({
     queryKey: ['/api/inquiries'],
+    queryFn: getInquiries,
     staleTime: 1000 * 60, // 1 minute
   });
 
@@ -61,18 +63,15 @@ const AdminInquiriesPage = () => {
   // Handle status change
   const handleStatusChange = async (inquiryId: number, newStatus: string) => {
     try {
-      await apiRequest({
-        url: `/api/inquiries/${inquiryId}/status`,
-        method: 'PATCH',
-        body: { status: newStatus },
-      });
+      await updateInquiryStatus(inquiryId, newStatus);
       
       toast({
         title: "Status updated",
         description: "The inquiry status has been updated successfully.",
       });
       
-      refetch();
+      // Invalidate and refetch inquiries
+      queryClient.invalidateQueries({ queryKey: ['/api/inquiries'] });
     } catch (error) {
       toast({
         title: "Error",
@@ -124,7 +123,7 @@ const AdminInquiriesPage = () => {
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-full" />
             </div>
-          ) : inquiries?.length === 0 ? (
+          ) : inquiries.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground">No inquiries found.</p>
             </div>
@@ -142,7 +141,7 @@ const AdminInquiriesPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inquiries?.map((inquiry: Inquiry) => (
+                  {inquiries.map((inquiry: Inquiry) => (
                     <TableRow key={inquiry.id}>
                       <TableCell className="font-medium">
                         {formatDate(inquiry.createdAt)}

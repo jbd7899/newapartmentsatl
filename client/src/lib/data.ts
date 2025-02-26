@@ -1,4 +1,4 @@
-import { Location, Property, Feature } from "@shared/schema";
+import { Location, Property, Feature, Inquiry, InsertInquiry } from "@shared/schema";
 import { apiRequest } from "./queryClient";
 
 // Data fetching functions for client
@@ -48,4 +48,28 @@ export async function getFeatures(): Promise<Feature[]> {
     throw new Error('Failed to fetch features');
   }
   return response.json();
+}
+
+export async function getInquiries(): Promise<Inquiry[]> {
+  const response = await fetch('/api/inquiries');
+  if (!response.ok) {
+    throw new Error('Failed to fetch inquiries');
+  }
+  return response.json();
+}
+
+export async function createInquiry(inquiry: InsertInquiry): Promise<Inquiry> {
+  return apiRequest<Inquiry>({
+    url: '/api/inquiries',
+    method: 'POST',
+    body: inquiry,
+  });
+}
+
+export async function updateInquiryStatus(id: number, status: string): Promise<Inquiry> {
+  return apiRequest<Inquiry>({
+    url: `/api/inquiries/${id}/status`,
+    method: 'PATCH',
+    body: { status },
+  });
 }
