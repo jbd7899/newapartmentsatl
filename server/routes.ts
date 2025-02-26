@@ -1,0 +1,96 @@
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // API routes with /api prefix
+  
+  // Get all locations
+  app.get("/api/locations", async (req: Request, res: Response) => {
+    try {
+      const locations = await storage.getLocations();
+      res.json(locations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch locations" });
+    }
+  });
+
+  // Get location by slug
+  app.get("/api/locations/:slug", async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const location = await storage.getLocationBySlug(slug);
+      
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch location" });
+    }
+  });
+
+  // Get properties by location
+  app.get("/api/locations/:slug/properties", async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const location = await storage.getLocationBySlug(slug);
+      
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      const properties = await storage.getPropertiesByLocation(location.id);
+      res.json(properties);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  });
+
+  // Get all properties
+  app.get("/api/properties", async (req: Request, res: Response) => {
+    try {
+      const properties = await storage.getProperties();
+      res.json(properties);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  });
+
+  // Get property by id
+  app.get("/api/properties/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      const property = await storage.getProperty(id);
+      
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      res.json(property);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch property" });
+    }
+  });
+
+  // Get all features
+  app.get("/api/features", async (req: Request, res: Response) => {
+    try {
+      const features = await storage.getFeatures();
+      res.json(features);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch features" });
+    }
+  });
+
+  // Create HTTP server
+  const httpServer = createServer(app);
+  return httpServer;
+}
