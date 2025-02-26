@@ -191,8 +191,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all property images
   app.get("/api/property-images", async (req: Request, res: Response) => {
     try {
-      const images = await storage.getPropertyImages();
-      res.json(images);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = (page - 1) * limit;
+      
+      // Get all images
+      const allImages = await storage.getPropertyImages();
+      
+      // Calculate total
+      const total = allImages.length;
+      
+      // Apply pagination - in a real app, this would be done at the database level
+      const paginatedImages = allImages.slice(offset, offset + limit);
+      
+      // Add pagination metadata in response headers
+      res.set('X-Total-Count', total.toString());
+      res.set('X-Page', page.toString());
+      res.set('X-Limit', limit.toString());
+      res.set('X-Total-Pages', Math.ceil(total / limit).toString());
+      
+      // Return the paginated results
+      res.json(paginatedImages);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch property images" });
     }

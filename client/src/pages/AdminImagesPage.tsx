@@ -388,11 +388,23 @@ const AdminImagesPage = () => {
     queryFn: getProperties,
   });
   
-  // Fetch property images data
-  const { data: propertyImages = [], isLoading: imagesLoading } = useQuery({
-    queryKey: ['/api/property-images'],
-    queryFn: getPropertyImages,
+  // Fetch property images data with pagination
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20; // Limit number of images per page
+  
+  const { data: propertyImagesResponse, isLoading: imagesLoading } = useQuery({
+    queryKey: ['/api/property-images', page],
+    queryFn: async ({ queryKey }) => {
+      const pageParam = queryKey[1] as number;
+      return getPropertyImages(pageParam, PAGE_SIZE);
+    },
+    staleTime: 300000, // 5 minutes - reduce unnecessary refetches
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   });
+  
+  // Extract images and pagination data
+  const propertyImages = propertyImagesResponse?.data || [];
+  const pagination = propertyImagesResponse?.pagination || { total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 };
   
   // Fetch images for a specific property when selected
   const { data: selectedPropertyImages = [] } = useQuery({
@@ -940,6 +952,54 @@ const AdminImagesPage = () => {
             
             <TabsContent value="gallery">
               <PropertyImageGrid />
+              
+              {/* Pagination UI */}
+              {!selectedProperty && !searchQuery && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between my-6">
+                  <div className="text-sm text-gray-500">
+                    Showing {Math.min(pagination.limit, pagination.total)} of {pagination.total} images
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={pagination.page === 1}
+                      onClick={() => setPage(1)}
+                    >
+                      First
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={pagination.page === 1}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="text-sm">
+                      Page {pagination.page} of {pagination.totalPages}
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={pagination.page === pagination.totalPages}
+                      onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={pagination.page === pagination.totalPages}
+                      onClick={() => setPage(pagination.totalPages)}
+                    >
+                      Last
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="featured">

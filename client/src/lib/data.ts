@@ -83,12 +83,38 @@ export async function updateInquiryStatus(id: number, status: string): Promise<I
 }
 
 // Property Images
-export async function getPropertyImages(): Promise<PropertyImage[]> {
-  const response = await fetch('/api/property-images');
+export async function getPropertyImages(page = 1, limit = 20): Promise<{
+  data: PropertyImage[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}> {
+  const response = await fetch(`/api/property-images?page=${page}&limit=${limit}`);
   if (!response.ok) {
     throw new Error('Failed to fetch property images');
   }
-  return response.json();
+  
+  // Get the data
+  const data = await response.json();
+  
+  // Get pagination data from headers
+  const total = parseInt(response.headers.get('X-Total-Count') || '0');
+  const currentPage = parseInt(response.headers.get('X-Page') || '1');
+  const pageLimit = parseInt(response.headers.get('X-Limit') || '20');
+  const totalPages = parseInt(response.headers.get('X-Total-Pages') || '1');
+  
+  return {
+    data,
+    pagination: {
+      total,
+      page: currentPage,
+      limit: pageLimit,
+      totalPages
+    }
+  };
 }
 
 export async function getPropertyImagesByProperty(propertyId: number): Promise<PropertyImage[]> {
