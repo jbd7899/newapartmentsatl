@@ -192,7 +192,9 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                   </div>
                   <div className="flex justify-between border-b pb-2">
                     <span className="text-slate-500">Property Type</span>
-                    <span className="font-semibold">Apartment</span>
+                    <span className="font-semibold capitalize">
+                      {property.propertyType ? property.propertyType.replace('-', ' ') : 'Multi Family'}
+                    </span>
                   </div>
                   <div className="flex justify-between border-b pb-2">
                     <span className="text-slate-500">Year Built</span>

@@ -237,6 +237,12 @@ const LocationPage = ({ location }: LocationPageProps) => {
                     <h3 className="font-heading font-bold text-xl mb-2">{property.name}</h3>
                     <p className="text-slate-600 mb-4 line-clamp-3">{property.description}</p>
                     
+                    <div className="mb-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-100 text-blue-800">
+                        {property.propertyType ? property.propertyType.replace('-', ' ') : 'Multi Family'}
+                      </span>
+                    </div>
+                    
                     <div className="flex flex-wrap gap-4 mb-4">
                       <div className="flex items-center text-slate-700">
                         <Building className="h-4 w-4 mr-2 text-primary" />

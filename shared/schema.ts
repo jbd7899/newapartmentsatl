@@ -54,6 +54,7 @@ export const properties = pgTable("properties", {
   locationId: integer("location_id").notNull(),
   imageUrl: text("image_url").notNull(),
   features: text("features").notNull(),
+  propertyType: text("property_type").notNull().default("multi-family"), // single-family, multi-family, townhome
 });
 
 export const insertPropertySchema = createInsertSchema(properties).omit({

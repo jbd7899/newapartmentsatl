@@ -50,7 +50,7 @@ const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  rent: z.coerce.number().min(500, "Rent must be at least $500"),
+  rent: z.coerce.number().min(500, "Rent must be at least $500").nullable(),
   bedrooms: z.coerce.number().min(0, "Must be 0 or more"),
   bathrooms: z.coerce.number().min(0, "Must be 0 or more"),
   sqft: z.coerce.number().min(200, "Size must be at least 200 sq. ft."),
@@ -58,6 +58,7 @@ const formSchema = z.object({
   imageUrl: z.string().url("Must be a valid URL"),
   features: z.string().default(""),
   available: z.boolean().default(true),
+  propertyType: z.enum(["single-family", "multi-family", "townhome"]).default("multi-family"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -99,7 +100,8 @@ const AdminPropertiesPage = () => {
     const form = useForm<FormValues>({
       resolver: zodResolver(formSchema),
       defaultValues: property ? {
-        ...property
+        ...property,
+        propertyType: (property.propertyType || "multi-family") as "single-family" | "multi-family" | "townhome"
       } : {
         name: "",
         description: "",
@@ -111,7 +113,8 @@ const AdminPropertiesPage = () => {
         locationId: 0,
         imageUrl: "https://i.imgur.com/JfcBN2B.jpg",
         features: "Modern,Updated,Spacious",
-        available: true
+        available: true,
+        propertyType: "multi-family"
       }
     });
     
@@ -205,7 +208,14 @@ const AdminPropertiesPage = () => {
                 <FormItem>
                   <FormLabel>Rent ($/month)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input 
+                      type="number" 
+                      value={field.value ?? ''} 
+                      onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -241,7 +251,7 @@ const AdminPropertiesPage = () => {
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="sqft"
@@ -268,6 +278,27 @@ const AdminPropertiesPage = () => {
                   <FormDescription>
                     Enter features separated by commas
                   </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="propertyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Property Type</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="multi-family">Multi Family</option>
+                      <option value="single-family">Single Family</option>
+                      <option value="townhome">Townhome</option>
+                    </select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -402,6 +433,7 @@ const AdminPropertiesPage = () => {
                   <th className="px-6 py-3">Image</th>
                   <th className="px-6 py-3">Name</th>
                   <th className="px-6 py-3">Location</th>
+                  <th className="px-6 py-3">Type</th>
                   <th className="px-6 py-3">Price</th>
                   <th className="px-6 py-3">Beds/Baths</th>
                   <th className="px-6 py-3">Actions</th>
@@ -429,6 +461,13 @@ const AdminPropertiesPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         {propertyLocation?.name || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4">
+                        {property.propertyType ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-100 text-blue-800">
+                            {property.propertyType.replace('-', ' ')}
+                          </span>
+                        ) : 'Multi Family'}
                       </td>
                       <td className="px-6 py-4">
                         ${typeof property.rent === 'number' ? property.rent.toLocaleString() : 'N/A'}
