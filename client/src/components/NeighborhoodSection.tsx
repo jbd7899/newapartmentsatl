@@ -51,8 +51,12 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
           </div>
         )}
 
-        <Tabs defaultValue="attractions" className="w-full">
+        <Tabs defaultValue="explore" className="w-full">
           <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full h-auto">
+            <TabsTrigger value="explore" className="flex flex-col items-center py-3">
+              <CompassIcon className="h-5 w-5 mb-1" />
+              <span>Explore</span>
+            </TabsTrigger>
             <TabsTrigger value="attractions" className="flex flex-col items-center py-3">
               <LandmarkIcon className="h-5 w-5 mb-1" />
               <span>Attractions</span>
@@ -76,10 +80,6 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
             <TabsTrigger value="history" className="flex flex-col items-center py-3">
               <Building2Icon className="h-5 w-5 mb-1" />
               <span>History</span>
-            </TabsTrigger>
-            <TabsTrigger value="explore" className="flex flex-col items-center py-3">
-              <CompassIcon className="h-5 w-5 mb-1" />
-              <span>Explore</span>
             </TabsTrigger>
           </TabsList>
           

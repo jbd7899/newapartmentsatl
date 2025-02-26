@@ -20,11 +20,10 @@ const AdminNeighborhoodsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("highlights");
+  const [activeTab, setActiveTab] = useState<string>("explore");
 
   // Create a schema for the form validation
   const formSchema = z.object({
-    mapImageUrl: z.string().optional().nullable(),
     highlights: z.string().optional().nullable(),
     attractions: z.string().optional().nullable(),
     transportationInfo: z.string().optional().nullable(),
@@ -62,7 +61,6 @@ const AdminNeighborhoodsPage = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      mapImageUrl: '',
       highlights: '',
       attractions: '',
       transportationInfo: '',
@@ -80,7 +78,6 @@ const AdminNeighborhoodsPage = () => {
   useEffect(() => {
     if (neighborhood) {
       form.reset({
-        mapImageUrl: neighborhood.mapImageUrl || '',
         highlights: neighborhood.highlights || '',
         attractions: neighborhood.attractions || '',
         transportationInfo: neighborhood.transportationInfo || '',
@@ -259,9 +256,13 @@ const AdminNeighborhoodsPage = () => {
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full h-auto">
+                        <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full h-auto">
+                          <TabsTrigger value="explore" className="flex items-center">
+                            <CompassIcon className="h-4 w-4 mr-1" />
+                            <span className="hidden md:inline">Explore</span>
+                            <span className="md:hidden">Expl.</span>
+                          </TabsTrigger>
                           <TabsTrigger value="highlights">Highlights</TabsTrigger>
-                          <TabsTrigger value="map" className="flex items-center">Map</TabsTrigger>
                           <TabsTrigger value="attractions" className="flex items-center">
                             <LandmarkIcon className="h-4 w-4 mr-1" />
                             <span className="hidden md:inline">Attractions</span>
@@ -290,11 +291,6 @@ const AdminNeighborhoodsPage = () => {
                             <span className="hidden md:inline">History</span>
                             <span className="md:hidden">Hist.</span>
                           </TabsTrigger>
-                          <TabsTrigger value="explore" className="flex items-center">
-                            <CompassIcon className="h-4 w-4 mr-1" />
-                            <span className="hidden md:inline">Explore</span>
-                            <span className="md:hidden">Expl.</span>
-                          </TabsTrigger>
                         </TabsList>
                         
                         {/* Highlights Tab */}
@@ -317,39 +313,6 @@ const AdminNeighborhoodsPage = () => {
                               </FormItem>
                             )}
                           />
-                        </TabsContent>
-                        
-                        {/* Map Tab */}
-                        <TabsContent value="map" className="pt-4">
-                          <FormField
-                            control={form.control}
-                            name="mapImageUrl"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Map Image URL</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Enter URL to a map image..."
-                                    {...field}
-                                    value={field.value || ''}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          {form.watch("mapImageUrl") && (
-                            <div className="mt-4 border rounded-md overflow-hidden">
-                              <img 
-                                src={form.watch("mapImageUrl") || ''} 
-                                alt="Neighborhood Map Preview" 
-                                className="w-full h-auto"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Invalid+Image+URL';
-                                }}
-                              />
-                            </div>
-                          )}
                         </TabsContent>
                         
                         {/* Attractions Tab */}
