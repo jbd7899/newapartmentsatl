@@ -78,3 +78,22 @@ export const insertInquirySchema = createInsertSchema(inquiries).omit({
 
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
+
+// Property Images table
+export const propertyImages = pgTable("property_images", {
+  id: serial("id").primaryKey(),
+  propertyId: integer("property_id").notNull(),
+  url: text("url").notNull(),
+  alt: text("alt").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPropertyImageSchema = createInsertSchema(propertyImages).omit({
+  id: true,
+  createdAt: true
+});
+
+export type PropertyImage = typeof propertyImages.$inferSelect;
+export type InsertPropertyImage = z.infer<typeof insertPropertyImageSchema>;

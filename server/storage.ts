@@ -1,9 +1,10 @@
 import { 
-  locations, properties, features, inquiries,
+  locations, properties, features, inquiries, propertyImages,
   type Location, type InsertLocation, 
   type Property, type InsertProperty,
   type Feature, type InsertFeature,
-  type Inquiry, type InsertInquiry
+  type Inquiry, type InsertInquiry,
+  type PropertyImage, type InsertPropertyImage
 } from "@shared/schema";
 
 // Storage Interface
@@ -24,6 +25,14 @@ export interface IStorage {
   getInquiries(): Promise<Inquiry[]>;
   createInquiry(inquiry: InsertInquiry): Promise<Inquiry>;
   updateInquiryStatus(id: number, status: string): Promise<Inquiry | undefined>;
+  
+  // Property Images
+  getPropertyImages(): Promise<PropertyImage[]>;
+  getPropertyImagesByProperty(propertyId: number): Promise<PropertyImage[]>;
+  createPropertyImage(image: InsertPropertyImage): Promise<PropertyImage>;
+  updatePropertyImageOrder(id: number, displayOrder: number): Promise<PropertyImage | undefined>;
+  updatePropertyImageFeatured(id: number, isFeatured: boolean): Promise<PropertyImage | undefined>;
+  deletePropertyImage(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -32,16 +41,90 @@ export class MemStorage implements IStorage {
   private propertiesData: Map<number, Property>;
   private featuresData: Map<number, Feature>;
   private inquiriesData: Map<number, Inquiry>;
+  private propertyImagesData: Map<number, PropertyImage>;
   private nextInquiryId: number = 1;
+  private nextPropertyImageId: number = 1;
 
   constructor() {
     this.locationsData = new Map();
     this.propertiesData = new Map();
     this.featuresData = new Map();
     this.inquiriesData = new Map();
+    this.propertyImagesData = new Map();
     
     // Seed initial data
     this.seedData();
+  }
+  
+  // Property Image methods
+  async getPropertyImages(): Promise<PropertyImage[]> {
+    return Array.from(this.propertyImagesData.values()).sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+
+  async getPropertyImagesByProperty(propertyId: number): Promise<PropertyImage[]> {
+    return Array.from(this.propertyImagesData.values())
+      .filter(image => image.propertyId === propertyId)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+
+  async createPropertyImage(image: InsertPropertyImage): Promise<PropertyImage> {
+    const id = this.nextPropertyImageId++;
+    const createdAt = new Date();
+    
+    const newImage: PropertyImage = {
+      id,
+      propertyId: image.propertyId,
+      url: image.url,
+      alt: image.alt,
+      displayOrder: image.displayOrder ?? 0,
+      isFeatured: image.isFeatured ?? false,
+      createdAt
+    };
+    
+    this.propertyImagesData.set(id, newImage);
+    return newImage;
+  }
+
+  async updatePropertyImageOrder(id: number, displayOrder: number): Promise<PropertyImage | undefined> {
+    const image = this.propertyImagesData.get(id);
+    if (!image) return undefined;
+    
+    const updatedImage: PropertyImage = {
+      ...image,
+      displayOrder
+    };
+    
+    this.propertyImagesData.set(id, updatedImage);
+    return updatedImage;
+  }
+
+  async updatePropertyImageFeatured(id: number, isFeatured: boolean): Promise<PropertyImage | undefined> {
+    const image = this.propertyImagesData.get(id);
+    if (!image) return undefined;
+    
+    // If setting as featured, unset any other featured image for this property
+    if (isFeatured) {
+      Array.from(this.propertyImagesData.values())
+        .filter(img => img.propertyId === image.propertyId && img.isFeatured && img.id !== id)
+        .forEach(img => {
+          this.propertyImagesData.set(img.id, {
+            ...img,
+            isFeatured: false
+          });
+        });
+    }
+    
+    const updatedImage: PropertyImage = {
+      ...image,
+      isFeatured
+    };
+    
+    this.propertyImagesData.set(id, updatedImage);
+    return updatedImage;
+  }
+
+  async deletePropertyImage(id: number): Promise<boolean> {
+    return this.propertyImagesData.delete(id);
   }
 
   // Location methods
