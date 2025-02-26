@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { getProperty, getLocations } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Bike, MapPin, ParkingCircle, Home, Check } from "lucide-react";
+import { Building, MapPin, ParkingCircle, Home, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Property, Location } from "@shared/schema";
+import NeighborhoodSection from "@/components/NeighborhoodSection";
 
 interface PropertyPageProps {
   id: string;
@@ -179,6 +180,14 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
           </div>
         </div>
       </div>
+      
+      {/* Neighborhood Section */}
+      {propertyLocation && (
+        <NeighborhoodSection 
+          locationSlug={propertyLocation.slug} 
+          locationName={propertyLocation.name} 
+        />
+      )}
     </>
   );
 };
