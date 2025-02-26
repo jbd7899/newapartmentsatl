@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProperties, getPropertyImages, getPropertyImagesByProperty, createPropertyImage, updatePropertyImageOrder, updatePropertyImageFeatured, deletePropertyImage } from "@/lib/data";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -33,12 +33,247 @@ import {
   ArrowUp,
   ArrowDown,
   Plus,
-  Image,
-  FolderOpen
+  Image as ImageIcon,
+  FolderOpen,
+  FilePlus2,
+  ImagePlus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Property, PropertyImage } from "@shared/schema";
+
+// File Upload Form component
+const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => void, properties: Property[] }) => {
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [propertyId, setPropertyId] = useState("");
+  const [alt, setAlt] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  // Handle file drop
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files));
+    }
+  }, []);
+  
+  // Handle file selection from input
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(Array.from(e.target.files));
+    }
+  };
+  
+  // Process the selected files
+  const handleFiles = (selectedFiles: File[]) => {
+    // Filter for image files only
+    const imageFiles = selectedFiles.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select image files only (jpg, png, gif, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Add the new files to the existing files
+    setFiles(prevFiles => [...prevFiles, ...imageFiles]);
+    
+    // Generate previews for the images
+    imageFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  
+  // Remove an image from the upload list
+  const removeImage = (index: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    setPreviews(prevPreviews => prevPreviews.filter((_, i) => i !== index));
+  };
+  
+  // Handle property selection
+  const handlePropertyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedPropertyId = e.target.value;
+    setPropertyId(selectedPropertyId);
+    
+    // Set default alt text based on property name
+    if (selectedPropertyId && !alt) {
+      const propertyName = properties.find(
+        (p) => p.id.toString() === selectedPropertyId
+      )?.name;
+      if (propertyName) {
+        setAlt(`Image of ${propertyName}`);
+      }
+    }
+  };
+  
+  // Convert files to URLs and submit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (files.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one image",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "Please select a property",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    try {
+      // We need to convert the File objects to URLs that can be stored
+      // In a real app, this would upload to a storage service, but we'll use data URLs here
+      const imageUrls = previews;
+      
+      onUpload({
+        imageUrls,
+        propertyId,
+        alt: alt || `Property images`
+      });
+      
+      // Reset form after successful upload
+      setFiles([]);
+      setPreviews([]);
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process images",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="file-property">Property</Label>
+        <select 
+          id="file-property"
+          value={propertyId}
+          onChange={handlePropertyChange}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          required
+        >
+          <option value="">-- Select Property --</option>
+          {properties.map((property: Property) => (
+            <option key={property.id} value={property.id.toString()}>
+              {property.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="file-alt">Image Description</Label>
+        <Input 
+          id="file-alt" 
+          value={alt} 
+          onChange={(e) => setAlt(e.target.value)} 
+          placeholder="Description of the images"
+          required 
+        />
+        <p className="text-xs text-gray-500">Provide a descriptive text for the images.</p>
+      </div>
+      
+      <div 
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          isDragging ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary"
+        }`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input 
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+        />
+        <ImagePlus className="h-10 w-10 mx-auto mb-4 text-gray-400" />
+        <div className="text-sm text-gray-500 mb-2">
+          <span className="font-medium">Click to upload</span> or drag and drop
+        </div>
+        <p className="text-xs text-gray-400">
+          PNG, JPG, GIF up to 10MB
+        </p>
+      </div>
+      
+      {previews.length > 0 && (
+        <div className="space-y-4">
+          <Label>Selected Images ({previews.length})</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {previews.map((preview, index) => (
+              <div key={index} className="relative group">
+                <div className="relative h-24 rounded-md overflow-hidden border">
+                  <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                </div>
+                <button
+                  type="button"
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => removeImage(index)}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      <DialogFooter>
+        <Button
+          type="submit"
+          className="flex items-center"
+          disabled={isProcessing || files.length === 0}
+        >
+          {isProcessing ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <UploadCloud className="h-4 w-4 mr-2" />
+              Upload {files.length > 0 ? `${files.length} Images` : 'Images'}
+            </>
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+};
 
 const AdminImagesPage = () => {
   const [activeTab, setActiveTab] = useState("gallery");
@@ -330,7 +565,7 @@ const AdminImagesPage = () => {
                             onClick={() => setViewImageDialog({ open: true, image })}
                             title="View details"
                           >
-                            <Image className="h-4 w-4" />
+                            <ImageIcon className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -547,7 +782,7 @@ const AdminImagesPage = () => {
               </TabsContent>
               
               <TabsContent value="file" className="mt-4">
-                <FileUploadForm onUpload={handleUploadImage} />
+                <FileUploadForm onUpload={handleUploadImage} properties={properties} />
               </TabsContent>
             </Tabs>
           </DialogContent>
