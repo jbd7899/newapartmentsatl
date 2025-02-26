@@ -47,10 +47,17 @@ import { Badge } from "@/components/ui/badge";
 import { Property, PropertyImage } from "@shared/schema";
 import imageCompression from "browser-image-compression";
 
+// Define the preview type
+interface ImagePreview {
+  fullDataUrl: string;
+  storageUrl: string;
+  data: string;
+}
+
 // File Upload Form component
 const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => void, properties: Property[] }) => {
   const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [previews, setPreviews] = useState<ImagePreview[]>([]);
   const [propertyId, setPropertyId] = useState("");
   const [alt, setAlt] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -253,11 +260,14 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
     
     try {
       // We need to convert the File objects to URLs that can be stored
-      // In a real app, this would upload to a storage service, but we'll use data URLs here
-      const imageUrls = previews;
-      
+      // Pass both the storage URL and full data URL to the upload handler
       onUpload({
-        imageUrls,
+        imageUrls: previews.map(preview => ({
+          // Use the storage URL for the database reference
+          url: preview.storageUrl,
+          // Pass the full data URL for the actual image data
+          data: preview.data
+        })),
         propertyId,
         alt: alt || `Property images`
       });
@@ -362,7 +372,10 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
             {previews.map((preview, index) => (
               <div key={index} className="relative group">
                 <div className="relative h-24 rounded-md overflow-hidden border">
-                  <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                  <img src={preview.fullDataUrl} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
+                    {preview.storageUrl.split('/').pop()}
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -550,7 +563,7 @@ const AdminImagesPage = () => {
   }, [filteredImages]);
   
   const handleUploadImage = (formData: {
-    imageUrls: string[];
+    imageUrls: Array<{url: string, data: string}>;
     propertyId: string;
     alt: string;
   }) => {
@@ -571,10 +584,11 @@ const AdminImagesPage = () => {
       : -1;
     
     // Upload each image with incremental display order
-    formData.imageUrls.forEach((url, index) => {
+    formData.imageUrls.forEach((imageData, index) => {
+      // Use the URL reference instead of the full data
       createImageMutation.mutate({
         propertyId,
-        url,
+        url: imageData.url,
         alt: formData.alt || `Image of ${properties.find(p => p.id === propertyId)?.name}`,
         displayOrder: highestOrder + index + 1,
         isFeatured: existingImages.length === 0 && index === 0 // Make first image featured if no existing images
@@ -771,12 +785,9 @@ const AdminImagesPage = () => {
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       // Filter out empty URLs
-      const filteredData = {
-        ...formData,
-        imageUrls: formData.imageUrls.filter(url => url.trim() !== "")
-      };
+      const filteredUrls = formData.imageUrls.filter(url => url.trim() !== "");
       
-      if (filteredData.imageUrls.length === 0) {
+      if (filteredUrls.length === 0) {
         toast({
           title: "Error",
           description: "Please enter at least one image URL",
@@ -785,7 +796,23 @@ const AdminImagesPage = () => {
         return;
       }
       
-      onUpload(filteredData);
+      // For URL upload, convert strings to the same format as file upload
+      const processedUrls = filteredUrls.map(url => {
+        // Extract a filename for better display
+        const urlObj = new URL(url);
+        const path = urlObj.pathname;
+        const filename = path.split('/').pop() || `image_${Date.now()}`;
+        
+        return {
+          url: url,
+          data: url // For URL uploads, the data is the same as the URL
+        };
+      });
+      
+      onUpload({
+        ...formData,
+        imageUrls: processedUrls
+      });
     };
     
     const handlePropertyChange = (property: string) => {
