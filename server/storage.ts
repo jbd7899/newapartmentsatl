@@ -267,8 +267,8 @@ export class MemStorage implements IStorage {
       bedrooms: unit.bedrooms,
       bathrooms: unit.bathrooms,
       sqft: unit.sqft,
-      rent: unit.rent,
-      available: unit.available,
+      rent: unit.rent ?? null,
+      available: unit.available ?? true,
       description: unit.description || "",
       features: unit.features || "",
       createdAt
@@ -416,8 +416,10 @@ export class MemStorage implements IStorage {
 
   // Seed data for demo
   private seedData() {
-    // Initialize property images data
+    // Initialize collections
     this.propertyImagesData = new Map();
+    this.propertyUnitsData = new Map();
+    this.unitImagesData = new Map();
     // Locations
     const locations: Location[] = [
       {
@@ -489,7 +491,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/O9Fu46o.png",
-        features: "Hardwood floors, updated appliances, large windows, central AC"
+        features: "Hardwood floors, updated appliances, large windows, central AC",
+        propertyType: "multi-family",
+        isMultifamily: true,
+        unitCount: 3
       },
       {
         id: 2,
@@ -971,12 +976,124 @@ export class MemStorage implements IStorage {
       }
     ];
     
+    // Create property units for multifamily property
+    const propertyUnits: PropertyUnit[] = [
+      {
+        id: 1,
+        propertyId: 1,
+        unitNumber: "101",
+        bedrooms: 1,
+        bathrooms: 1,
+        sqft: 750,
+        rent: 1500,
+        available: true,
+        description: "Modern 1 bedroom unit with great natural light and hardwood floors throughout.",
+        features: "Stainless steel appliances, quartz countertops, walk-in closet, in-unit washer/dryer",
+        createdAt: new Date()
+      },
+      {
+        id: 2,
+        propertyId: 1,
+        unitNumber: "102",
+        bedrooms: 2,
+        bathrooms: 1,
+        sqft: 950,
+        rent: 1950,
+        available: false,
+        description: "Spacious 2 bedroom corner unit with bright windows and updated fixtures.",
+        features: "Open floor plan, granite countertops, ceiling fans, large balcony, pet-friendly",
+        createdAt: new Date()
+      },
+      {
+        id: 3,
+        propertyId: 1,
+        unitNumber: "201",
+        bedrooms: 2,
+        bathrooms: 2,
+        sqft: 1100,
+        rent: 2200,
+        available: true,
+        description: "Luxury 2 bedroom, 2 bath unit with premium finishes and spacious living area.",
+        features: "Waterfall quartz countertops, stainless appliances, smart home features, walk-in shower, soaking tub",
+        createdAt: new Date()
+      }
+    ];
+    
+    // Create unit images
+    const unitImages: UnitImage[] = [
+      {
+        id: 1,
+        unitId: 1,
+        url: "https://i.imgur.com/O9Fu46o.png",
+        alt: "Living room of Unit 101",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 2,
+        unitId: 1,
+        url: "https://i.imgur.com/THKfFjB.png",
+        alt: "Kitchen of Unit 101",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 3,
+        unitId: 2,
+        url: "https://i.imgur.com/9L78Ghe.png",
+        alt: "Living room of Unit 102",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 4,
+        unitId: 2,
+        url: "https://i.imgur.com/Qt30zdg.png",
+        alt: "Kitchen of Unit 102",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 5,
+        unitId: 3,
+        url: "https://i.imgur.com/eFdi7sd.jpg",
+        alt: "Living room of Unit 201",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 6,
+        unitId: 3,
+        url: "https://i.imgur.com/ASrp6Cl.jpg",
+        alt: "Kitchen of Unit 201",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 7,
+        unitId: 3,
+        url: "https://i.imgur.com/DI66TQ0.png",
+        alt: "Bathroom of Unit 201",
+        displayOrder: 2,
+        isFeatured: false,
+        createdAt: new Date()
+      }
+    ];
+
     // Populate data maps
     locations.forEach(location => this.locationsData.set(location.id, location));
     features.forEach(feature => this.featuresData.set(feature.id, feature));
     properties.forEach(property => this.propertiesData.set(property.id, property));
     inquiries.forEach(inquiry => this.inquiriesData.set(inquiry.id, inquiry));
     neighborhoods.forEach(neighborhood => this.neighborhoodsData.set(neighborhood.id, neighborhood));
+    propertyUnits.forEach(unit => this.propertyUnitsData.set(unit.id, unit));
+    unitImages.forEach(image => this.unitImagesData.set(image.id, image));
     
     // Seed property images
     const propertyImages: PropertyImage[] = [
