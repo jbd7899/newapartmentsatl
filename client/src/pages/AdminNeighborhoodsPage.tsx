@@ -246,7 +246,7 @@ const AdminNeighborhoodsPage = () => {
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full h-auto">
+                        <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full h-auto">
                           <TabsTrigger value="highlights">Highlights</TabsTrigger>
                           <TabsTrigger value="map" className="flex items-center">Map</TabsTrigger>
                           <TabsTrigger value="attractions" className="flex items-center">
@@ -271,6 +271,11 @@ const AdminNeighborhoodsPage = () => {
                             <PalmtreeIcon className="h-4 w-4 mr-1" />
                             <span className="hidden md:inline">Parks & Rec</span>
                             <span className="md:hidden">Parks</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="history" className="flex items-center">
+                            <Building2Icon className="h-4 w-4 mr-1" />
+                            <span className="hidden md:inline">History</span>
+                            <span className="md:hidden">Hist.</span>
                           </TabsTrigger>
                         </TabsList>
                         
