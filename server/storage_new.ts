@@ -1,14 +1,7 @@
-import { 
-  locations, properties, features, inquiries, propertyImages, neighborhoods,
-  type Location, type InsertLocation, 
-  type Property, type InsertProperty,
-  type Feature, type InsertFeature,
-  type Inquiry, type InsertInquiry,
-  type PropertyImage, type InsertPropertyImage,
-  type Neighborhood, type InsertNeighborhood
-} from "@shared/schema";
+import { Location, Property, Feature, Neighborhood, Inquiry, PropertyImage, 
+  InsertLocation, InsertNeighborhood, InsertProperty, InsertFeature, InsertInquiry, InsertPropertyImage } from "@shared/schema";
 
-// Storage Interface
+// Interface for storage operations
 export interface IStorage {
   // Locations
   getLocations(): Promise<Location[]>;
@@ -212,36 +205,32 @@ export class MemStorage implements IStorage {
   async getFeatures(): Promise<Feature[]> {
     return Array.from(this.featuresData.values());
   }
-  
+
   // Inquiry methods
   async getInquiries(): Promise<Inquiry[]> {
-    return Array.from(this.inquiriesData.values()).sort((a, b) => {
-      // Sort by createdAt descending (newest first)
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    return Array.from(this.inquiriesData.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
-  
+
   async createInquiry(inquiry: InsertInquiry): Promise<Inquiry> {
     const id = this.nextInquiryId++;
     const createdAt = new Date();
     
-    // Ensure all required fields are present with proper defaults
     const newInquiry: Inquiry = {
       id,
       name: inquiry.name,
       email: inquiry.email,
-      message: inquiry.message,
       phone: inquiry.phone || null,
+      message: inquiry.message,
       propertyId: inquiry.propertyId || null,
       propertyName: inquiry.propertyName || null,
-      status: inquiry.status || "new",
-      createdAt
+      createdAt,
+      status: inquiry.status || "new"
     };
     
     this.inquiriesData.set(id, newInquiry);
     return newInquiry;
   }
-  
+
   async updateInquiryStatus(id: number, status: string): Promise<Inquiry | undefined> {
     const inquiry = this.inquiriesData.get(id);
     if (!inquiry) return undefined;
@@ -255,44 +244,46 @@ export class MemStorage implements IStorage {
     return updatedInquiry;
   }
 
-  // Seed data for demo
+  // Seed method to populate initial data
   private seedData() {
-    // Initialize property images data
-    this.propertyImagesData = new Map();
     // Locations
     const locations: Location[] = [
       {
         id: 1,
         slug: "midtown",
         name: "Midtown, Atlanta",
-        description: "Walk to parks, restaurants, and cultural attractions from our carefully preserved historic properties.",
-        imageUrl: "https://i.imgur.com/THKfFjB.png",
-        linkText: "View Midtown Properties"
+        description: "Experience the heart of Atlanta's cultural scene with walkable streets, iconic museums, and vibrant entertainment.",
+        imageUrl: "https://i.imgur.com/Mje87Pl.jpg",
+        linkText: "Explore Midtown"
       },
       {
         id: 2,
         slug: "virginia-highland",
         name: "Virginia-Highland, Atlanta",
-        description: "Experience the charm of Atlanta's most walkable neighborhood in our character-rich homes.",
-        imageUrl: "https://i.imgur.com/xHkf2HL.jpg",
-        linkText: "View Va-Hi Properties"
+        description: "Discover charming tree-lined streets with historic homes and a vibrant village atmosphere of shops and restaurants.",
+        imageUrl: "https://i.imgur.com/9vYJtfa.jpg",
+        linkText: "Explore Virginia-Highland"
       },
       {
         id: 3,
         slug: "dallas",
         name: "Dallas, Texas",
-        description: "Explore our growing collection of distinctive properties in Dallas's most desirable areas.",
-        imageUrl: "https://i.imgur.com/dMU0oEE.jpg",
-        linkText: "View Dallas Properties"
+        description: "Experience urban living with Texas charm in one of America's most dynamic and growing metropolitan areas.",
+        imageUrl: "https://i.imgur.com/1NRwYIo.jpg",
+        linkText: "Explore Dallas"
       }
     ];
-
+    
+    for (const location of locations) {
+      this.locationsData.set(location.id, location);
+    }
+    
     // Features
     const features: Feature[] = [
       {
         id: 1,
         title: "Historic Character",
-        description: "Preserved architectural details, high ceilings, and unique features that tell a story.",
+        description: "Our properties maintain their historic charm while providing modern comfort.",
         icon: "fa-landmark"
       },
       {
@@ -314,8 +305,12 @@ export class MemStorage implements IStorage {
         icon: "fa-map-marker-alt"
       }
     ];
-
-    // Properties
+    
+    for (const feature of features) {
+      this.featuresData.set(feature.id, feature);
+    }
+    
+    // Properties - all with null rent values
     const properties: Property[] = [
       // Midtown Properties
       {
@@ -354,7 +349,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 950,
-        rent: 1650,
+        rent: null,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/Qt30zdg.png",
@@ -368,7 +363,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1100,
-        rent: 1850,
+        rent: null,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/eFdi7sd.jpg",
@@ -382,7 +377,7 @@ export class MemStorage implements IStorage {
         bedrooms: 1,
         bathrooms: 1,
         sqft: 800,
-        rent: 1500,
+        rent: null,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/ASrp6Cl.jpg",
@@ -396,7 +391,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 950,
-        rent: 1650,
+        rent: null,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/DI66TQ0.png",
@@ -410,7 +405,7 @@ export class MemStorage implements IStorage {
         bedrooms: 1,
         bathrooms: 1,
         sqft: 775,
-        rent: 1475,
+        rent: null,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/CGq20NX.png",
@@ -426,7 +421,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 1050,
-        rent: 1800,
+        rent: null,
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/OWMqzbK.png",
@@ -440,7 +435,7 @@ export class MemStorage implements IStorage {
         bedrooms: 1,
         bathrooms: 1,
         sqft: 900,
-        rent: 1600,
+        rent: null,
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/Qqrynp5.png",
@@ -454,7 +449,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1150,
-        rent: 1900,
+        rent: null,
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/GQPUMr8.png",
@@ -470,7 +465,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1100,
-        rent: 1750,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/psQEwWF.jpg",
@@ -484,7 +479,7 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2,
         sqft: 1450,
-        rent: 2200,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/gsremPD.jpg",
@@ -498,7 +493,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1250,
-        rent: 1950,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/GmGrXBV.jpg",
@@ -512,7 +507,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 1000,
-        rent: 1700,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/P62glux.jpg",
@@ -526,7 +521,7 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2,
         sqft: 1500,
-        rent: 2300,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/Pw0RRJ6.jpg",
@@ -540,7 +535,7 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2.5,
         sqft: 1800,
-        rent: 2600,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/5QfQiJD.png",
@@ -554,7 +549,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1200,
-        rent: 1850,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/ZC9OEET.jpg",
@@ -568,7 +563,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 1100,
-        rent: 1750,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/KyxXN2C.jpg",
@@ -582,7 +577,7 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2,
         sqft: 1650,
-        rent: 2400,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/kQrkgX6.jpg",
@@ -596,7 +591,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 950,
-        rent: 1600,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/eER5hbA.jpg",
@@ -610,7 +605,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1250,
-        rent: 1950,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/Mzh4Dn2.jpg",
@@ -624,14 +619,18 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1150,
-        rent: 1850,
+        rent: null,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/cOicEI4.png",
         features: "Contemporary design, energy-efficient, gourmet kitchen, private balcony"
       }
     ];
-
+    
+    for (const property of properties) {
+      this.propertiesData.set(property.id, property);
+    }
+    
     // Sample inquiries for demo
     const inquiries: Inquiry[] = [
       {
@@ -691,45 +690,46 @@ export class MemStorage implements IStorage {
       }
     ];
     
+    for (const inquiry of inquiries) {
+      this.inquiriesData.set(inquiry.id, inquiry);
+    }
+    
     // Set the next inquiry ID based on our seed data
     this.nextInquiryId = inquiries.length + 1;
-
+    
     // Neighborhoods data
     const neighborhoods: Neighborhood[] = [
       {
         id: 1,
         locationId: 1, // Midtown
         mapImageUrl: "https://i.imgur.com/rXMUihK.png", // Example map image
-        highlights: "Midtown Atlanta is a vibrant, urban district known for its mix of business headquarters, cultural attractions, and residential communities. It's often regarded as Atlanta's 'heart of the arts' with numerous theaters, galleries, and museums.",
-        attractions: "Piedmont Park, High Museum of Art, Atlanta Botanical Garden, Fox Theatre, The Center for Puppetry Arts, Margaret Mitchell House, Colony Square, Federal Reserve Bank of Atlanta",
-        transportationInfo: "Midtown is served by MARTA's North-South rail line with stations at North Avenue, Midtown, and Arts Center. Multiple bus routes connect throughout the area. The Atlanta Streetcar connects to Downtown, and the neighborhood is bisected by the Atlanta BeltLine's Eastside Trail.",
-        diningOptions: "South City Kitchen, Empire State South, The Varsity, Mary Mac's Tea Room, Ecco, Lure, The Lawrence, Cypress Street Pint & Plate, The Canteen, Tabla, Poor Calvin's, Bon Ton, and numerous other restaurants spanning all cuisines and price points.",
-        schoolsInfo: "Public schools include Springdale Park Elementary, Morningside Elementary, and Midtown High School. Private options include The Children's School and Paideia. Georgia Tech and SCAD Atlanta provide higher education.",
-        parksAndRecreation: "Piedmont Park (189 acres) is the crown jewel with sports facilities, trails, and Lake Clara Meer. The Atlanta BeltLine's Eastside Trail runs along the eastern edge of Midtown. Also features Renaissance Park and Central Park.",
-        historicalInfo: "Originally a residential district of mansions built by Atlanta's elite in the early 1900s, Midtown experienced decline after WWII. A renaissance began in the 1980s transforming it into a prime commercial and cultural district while preserving many historic buildings. The area includes the Midtown Historic District and several other listings on the National Register of Historic Places.",
-        exploreDescription: "Midtown Atlanta is the heart of the city's arts and culture scene, offering a perfect blend of urban sophistication and creative energy. With its walkable streets, world-class cultural venues, and innovative dining scene, Midtown represents Atlanta's dynamic future while honoring its rich cultural heritage.",
+        highlights: "Midtown Atlanta is known for its vibrant arts scene, walkable streets, and iconic skyline views. Home to the Fox Theatre, High Museum of Art, and Piedmont Park.",
+        attractions: "High Museum of Art, Fox Theatre, Atlanta Botanical Garden, Piedmont Park, Margaret Mitchell House, Center for Puppetry Arts",
+        transportationInfo: "Served by MARTA with stations at Midtown, Arts Center, and North Avenue. Multiple bus routes and access to the Atlanta BeltLine's Eastside Trail. Bike-friendly streets and scooter rentals available throughout the area.",
+        diningOptions: "Diverse dining scene from casual cafes to upscale restaurants. Notable spots include Empire State South, The Varsity, South City Kitchen, and numerous international cuisine options along Juniper Street and Peachtree Street.",
+        schoolsInfo: "Served by Atlanta Public Schools. Notable institutions include Centennial Academy and Midtown International School. Georgia Tech's campus borders the western edge of Midtown.",
+        parksAndRecreation: "Piedmont Park offers 185 acres of green space with walking trails, sports facilities, and frequent events. Atlanta Botanical Garden showcases unique plant collections and seasonal exhibitions.",
+        historicalInfo: "Originally developed in the early 20th century, Midtown fell into decline in the 1970s before experiencing revitalization beginning in the 1990s. Historic landmarks include the Fox Theatre (1929) and Margaret Mitchell House.",
+        exploreDescription: "Midtown Atlanta offers the perfect blend of culture, dining, and recreation. Explore the area's top attractions, green spaces, and local hotspots.",
         exploreMapUrl: "https://www.google.com/maps/d/u/0/embed?mid=1XLv06Buip8bENLqmPSeiPE9ehpdzfQY&ehbc=2E312F&noprof=1",
         exploreHotspots: JSON.stringify([
           {
             name: "High Museum of Art",
-            description: "Southeast's premier art museum featuring classic and contemporary exhibitions.",
-            distance: "0.4 miles from center",
-            imageUrl: "https://i.imgur.com/sdHC6Hr.jpg",
-            link: "https://high.org"
+            description: "Renowned museum featuring a diverse collection of classic and contemporary art.",
+            location: { lat: 33.7901, lng: -84.3851 },
+            imageUrl: "https://i.imgur.com/sdHC6Hr.jpg"
           },
           {
             name: "Piedmont Park",
-            description: "Atlanta's central park offering green spaces, recreational facilities, and city views.",
-            distance: "0.2 miles from center",
-            imageUrl: "https://i.imgur.com/bAy8idc.jpg",
-            link: "https://piedmontpark.org"
+            description: "Atlanta's premier green space offering trails, recreational facilities, and stunning city views.",
+            location: { lat: 33.7851, lng: -84.3736 },
+            imageUrl: "https://i.imgur.com/bAy8idc.jpg"
           },
           {
-            name: "Atlanta Botanical Garden",
-            description: "Urban oasis featuring stunning plant collections and seasonal exhibitions.",
-            distance: "0.5 miles from center",
-            imageUrl: "https://i.imgur.com/xq6r9MA.jpg",
-            link: "https://atlantabg.org"
+            name: "Fox Theatre",
+            description: "Historic venue hosting concerts, Broadway shows, and cultural performances.",
+            location: { lat: 33.7726, lng: -84.3857 },
+            imageUrl: "https://i.imgur.com/Hxs8rIi.jpg"
           }
         ]),
         createdAt: new Date()
@@ -737,96 +737,55 @@ export class MemStorage implements IStorage {
       {
         id: 2,
         locationId: 2, // Virginia-Highland
-        mapImageUrl: "https://i.imgur.com/3PNfb3a.png",
-        highlights: "Virginia-Highland (often shortened to 'Va-Hi') is known for its historic bungalows, craftsman homes, and walkable village areas with boutique shopping and local restaurants. It's one of Atlanta's most pedestrian-friendly neighborhoods with a relaxed community atmosphere.",
-        attractions: "John Howell Park, Orme Park, Murphy's Restaurant, Highland Row Antiques, Virginia-Highland shops and boutiques, access to the Atlanta BeltLine",
-        transportationInfo: "Served by MARTA bus routes connecting to the Midtown MARTA station. The neighborhood is highly walkable with easy access to the BeltLine's Eastside Trail.",
-        diningOptions: "Murphy's, Highland Tap, Atkins Park, La Tavola, Fontaine's, DBA Barbecue, Paolo's Gelato, Taco Mac, Yeah! Burger, Osteria 832, and several coffee shops including Dancing Goats and San Francisco Coffee.",
-        schoolsInfo: "Served by Atlanta Public Schools including Springdale Park Elementary, Inman Middle School, and Midtown High School. Several private schools are also nearby.",
-        parksAndRecreation: "John Howell Park, Orme Park, and easy access to Piedmont Park and the Atlanta BeltLine's Eastside Trail for walking, running, and cycling.",
-        historicalInfo: "Developed primarily in the early 1900s, Virginia-Highland was named for the intersection of Virginia and Highland Avenues. The neighborhood architecture includes Craftsman bungalows, Tudor Revival, and Colonial Revival homes. It was at the center of highway revolts in the 1970s that prevented I-485 from cutting through the neighborhood, helping preserve its historic character.",
-        exploreDescription: "The vibrant Virginia Highland neighborhood offers a perfect blend of historic charm and modern amenities. Ideal for those who want to live in one of Atlanta's most sought-after areas, with easy access to dining, shopping, and entertainment.",
+        mapImageUrl: "https://i.imgur.com/SRYHIcL.jpg", // Example map image
+        highlights: "Virginia-Highland is characterized by its charming bungalows, tree-lined streets, and walkable village centers with boutique shopping and local restaurants.",
+        attractions: "John Howell Park, Virginia-Highland commercial district, Callanwolde Fine Arts Center, Jimmy Carter Presidential Library, Plaza Theatre",
+        transportationInfo: "Closest MARTA stations are Midtown and Lindbergh Center. Multiple bus routes serve the area. Very walkable neighborhood with easy access to the Atlanta BeltLine's Eastside Trail.",
+        diningOptions: "Known for its eclectic dining scene. Popular spots include Murphy's, La Tavola, Atkins Park, and numerous casual cafes and pubs clustered around the Virginia and Highland Avenue intersection.",
+        schoolsInfo: "Served by Atlanta Public Schools, including Springdale Park Elementary and Inman Middle School. Several private school options nearby.",
+        parksAndRecreation: "John Howell Park features recreational fields and a playground. Close proximity to Piedmont Park and the Atlanta BeltLine. Orme Park offers a quieter green space with a creek and walking paths.",
+        historicalInfo: "Developed primarily in the early 20th century as a streetcar suburb. Named for the intersection of Virginia and Highland Avenues. Many homes date to the 1910s-1930s and showcase Craftsman architecture.",
+        exploreDescription: "Virginia-Highland combines historic charm with modern amenities. Discover local shops, parks, and dining in this walkable Atlanta neighborhood.",
         exploreMapUrl: "https://www.google.com/maps/d/u/0/embed?mid=1mLjD6MgRd5Cq3tRresLx63wYe01d600&ehbc=2E312F&noprof=1",
         exploreHotspots: JSON.stringify([
           {
-            name: "Ponce City Market",
-            description: "Historic marketplace with dining, shopping, and entertainment.",
-            distance: "1.2 miles from neighborhood center",
-            imageUrl: "https://i.imgur.com/1zBCVnO.jpg",
-            link: "http://poncecitymarket.com"
+            name: "Murphy's Restaurant",
+            description: "Neighborhood institution serving upscale comfort food in a cozy setting.",
+            location: { lat: 33.7806, lng: -84.3526 },
+            imageUrl: "https://i.imgur.com/Ml1Ld5k.jpg"
           },
           {
             name: "Virginia Highland Shopping District",
-            description: "Boutique shopping and local businesses in a charming setting.",
-            distance: "In the heart of the neighborhood",
-            imageUrl: "https://i.imgur.com/mmnSr5n.jpg",
-            link: "https://www.virginiahighlanddistrict.com"
+            description: "Charming collection of boutiques, restaurants, and local businesses.",
+            location: { lat: 33.7814, lng: -84.3520 },
+            imageUrl: "https://i.imgur.com/mmnSr5n.jpg"
           },
           {
-            name: "Piedmont Park",
-            description: "Atlanta's premier green space with walking trails and events.",
-            distance: "0.8 miles from neighborhood center",
-            imageUrl: "https://i.imgur.com/toEfT5z.jpg",
-            link: "https://piedmontpark.org"
-          }
-        ]),
-        createdAt: new Date()
-      },
-      {
-        id: 3,
-        locationId: 3, // Dallas
-        mapImageUrl: "https://i.imgur.com/GGXMOqb.png",
-        highlights: "We offer properties in several historic and desirable neighborhoods of Dallas, including the M Streets, Lower Greenville, and Old East Dallas areas. These neighborhoods feature a mix of historic and updated homes in tree-lined residential areas with convenient access to dining, entertainment, and downtown Dallas.",
-        attractions: "Lower Greenville entertainment district, Granada Theater, White Rock Lake, Dallas Arboretum, Deep Ellum, Knox-Henderson shopping district, SMU campus",
-        transportationInfo: "Major thoroughfares include Greenville Avenue, Skillman Street, and US-75 (Central Expressway). DART light rail stations at Mockingbird and SMU provide public transit access.",
-        diningOptions: "Lower Greenville and Knox-Henderson areas offer numerous dining options including Gemma, HG Sply Co., Rapscallion, Truck Yard, Knife, Chelsea Corner, and The Old Monk.",
-        schoolsInfo: "Dallas Independent School District serves the area with several well-regarded elementary, middle, and high schools. SMU and Richland College provide higher education options.",
-        parksAndRecreation: "White Rock Lake Park offers 1,015 acres of outdoor recreation including a 9.3-mile trail. Glencoe Park, Tietze Park, and Cole Park provide neighborhood green spaces.",
-        historicalInfo: "The M Streets (formally Greenland Hills) is known for its Tudor-style homes from the 1920s. Lower Greenville developed as a streetcar suburb in the early 1900s. Old East Dallas was originally a separate city before being annexed by Dallas in 1890 and contains several historic districts including Swiss Avenue, Munger Place, and Peak's Suburban Addition.",
-        exploreDescription: "Dallas combines Southern charm with modern urban sophistication, offering residents a dynamic mix of cultural attractions, outdoor spaces, and entertainment districts. From serene lakes to vibrant arts scenes, Dallas provides an exceptional quality of life with amenities for every lifestyle.",
-        exploreMapUrl: "https://www.google.com/maps/d/u/0/embed?mid=1v6kgd00ViRSvEjteA1vY0_iVvggVB_0&ehbc=2E312F&noprof=1",
-        exploreHotspots: JSON.stringify([
-          {
-            name: "White Rock Lake",
-            description: "Urban oasis featuring a 9.3-mile trail, water activities, and stunning skyline views.",
-            distance: "1.2 miles from center",
-            imageUrl: "https://i.imgur.com/GkYyI2f.jpg",
-            link: "https://www.dallasparks.org/235/White-Rock-Lake-Park"
-          },
-          {
-            name: "Deep Ellum",
-            description: "Historic entertainment district known for live music, street art, and eclectic dining.",
-            distance: "3.5 miles from center",
-            imageUrl: "https://i.imgur.com/vSWSMob.jpg",
-            link: "https://deepellumtexas.com"
-          },
-          {
-            name: "Klyde Warren Park",
-            description: "Urban green space built over a freeway, featuring food trucks, events, and community activities.",
-            distance: "4.2 miles from center",
-            imageUrl: "https://i.imgur.com/HhD5VJM.jpg",
-            link: "https://www.klydewarrenpark.org"
+            name: "John Howell Park",
+            description: "Neighborhood green space with athletic fields and community events.",
+            location: { lat: 33.7828, lng: -84.3535 },
+            imageUrl: "https://i.imgur.com/oJc1dRE.jpg"
           }
         ]),
         createdAt: new Date()
       }
     ];
     
-    // Populate data maps
-    locations.forEach(location => this.locationsData.set(location.id, location));
-    features.forEach(feature => this.featuresData.set(feature.id, feature));
-    properties.forEach(property => this.propertiesData.set(property.id, property));
-    inquiries.forEach(inquiry => this.inquiriesData.set(inquiry.id, inquiry));
-    neighborhoods.forEach(neighborhood => this.neighborhoodsData.set(neighborhood.id, neighborhood));
+    for (const neighborhood of neighborhoods) {
+      this.neighborhoodsData.set(neighborhood.id, neighborhood);
+    }
     
-    // Seed property images
+    // Set the next neighborhood ID based on our seed data
+    this.nextNeighborhoodId = neighborhoods.length + 1;
+    
+    // Property Images
     const propertyImages: PropertyImage[] = [
       // Property 1 images
       {
         id: 1,
         propertyId: 1,
         url: "https://i.imgur.com/O9Fu46o.png",
-        alt: "Main exterior view of 253 14th St NE",
+        alt: "Front view of 253 14th St NE",
         displayOrder: 0,
         isFeatured: true,
         createdAt: new Date()
@@ -834,7 +793,7 @@ export class MemStorage implements IStorage {
       {
         id: 2,
         propertyId: 1,
-        url: "https://i.imgur.com/THKfFjB.png",
+        url: "https://i.imgur.com/F8elHoj.jpg",
         alt: "Living room of 253 14th St NE",
         displayOrder: 1,
         isFeatured: false,
@@ -843,7 +802,7 @@ export class MemStorage implements IStorage {
       {
         id: 3,
         propertyId: 1,
-        url: "https://i.imgur.com/Qt30zdg.png",
+        url: "https://i.imgur.com/qR3CzRz.jpg",
         alt: "Kitchen of 253 14th St NE",
         displayOrder: 2,
         isFeatured: false,
@@ -855,7 +814,7 @@ export class MemStorage implements IStorage {
         id: 4,
         propertyId: 2,
         url: "https://i.imgur.com/9L78Ghe.png",
-        alt: "Main exterior view of 965 Myrtle St NE",
+        alt: "Front view of 965 Myrtle St NE",
         displayOrder: 0,
         isFeatured: true,
         createdAt: new Date()
@@ -863,47 +822,21 @@ export class MemStorage implements IStorage {
       {
         id: 5,
         propertyId: 2,
-        url: "https://i.imgur.com/DI66TQ0.png",
+        url: "https://i.imgur.com/GFtN8CD.jpg",
         alt: "Bedroom of 965 Myrtle St NE",
         displayOrder: 1,
-        isFeatured: false,
-        createdAt: new Date()
-      },
-      
-      // Property 3 images
-      {
-        id: 6,
-        propertyId: 3,
-        url: "https://i.imgur.com/Qt30zdg.png",
-        alt: "Main exterior view of 903 Myrtle St NE",
-        displayOrder: 0,
-        isFeatured: true,
-        createdAt: new Date()
-      },
-      {
-        id: 7,
-        propertyId: 3,
-        url: "https://i.imgur.com/ASrp6Cl.jpg",
-        alt: "Living room of 903 Myrtle St NE",
-        displayOrder: 1,
-        isFeatured: false,
-        createdAt: new Date()
-      },
-      {
-        id: 8,
-        propertyId: 3,
-        url: "https://i.imgur.com/CGq20NX.png",
-        alt: "Bathroom of 903 Myrtle St NE",
-        displayOrder: 2,
         isFeatured: false,
         createdAt: new Date()
       }
     ];
     
-    propertyImages.forEach(image => this.propertyImagesData.set(image.id, image));
-    this.nextPropertyImageId = Math.max(...propertyImages.map(image => image.id)) + 1;
+    for (const image of propertyImages) {
+      this.propertyImagesData.set(image.id, image);
+    }
+    
+    // Set the next property image ID based on our seed data
+    this.nextPropertyImageId = propertyImages.length + 1;
   }
 }
 
-// Export an instance for use throughout the application
 export const storage = new MemStorage();
