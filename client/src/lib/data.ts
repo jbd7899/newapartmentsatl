@@ -1,4 +1,4 @@
-import { Location, Property, Feature, Inquiry, InsertInquiry } from "@shared/schema";
+import { Location, Property, Feature, Inquiry, InsertInquiry, PropertyImage, InsertPropertyImage } from "@shared/schema";
 import { apiRequest } from "./queryClient";
 
 // Data fetching functions for client
@@ -71,5 +71,53 @@ export async function updateInquiryStatus(id: number, status: string): Promise<I
     url: `/api/inquiries/${id}/status`,
     method: 'PATCH',
     body: { status },
+  });
+}
+
+// Property Images
+export async function getPropertyImages(): Promise<PropertyImage[]> {
+  const response = await fetch('/api/property-images');
+  if (!response.ok) {
+    throw new Error('Failed to fetch property images');
+  }
+  return response.json();
+}
+
+export async function getPropertyImagesByProperty(propertyId: number): Promise<PropertyImage[]> {
+  const response = await fetch(`/api/properties/${propertyId}/images`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch images for property: ${propertyId}`);
+  }
+  return response.json();
+}
+
+export async function createPropertyImage(image: InsertPropertyImage): Promise<PropertyImage> {
+  return apiRequest<PropertyImage>({
+    url: '/api/property-images',
+    method: 'POST',
+    body: image,
+  });
+}
+
+export async function updatePropertyImageOrder(id: number, displayOrder: number): Promise<PropertyImage> {
+  return apiRequest<PropertyImage>({
+    url: `/api/property-images/${id}/order`,
+    method: 'PATCH',
+    body: { displayOrder },
+  });
+}
+
+export async function updatePropertyImageFeatured(id: number, isFeatured: boolean): Promise<PropertyImage> {
+  return apiRequest<PropertyImage>({
+    url: `/api/property-images/${id}/featured`,
+    method: 'PATCH',
+    body: { isFeatured },
+  });
+}
+
+export async function deletePropertyImage(id: number): Promise<void> {
+  return apiRequest<void>({
+    url: `/api/property-images/${id}`,
+    method: 'DELETE',
   });
 }

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getProperties } from "@/lib/data";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getProperties, getPropertyImages, getPropertyImagesByProperty, createPropertyImage, updatePropertyImageOrder, updatePropertyImageFeatured, deletePropertyImage } from "@/lib/data";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -28,10 +28,17 @@ import {
   RefreshCw, 
   Trash2,
   Check,
-  X
+  X,
+  Star,
+  ArrowUp,
+  ArrowDown,
+  Plus,
+  Image,
+  FolderOpen
 } from "lucide-react";
-
-import { Property } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Property, PropertyImage } from "@shared/schema";
 
 const AdminImagesPage = () => {
   const [activeTab, setActiveTab] = useState("gallery");

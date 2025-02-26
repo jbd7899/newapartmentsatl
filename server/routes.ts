@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertInquirySchema } from "@shared/schema";
+import { insertInquirySchema, insertPropertyImageSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes with /api prefix
@@ -163,6 +163,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedInquiry);
     } catch (error) {
       res.status(500).json({ message: "Failed to update inquiry status" });
+    }
+  });
+
+  // Get all property images
+  app.get("/api/property-images", async (req: Request, res: Response) => {
+    try {
+      const images = await storage.getPropertyImages();
+      res.json(images);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch property images" });
+    }
+  });
+
+  // Get property images by property ID
+  app.get("/api/properties/:id/images", async (req: Request, res: Response) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      const property = await storage.getProperty(propertyId);
+      
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      const images = await storage.getPropertyImagesByProperty(propertyId);
+      res.json(images);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch property images" });
+    }
+  });
+
+  // Add a new property image
+  app.post("/api/property-images", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = insertPropertyImageSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid image data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      // Verify property exists
+      const property = await storage.getProperty(req.body.propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      const image = await storage.createPropertyImage(validationResult.data);
+      res.status(201).json(image);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create property image" });
+    }
+  });
+
+  // Update property image order
+  app.patch("/api/property-images/:id/order", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
+      const { displayOrder } = req.body;
+      
+      if (displayOrder === undefined || typeof displayOrder !== 'number') {
+        return res.status(400).json({ message: "Display order is required and must be a number" });
+      }
+      
+      const updatedImage = await storage.updatePropertyImageOrder(id, displayOrder);
+      
+      if (!updatedImage) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      res.json(updatedImage);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update image order" });
+    }
+  });
+
+  // Update property image featured status
+  app.patch("/api/property-images/:id/featured", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
+      const { isFeatured } = req.body;
+      
+      if (isFeatured === undefined || typeof isFeatured !== 'boolean') {
+        return res.status(400).json({ message: "Featured status is required and must be a boolean" });
+      }
+      
+      const updatedImage = await storage.updatePropertyImageFeatured(id, isFeatured);
+      
+      if (!updatedImage) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      res.json(updatedImage);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update image featured status" });
+    }
+  });
+
+  // Delete property image
+  app.delete("/api/property-images/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
+      const result = await storage.deletePropertyImage(id);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete image" });
     }
   });
 

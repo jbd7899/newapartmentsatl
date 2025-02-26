@@ -202,6 +202,8 @@ export class MemStorage implements IStorage {
 
   // Seed data for demo
   private seedData() {
+    // Initialize property images data
+    this.propertyImagesData = new Map();
     // Locations
     const locations: Location[] = [
       {
@@ -642,6 +644,90 @@ export class MemStorage implements IStorage {
     features.forEach(feature => this.featuresData.set(feature.id, feature));
     properties.forEach(property => this.propertiesData.set(property.id, property));
     inquiries.forEach(inquiry => this.inquiriesData.set(inquiry.id, inquiry));
+    
+    // Seed property images
+    const propertyImages: PropertyImage[] = [
+      // Property 1 images
+      {
+        id: 1,
+        propertyId: 1,
+        url: "https://i.imgur.com/O9Fu46o.png",
+        alt: "Main exterior view of 253 14th St NE",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 2,
+        propertyId: 1,
+        url: "https://i.imgur.com/THKfFjB.png",
+        alt: "Living room of 253 14th St NE",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 3,
+        propertyId: 1,
+        url: "https://i.imgur.com/Qt30zdg.png",
+        alt: "Kitchen of 253 14th St NE",
+        displayOrder: 2,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      
+      // Property 2 images
+      {
+        id: 4,
+        propertyId: 2,
+        url: "https://i.imgur.com/9L78Ghe.png",
+        alt: "Main exterior view of 965 Myrtle St NE",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 5,
+        propertyId: 2,
+        url: "https://i.imgur.com/DI66TQ0.png",
+        alt: "Bedroom of 965 Myrtle St NE",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      
+      // Property 3 images
+      {
+        id: 6,
+        propertyId: 3,
+        url: "https://i.imgur.com/Qt30zdg.png",
+        alt: "Main exterior view of 903 Myrtle St NE",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 7,
+        propertyId: 3,
+        url: "https://i.imgur.com/ASrp6Cl.jpg",
+        alt: "Living room of 903 Myrtle St NE",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 8,
+        propertyId: 3,
+        url: "https://i.imgur.com/CGq20NX.png",
+        alt: "Bathroom of 903 Myrtle St NE",
+        displayOrder: 2,
+        isFeatured: false,
+        createdAt: new Date()
+      }
+    ];
+    
+    propertyImages.forEach(image => this.propertyImagesData.set(image.id, image));
+    this.nextPropertyImageId = Math.max(...propertyImages.map(image => image.id)) + 1;
   }
 }
 
