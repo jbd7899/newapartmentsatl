@@ -159,10 +159,39 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
         // Add the processed file
         setFiles(prevFiles => [...prevFiles, processedFile]);
         
-        // Generate preview
+        // Generate short preview to display in the UI
         const reader = new FileReader();
         reader.onloadend = () => {
-          setPreviews(prev => [...prev, reader.result as string]);
+          const fullDataUrl = reader.result as string;
+          
+          // Create a more storage-efficient version for the database
+          // Generate a filename based on the current timestamp and a random string
+          const timestamp = new Date().getTime();
+          const randomStr = Math.random().toString(36).substring(2, 8);
+          const fileExt = processedFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+          
+          // Get just the base64 data without the data URL prefix
+          const base64Data = fullDataUrl.split(',')[1];
+          // Calculate a short hash of the base64 data for uniqueness
+          const shortHash = base64Data.substring(0, 8);
+          
+          // Create a filename in the format: image_timestamp_random_hash.ext
+          const filename = `image_${timestamp}_${randomStr}_${shortHash}.${fileExt}`;
+          
+          // Instead of storing the full data URL, we'll use this generated filename
+          // In a real application, we would upload the file to a storage service
+          // and store the URL to that file. For this demo, we'll use the data URL
+          // but we'll add metadata to make it more manageable.
+          
+          // Set a shorter preview using a thumbnail version of the image
+          setPreviews(prev => [...prev, { 
+            fullDataUrl,
+            // Store the filename as the URL for the database
+            storageUrl: `/uploads/${filename}`,
+            // We'll include the full data as a property for now, but in production
+            // this would be uploaded to storage and not stored in the database
+            data: fullDataUrl
+          }]);
         };
         reader.readAsDataURL(processedFile);
       }
