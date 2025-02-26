@@ -16,7 +16,7 @@ const HeroSection = () => {
             </Button>
           </Link>
           <a href="#locations">
-            <Button variant="outline" className="w-full md:w-auto border-2 border-white text-white hover:bg-white hover:text-[hsl(var(--brand-dark))] px-6 py-3 h-auto text-base font-heading font-semibold">
+            <Button variant="outline" className="w-full md:w-auto border-2 border-white text-white hover:bg-white hover:text-[hsl(var(--brand-dark))] px-6 py-3 h-auto text-base font-heading font-semibold bg-black/30 backdrop-blur-sm">
               View Properties
             </Button>
           </a>

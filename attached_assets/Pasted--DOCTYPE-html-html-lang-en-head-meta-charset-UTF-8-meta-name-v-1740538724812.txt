@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">    
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Apartment Finder Form</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html" aria-label="ApartmentsATL Home">ApartmentsATL</a>
+            </div>
+            <div class="nav-buttons">
+                <a href="properties.html" class="nav-button">View Properties</a>
+                <a href="https://apartmentsatl.appfolio.com/connect/users/sign_in" 
+                   class="nav-button"
+                   target="_blank" 
+                   rel="noopener">
+                    Resident Portal
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h2 class="page-title">Find Your Perfect Apartment</h2>
+        <p class="text-center subtitle">Fill out our apartment finder form and we'll match you with available properties.</p>        
+        
+        <form class="apartment-finder-form" name="apartment-finder" data-netlify="true" method="POST">
+            <input type="hidden" name="form-name" value="apartment-finder">
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h3>Personal Information</h3>
+                <div class="form-row name-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input 
+                            type="text" 
+                            id="firstName" 
+                            name="First" 
+                            required 
+                            pattern="[A-Za-z ]+"
+                            title="Please enter a valid name (letters only)"
+                        >
+                        <div class="error-message">Please enter a valid name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input 
+                            type="text" 
+                            id="lastName" 
+                            name="Last" 
+                            required
+                            pattern="[A-Za-z ]+"
+                        >
+                        <div class="error-message">Please enter a valid name</div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                        >
+                        <div class="error-message">Please enter a valid email address</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input 
+                            type="tel" 
+                            id="phone" 
+                            name="phone" 
+                            required
+                            pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                            placeholder="123-456-7890"
+                        >
+                        <div class="error-message">Please enter a valid phone number (123-456-7890)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Preferences Section -->
+            <div class="form-section">
+                <h3>Location Preferences</h3>
+                <div class="form-group">
+                    <label>Preferred Area *</label>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="preferred_area[]" value="Virginia highland">
+                            Virginia highland
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="preferred_area[]" value="Midtown">
+                            Midtown
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="preferred_area[]" value="No Preference">
+                            No Preference
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="price_range">Price Range * (Minimum $1450)</label>
+                    <input 
+                        type="text" 
+                        id="price_range" 
+                        name="price_range" 
+                        required
+                        placeholder="e.g., $1500-2000"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="move_in_date">Desired Move-in Date *</label>
+                    <input 
+                        type="text" 
+                        id="move_in_date" 
+                        name="move_in_date" 
+                        required
+                        placeholder="e.g., July 1st, 2025"
+                    >
+                </div>
+            </div>
+
+            <!-- Amenities and Details Section -->
+            <div class="form-section">
+                <h3>Amenities and Additional Details</h3>
+                <div class="form-group">
+                    <label for="amenities">Desired Amenities *</label>
+                    <input 
+                        type="text" 
+                        id="amenities" 
+                        name="amenities" 
+                        required
+                        placeholder="e.g., Hardwood floors, washer/dryer, parking"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Do you have any pets? *</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="has_pet" value="Yes" required>
+                            Yes
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="has_pet" value="No" required>
+                            No
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group pet-details" id="petDetails" style="display: none;">
+                    <label for="pet_details">Pet Details (Type, age, weight, breed) *</label>
+                    <input 
+                        type="text" 
+                        id="pet_details" 
+                        name="pet_details" 
+                        placeholder="e.g., Dog, 2 years, 25 lbs, Golden Retriever"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Do you have a car? *</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="has_car" value="Yes" required>
+                            Yes
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="has_car" value="No" required>
+                            No
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comments">Additional Comments</label>
+                    <textarea 
+                        id="comments" 
+                        name="comments" 
+                        placeholder="Any other requirements or questions?"
+                        rows="4"
+                    ></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">Submit Form</button>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Phone number formatting
+                const phoneInput = document.getElementById('phone');
+                phoneInput.addEventListener('input', function(e) {
+                    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+                    e.target.value = !x[2] ? x[1] : !x[3] ? x[1] + '-' + x[2] : x[1] + '-' + x[2] + '-' + x[3];
+                });
+
+                // Pet details toggle with required field handling
+                const petRadios = document.querySelectorAll('input[name="has_pet"]');
+                const petDetails = document.getElementById('petDetails');
+                const petDetailsInput = document.getElementById('pet_details');
+                
+                petRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        petDetails.style.display = this.value === 'Yes' ? 'block' : 'none';
+                        if (this.value === 'Yes') {
+                            petDetailsInput.required = true;
+                        } else {
+                            petDetailsInput.required = false;
+                            petDetailsInput.value = '';
+                        }
+                    });
+                });
+            });
+        </script>
+    </main>
+</body>
+</html>
