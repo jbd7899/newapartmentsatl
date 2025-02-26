@@ -783,6 +783,31 @@ export class MemStorage implements IStorage {
         schoolsInfo: "Dallas Independent School District serves the area with several well-regarded elementary, middle, and high schools. SMU and Richland College provide higher education options.",
         parksAndRecreation: "White Rock Lake Park offers 1,015 acres of outdoor recreation including a 9.3-mile trail. Glencoe Park, Tietze Park, and Cole Park provide neighborhood green spaces.",
         historicalInfo: "The M Streets (formally Greenland Hills) is known for its Tudor-style homes from the 1920s. Lower Greenville developed as a streetcar suburb in the early 1900s. Old East Dallas was originally a separate city before being annexed by Dallas in 1890 and contains several historic districts including Swiss Avenue, Munger Place, and Peak's Suburban Addition.",
+        exploreDescription: "Dallas combines Southern charm with modern urban sophistication, offering residents a dynamic mix of cultural attractions, outdoor spaces, and entertainment districts. From serene lakes to vibrant arts scenes, Dallas provides an exceptional quality of life with amenities for every lifestyle.",
+        exploreMapUrl: "https://www.google.com/maps/d/u/0/embed?mid=1v6kgd00ViRSvEjteA1vY0_iVvggVB_0&ehbc=2E312F&noprof=1",
+        exploreHotspots: JSON.stringify([
+          {
+            name: "White Rock Lake",
+            description: "Urban oasis featuring a 9.3-mile trail, water activities, and stunning skyline views.",
+            distance: "1.2 miles from center",
+            imageUrl: "https://i.imgur.com/GkYyI2f.jpg",
+            link: "https://www.dallasparks.org/235/White-Rock-Lake-Park"
+          },
+          {
+            name: "Deep Ellum",
+            description: "Historic entertainment district known for live music, street art, and eclectic dining.",
+            distance: "3.5 miles from center",
+            imageUrl: "https://i.imgur.com/vSWSMob.jpg",
+            link: "https://deepellumtexas.com"
+          },
+          {
+            name: "Klyde Warren Park",
+            description: "Urban green space built over a freeway, featuring food trucks, events, and community activities.",
+            distance: "4.2 miles from center",
+            imageUrl: "https://i.imgur.com/HhD5VJM.jpg",
+            link: "https://www.klydewarrenpark.org"
+          }
+        ]),
         createdAt: new Date()
       }
     ];

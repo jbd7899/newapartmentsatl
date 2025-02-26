@@ -8,7 +8,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { LandmarkIcon, UtensilsIcon, TrainIcon, School, PalmtreeIcon, Building2Icon, AlertCircle, Loader2 } from "lucide-react";
+import { LandmarkIcon, UtensilsIcon, TrainIcon, School, PalmtreeIcon, Building2Icon, AlertCircle, Loader2, MapPinIcon, CompassIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -70,6 +70,9 @@ const AdminNeighborhoodsPage = () => {
       schoolsInfo: '',
       parksAndRecreation: '',
       historicalInfo: '',
+      exploreDescription: '',
+      exploreMapUrl: '',
+      exploreHotspots: '',
     },
   });
 
@@ -85,6 +88,9 @@ const AdminNeighborhoodsPage = () => {
         schoolsInfo: neighborhood.schoolsInfo || '',
         parksAndRecreation: neighborhood.parksAndRecreation || '',
         historicalInfo: neighborhood.historicalInfo || '',
+        exploreDescription: neighborhood.exploreDescription || '',
+        exploreMapUrl: neighborhood.exploreMapUrl || '',
+        exploreHotspots: neighborhood.exploreHotspots || '',
       });
     } else if (selectedLocation) {
       // Reset form when no neighborhood data
@@ -97,6 +103,9 @@ const AdminNeighborhoodsPage = () => {
         schoolsInfo: '',
         parksAndRecreation: '',
         historicalInfo: '',
+        exploreDescription: '',
+        exploreMapUrl: '',
+        exploreHotspots: '',
       });
     }
   }, [neighborhood, selectedLocation, form]);
@@ -280,6 +289,11 @@ const AdminNeighborhoodsPage = () => {
                             <Building2Icon className="h-4 w-4 mr-1" />
                             <span className="hidden md:inline">History</span>
                             <span className="md:hidden">Hist.</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="explore" className="flex items-center">
+                            <CompassIcon className="h-4 w-4 mr-1" />
+                            <span className="hidden md:inline">Explore</span>
+                            <span className="md:hidden">Expl.</span>
                           </TabsTrigger>
                         </TabsList>
                         
@@ -468,6 +482,102 @@ const AdminNeighborhoodsPage = () => {
                               </FormItem>
                             )}
                           />
+                        </TabsContent>
+
+                        {/* Explore Tab */}
+                        <TabsContent value="explore" className="pt-4">
+                          <div className="space-y-6">
+                            <FormField
+                              control={form.control}
+                              name="exploreDescription"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Neighborhood Explorer Description</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Enter an engaging description for the neighborhood explorer section..."
+                                      className="min-h-24"
+                                      {...field}
+                                      value={field.value || ''}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="exploreMapUrl"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Interactive Map URL</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Enter URL for an interactive map (e.g., Google Maps embed URL)..."
+                                      {...field}
+                                      value={field.value || ''}
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-xs">
+                                    Use a Google Maps embed URL or similar interactive map service
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="exploreHotspots"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Neighborhood Hotspots</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder={`Enter hotspots in JSON format, for example:
+[
+  {
+    "name": "Central Park",
+    "description": "Urban oasis with trails and lake",
+    "distance": "0.5 miles from center",
+    "imageUrl": "https://example.com/image.jpg",
+    "link": "https://park-website.com"
+  },
+  {
+    "name": "Art Museum",
+    "description": "Contemporary art museum with rotating exhibits",
+    "distance": "1.2 miles from center",
+    "imageUrl": "https://example.com/museum.jpg",
+    "link": "https://museum-website.com"
+  }
+]`}
+                                      className="min-h-64 font-mono text-sm"
+                                      {...field}
+                                      value={field.value || ''}
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-xs">
+                                    Enter hotspots as a JSON array with name, description, distance, imageUrl, and link properties
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            {form.watch("exploreMapUrl") && (
+                              <div className="mt-4 border rounded-md overflow-hidden">
+                                <p className="p-2 text-sm bg-muted">Map Preview:</p>
+                                <iframe 
+                                  src={form.watch("exploreMapUrl") || ''} 
+                                  className="w-full h-64 border-0"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer-when-downgrade"
+                                  title="Neighborhood Map"
+                                ></iframe>
+                              </div>
+                            )}
+                          </div>
                         </TabsContent>
                       </Tabs>
                       
