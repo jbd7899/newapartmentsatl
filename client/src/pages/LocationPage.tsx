@@ -253,7 +253,11 @@ const LocationPage = ({ location }: LocationPageProps) => {
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <div className="text-xl font-semibold">${property.rent}/month</div>
+                      {property.rent ? (
+                        <div className="text-xl font-semibold">${property.rent}/month</div>
+                      ) : (
+                        <div className="text-lg text-slate-700">Contact for Pricing</div>
+                      )}
                       <Link to={`/properties/${property.id}`} className="text-primary font-medium inline-flex items-center group-hover:underline">
                         View Property
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">

@@ -131,10 +131,17 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
           <div>
             <Card>
               <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="text-3xl font-bold text-primary">${property.rent}</div>
-                  <div className="text-slate-500">per month</div>
-                </div>
+                {property.rent ? (
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold text-primary">${property.rent}</div>
+                    <div className="text-slate-500">per month</div>
+                  </div>
+                ) : (
+                  <div className="text-center mb-6">
+                    <div className="text-lg font-medium text-slate-700">Contact for Pricing</div>
+                    <div className="text-slate-500">Multiple units available</div>
+                  </div>
+                )}
                 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between border-b pb-2">
