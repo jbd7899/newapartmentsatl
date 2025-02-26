@@ -368,7 +368,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1100,
-        rent: 1850,
+        rent: 0,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/eFdi7sd.jpg",
