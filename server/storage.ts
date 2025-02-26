@@ -430,7 +430,7 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/OWMqzbK.png",
-        features: "4 units - 2x (2BD/1BA), 2x (1BD/1BA), hardwood floors, walk-in closets, balconies, updated kitchens, large windows, private patios"
+        features: "Classic architectural details, modern kitchen, hardwood floors, large windows"
       },
       {
         id: 9,
@@ -544,7 +544,7 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/5QfQiJD.png",
-        features: "Upscale townhouse, gourmet kitchen, private yard, garage, modern finishes"
+        features: "Upscale finishes, gourmet kitchen, private yard, garage"
       },
       {
         id: 17,
@@ -586,7 +586,7 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/kQrkgX6.jpg",
-        features: "Single-family home, modern finishes, open concept, large windows, outdoor entertainment area"
+        features: "Modern finishes, open concept, large windows, outdoor entertainment area"
       },
       {
         id: 20,
@@ -896,75 +896,6 @@ export class MemStorage implements IStorage {
         alt: "Bathroom of 903 Myrtle St NE",
         displayOrder: 2,
         isFeatured: false,
-        createdAt: new Date()
-      },
-      
-      // Property 8 (1031 Lanier Blvd NE) images
-      {
-        id: 9,
-        propertyId: 8,
-        url: "https://i.imgur.com/OWMqzbK.png",
-        alt: "Main exterior view of 1031 Lanier Blvd NE",
-        displayOrder: 0,
-        isFeatured: true,
-        createdAt: new Date()
-      },
-      {
-        id: 10,
-        propertyId: 8, 
-        url: "https://i.imgur.com/OWMqzbK.png",
-        alt: "Unit 1 of 1031 Lanier Blvd NE - 2 Bed, 1 Bath",
-        displayOrder: 1,
-        isFeatured: false,
-        createdAt: new Date()
-      },
-      {
-        id: 11,
-        propertyId: 8,
-        url: "https://i.imgur.com/OWMqzbK.png",
-        alt: "Unit 2 of 1031 Lanier Blvd NE - 1 Bed, 1 Bath",
-        displayOrder: 2,
-        isFeatured: false,
-        createdAt: new Date()
-      },
-      {
-        id: 12,
-        propertyId: 8,
-        url: "https://i.imgur.com/OWMqzbK.png",
-        alt: "Unit 3 of 1031 Lanier Blvd NE - 2 Bed, 1 Bath",
-        displayOrder: 3,
-        isFeatured: false,
-        createdAt: new Date()
-      },
-      {
-        id: 13,
-        propertyId: 8,
-        url: "https://i.imgur.com/OWMqzbK.png",
-        alt: "Unit 4 of 1031 Lanier Blvd NE - 1 Bed, 1 Bath",
-        displayOrder: 4,
-        isFeatured: false,
-        createdAt: new Date()
-      },
-      
-      // Property 16 (6646 E Lovers Ln) images
-      {
-        id: 14,
-        propertyId: 16,
-        url: "https://i.imgur.com/5QfQiJD.png",
-        alt: "Main exterior view of 6646 E Lovers Ln",
-        displayOrder: 0,
-        isFeatured: true,
-        createdAt: new Date()
-      },
-      
-      // Property 19 (1015 Cameron Ave) images
-      {
-        id: 15,
-        propertyId: 19,
-        url: "https://i.imgur.com/kQrkgX6.jpg",
-        alt: "Main exterior view of 1015 Cameron Ave",
-        displayOrder: 0,
-        isFeatured: true,
         createdAt: new Date()
       }
     ];
