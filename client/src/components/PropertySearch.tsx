@@ -19,7 +19,11 @@ import {
 } from "@/components/ui/popover";
 import { Property } from "@shared/schema";
 
-export default function PropertySearch() {
+interface PropertySearchProps {
+  onSelect?: () => void;
+}
+
+export default function PropertySearch({ onSelect }: PropertySearchProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [, setLocation] = useLocation();
@@ -56,6 +60,11 @@ export default function PropertySearch() {
     
     if (selectedProperty) {
       setLocation(`/properties/${propertyId}`);
+      
+      // Call the onSelect callback if provided
+      if (onSelect) {
+        onSelect();
+      }
     }
     
     setOpen(false);
