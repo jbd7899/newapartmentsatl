@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
-import { getLocations, getProperties } from "@/lib/data";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getLocations, getProperties, createInquiry } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 // We'll implement a simpler date input for now
 // import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Location, Property } from "@shared/schema";
+import { Location, Property, InsertInquiry } from "@shared/schema";
 // import { Calendar } from "lucide-react";
 
 // Schema for the apartment finder form
@@ -51,10 +51,20 @@ const ApartmentFinderPage = () => {
   const { toast } = useToast();
   const [hasPetsValue, setHasPetsValue] = useState("No");
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: locations = [], isLoading: isLoadingLocations } = useQuery({
     queryKey: ['/api/locations'],
     queryFn: getLocations
+  });
+  
+  // Inquiry creation mutation
+  const createInquiryMutation = useMutation({
+    mutationFn: createInquiry,
+    onSuccess: () => {
+      // Invalidate inquiries cache
+      queryClient.invalidateQueries({ queryKey: ['/api/inquiries'] });
+    }
   });
 
   // Initialize the form
@@ -84,12 +94,54 @@ const ApartmentFinderPage = () => {
 
   // Handler for form submission
   const onSubmit = (data: FormValues) => {
-    console.log(data);
-    toast({
-      title: "Form Submitted",
-      description: "Thank you for your interest! We'll be in touch shortly.",
+    // Create a message combining all the important details from the form
+    const message = `
+Apartment Finder Form Submission
+
+Personal Information:
+- Name: ${data.personalInfo.firstName} ${data.personalInfo.lastName}
+- Phone: ${data.personalInfo.phone}
+
+Location Preferences:
+- Areas: ${data.locationPrefs.areas.join(', ')}
+- Price Range: ${data.locationPrefs.priceRange}
+- Move-in Date: ${data.locationPrefs.moveInDate.toLocaleDateString()}
+
+Amenities and Details:
+- Desired Amenities: ${data.amenities.desiredAmenities}
+- Has Pets: ${data.amenities.hasPets}${data.amenities.hasPets === "Yes" ? ` (${data.amenities.petDetails})` : ''}
+- Has Car: ${data.amenities.hasCar}
+${data.amenities.additionalComments ? `- Additional Comments: ${data.amenities.additionalComments}` : ''}
+`;
+
+    // Create an inquiry object
+    const inquiry: InsertInquiry = {
+      name: `${data.personalInfo.firstName} ${data.personalInfo.lastName}`,
+      email: data.personalInfo.email,
+      phone: data.personalInfo.phone,
+      message: message,
+      propertyName: "Apartment Finder Request",
+      status: "new"
+    };
+
+    // Submit the inquiry
+    createInquiryMutation.mutate(inquiry, {
+      onSuccess: () => {
+        toast({
+          title: "Form Submitted",
+          description: "Thank you for your interest! We'll be in touch shortly.",
+        });
+        setFormSubmitted(true);
+      },
+      onError: (error) => {
+        console.error("Error submitting inquiry:", error);
+        toast({
+          title: "Submission Error",
+          description: "There was a problem submitting your inquiry. Please try again.",
+          variant: "destructive",
+        });
+      }
     });
-    setFormSubmitted(true);
   };
   
   // Update pet details requirements based on selection
