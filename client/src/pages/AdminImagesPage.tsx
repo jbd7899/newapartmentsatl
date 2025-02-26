@@ -180,7 +180,8 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
           // Get just the base64 data without the data URL prefix
           const base64Data = fullDataUrl.split(',')[1];
           // Calculate a short hash of the base64 data for uniqueness
-          const shortHash = base64Data.substring(0, 8);
+          // Make sure to remove any characters that could be interpreted as path separators
+          const shortHash = base64Data.substring(0, 8).replace(/[\/\\?%*:|"<>]/g, '_');
           
           // Create a filename in the format: image_timestamp_random_hash.ext
           const filename = `image_${timestamp}_${randomStr}_${shortHash}.${fileExt}`;

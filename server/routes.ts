@@ -80,6 +80,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract the filename from the URL
       filename = url.split('/uploads/')[1];
       console.log(`Extracted filename from URL: ${filename}`);
+      
+      // Sanitize the filename to remove path separators and other invalid characters
+      filename = filename.replace(/[\/\\?%*:|"<>]/g, '_');
     } else {
       // Generate a new filename
       const timestamp = Date.now();
@@ -98,6 +101,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         const filePath = path.join(uploadsDir, filename);
+        
+        // Ensure the parent directory exists
+        const dirname = path.dirname(filePath);
+        if (!fs.existsSync(dirname)) {
+          fs.mkdirSync(dirname, { recursive: true });
+        }
+        
         console.log(`Saving image to disk at: ${filePath}`);
         fs.writeFileSync(filePath, buffer);
         console.log(`Image saved to disk, size: ${buffer.length} bytes`);
