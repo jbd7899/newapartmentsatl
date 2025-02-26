@@ -41,16 +41,6 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
           {neighborhood.highlights}
         </p>
 
-        {neighborhood.mapImageUrl && (
-          <div className="mb-12 shadow-md rounded-lg overflow-hidden">
-            <img 
-              src={neighborhood.mapImageUrl} 
-              alt={`Map of ${locationName}`} 
-              className="w-full h-auto"
-            />
-          </div>
-        )}
-
         <Tabs defaultValue="explore" className="w-full">
           <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full h-auto">
             <TabsTrigger value="explore" className="flex flex-col items-center py-3">

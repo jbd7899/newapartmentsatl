@@ -92,7 +92,6 @@ const AdminNeighborhoodsPage = () => {
     } else if (selectedLocation) {
       // Reset form when no neighborhood data
       form.reset({
-        mapImageUrl: '',
         highlights: '',
         attractions: '',
         transportationInfo: '',
