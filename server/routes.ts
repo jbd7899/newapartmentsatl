@@ -20,59 +20,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve files from uploads directory
   app.get('/uploads/:filename', (req: Request, res: Response) => {
     const filename = req.params.filename;
+    console.log(`Serving image: ${filename}`);
+    
     if (!filename) {
+      console.log('No filename provided');
       return res.status(404).send('File not found');
     }
     
     // Try to get the image data from the in-memory store first
     const imageData = imageDataStore.get(filename);
+    console.log(`Image in memory store: ${imageData ? 'Yes' : 'No'}`);
+    
     if (imageData) {
-      // Extract the MIME type from the data URL
-      const mimeMatch = imageData.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
-      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-      
-      // Extract the base64 data
-      const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
-      
-      // Set proper content type
-      res.contentType(mime);
-      return res.send(buffer);
+      try {
+        // Extract the MIME type from the data URL
+        const mimeMatch = imageData.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        console.log(`Extracted MIME type: ${mime}`);
+        
+        // Extract the base64 data
+        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Set proper content type
+        res.contentType(mime);
+        console.log(`Serving image from memory, size: ${buffer.length} bytes`);
+        return res.send(buffer);
+      } catch (error) {
+        console.error('Error processing in-memory image:', error);
+      }
     }
     
     // If not in memory, try to read from the file system
     const filePath = path.join(uploadsDir, filename);
+    console.log(`Looking for file at: ${filePath}`);
+    
     if (fs.existsSync(filePath)) {
+      console.log(`File exists on disk, serving: ${filePath}`);
       return res.sendFile(filePath);
     }
     
+    console.log(`Image not found: ${filename}`);
     return res.status(404).send('File not found');
   });
   
   // Process image data and save to store
   const processImageData = (url: string, data?: string): string => {
+    console.log(`Processing image data. URL: ${url?.substring(0, 30)}..., Data provided: ${!!data}`);
+    
     // If it's already a URL (not a data URL), just return it
     if (url.startsWith('http') || url.startsWith('/uploads/')) {
+      console.log(`URL is already in correct format: ${url.substring(0, 30)}...`);
       return url;
     }
     
-    // For data URLs, extract the filename from the URL or generate a new one
-    const filename = url.includes('/uploads/') 
-      ? url.split('/uploads/')[1]
-      : `image_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.jpg`;
+    // Generate a filename for the image
+    const timestamp = Date.now();
+    const randomStr = crypto.randomBytes(4).toString('hex');
+    const filename = `image_${timestamp}_${randomStr}.jpg`;
+    console.log(`Generated filename: ${filename}`);
     
     // Save the image data to the in-memory store
     if (data && data.startsWith('data:')) {
+      console.log(`Storing image data in memory with key: ${filename}`);
       imageDataStore.set(filename, data);
       
-      // In a real app, we would also save the file to disk
-      // const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
-      // const buffer = Buffer.from(base64Data, 'base64');
-      // fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+      // Uncomment to save file to disk in a production app
+      try {
+        const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filePath = path.join(uploadsDir, filename);
+        console.log(`Saving image to disk at: ${filePath}`);
+        fs.writeFileSync(filePath, buffer);
+        console.log(`Image saved to disk, size: ${buffer.length} bytes`);
+      } catch (error) {
+        console.error('Error saving image to disk:', error);
+      }
+    } else {
+      console.log('No valid data provided for image, only storing URL reference');
     }
     
     // Return the URL for the image
-    return `/uploads/${filename}`;
+    const imageUrl = `/uploads/${filename}`;
+    console.log(`Returning image URL: ${imageUrl}`);
+    return imageUrl;
   };
   
   // API routes with /api prefix
