@@ -253,10 +253,10 @@ const LocationPage = ({ location }: LocationPageProps) => {
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      {property.rent ? (
+                      {property.rent && property.rent > 0 ? (
                         <div className="text-xl font-semibold">${property.rent}/month</div>
                       ) : (
-                        <div className="text-lg text-slate-700">Contact for Pricing</div>
+                        <div className="text-lg text-slate-700">Contact us for pricing</div>
                       )}
                       <Link to={`/properties/${property.id}`} className="text-primary font-medium inline-flex items-center group-hover:underline">
                         View Property
