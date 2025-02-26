@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { getProperty, getLocations } from "@/lib/data";
+import { getProperty, getLocations, getPropertyImagesByProperty } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building, MapPin, ParkingCircle, Home, Check, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Property, Location } from "@shared/schema";
+import { Property, Location, PropertyImage } from "@shared/schema";
 import NeighborhoodSection from "@/components/NeighborhoodSection";
 import PropertyGallery, { GalleryImage } from "@/components/PropertyGallery";
 
@@ -27,19 +27,27 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
     queryKey: ['/api/locations'],
     queryFn: getLocations
   });
-
-  // Sample images for the gallery - these would normally come from the backend
+  
+  // Fetch property images from the API
+  const { data: propertyImages = [], isLoading: imagesLoading } = useQuery({
+    queryKey: ['/api/properties', parseInt(id), 'images'],
+    queryFn: () => getPropertyImagesByProperty(parseInt(id)),
+    enabled: !!property
+  });
+  
+  // Convert property images to gallery format, sorted by display order
+  const galleryImages: GalleryImage[] = propertyImages
+    .sort((a: PropertyImage, b: PropertyImage) => a.displayOrder - b.displayOrder)
+    .map((image: PropertyImage) => ({
+      url: image.url,
+      alt: image.alt || property?.name || 'Property image'
+    }));
+  
+  // Use sample images as fallback if no images are found
   const sampleImages = [
     { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907976/6463_Trammel_Dr_1_vdvnqs.jpg', alt: 'Living Room' },
     { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_10_usc1cr.jpg', alt: 'Kitchen' },
     { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_11_ticwqa.jpg', alt: 'Bathroom' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_12_oznyvr.jpg', alt: 'Bedroom' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907982/6463_Trammel_Dr_13_a12ish.jpg', alt: 'Exterior' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907982/6463_Trammel_Dr_14_mslsbf.jpg', alt: 'Dining Room' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907983/6463_Trammel_Dr_15_cxskq9.jpg', alt: 'Office' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907984/6463_Trammel_Dr_16_s4uqdv.jpg', alt: 'Living Room 2' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907984/6463_Trammel_Dr_17_xyivml.jpg', alt: 'Bedroom 2' },
-    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907985/6463_Trammel_Dr_18_k9qy7g.jpg', alt: 'Bathroom 2' },
   ];
 
   // If invalid property ID, redirect to 404
@@ -78,11 +86,14 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
 
   // Format features from string to array
   const featuresList = property.features.split(", ");
+  
+  // Get featured image from property images or use property image URL as fallback
+  const featuredImage = propertyImages.find((img: PropertyImage) => img.isFeatured)?.url || property.imageUrl;
 
   return (
     <>
       {/* Property Hero */}
-      <div className="relative h-[60vh] bg-cover bg-center" style={{ backgroundImage: `url(${property.imageUrl})` }}>
+      <div className="relative h-[60vh] bg-cover bg-center" style={{ backgroundImage: `url(${featuredImage})` }}>
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white px-4">
@@ -233,7 +244,7 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
       {/* Property Gallery Modal */}
       {showGallery && (
         <PropertyGallery
-          images={sampleImages}
+          images={galleryImages.length > 0 ? galleryImages : sampleImages}
           onClose={() => setShowGallery(false)}
           propertyName={property.name}
         />
