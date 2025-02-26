@@ -17,6 +17,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminPropertiesPage from "./pages/AdminPropertiesPage";
 import AdminImagesPage from "./pages/AdminImagesPage";
 import AdminInquiriesPage from "./pages/AdminInquiriesPage";
+import AdminNeighborhoodsPage from "./pages/AdminNeighborhoodsPage";
 import AdminPlaceholderPage from "./pages/AdminPlaceholderPage";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/admin/properties" component={AdminPropertiesPage} />
       <Route path="/admin/images" component={AdminImagesPage} />
       <Route path="/admin/inquiries" component={AdminInquiriesPage} />
+      <Route path="/admin/neighborhoods" component={AdminNeighborhoodsPage} />
       <Route path="/admin/users" component={AdminPlaceholderPage} />
       <Route path="/admin/settings" component={AdminPlaceholderPage} />
       

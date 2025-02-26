@@ -129,3 +129,20 @@ export async function deletePropertyImage(id: number): Promise<void> {
     method: 'DELETE',
   });
 }
+
+// Neighborhood functions
+export async function createNeighborhood(slug: string, data: any): Promise<Neighborhood> {
+  return apiRequest<Neighborhood>({
+    url: `/api/locations/${slug}/neighborhood`,
+    method: 'POST',
+    body: data,
+  });
+}
+
+export async function updateNeighborhood(slug: string, data: any): Promise<Neighborhood> {
+  return apiRequest<Neighborhood>({
+    url: `/api/locations/${slug}/neighborhood`,
+    method: 'PATCH',
+    body: data,
+  });
+}

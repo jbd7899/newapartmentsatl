@@ -320,6 +320,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete image" });
     }
   });
+  
+  // Create neighborhood information for a location
+  app.post("/api/locations/:slug/neighborhood", async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const location = await storage.getLocationBySlug(slug);
+      
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      // Check if neighborhood already exists
+      const existingNeighborhood = await storage.getNeighborhoodByLocationId(location.id);
+      if (existingNeighborhood) {
+        return res.status(409).json({ message: "Neighborhood information already exists for this location" });
+      }
+      
+      // Validate request body
+      const validationResult = insertNeighborhoodSchema.safeParse({
+        ...req.body,
+        locationId: location.id
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid neighborhood data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      const neighborhood = await storage.createNeighborhood(validationResult.data);
+      res.status(201).json(neighborhood);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create neighborhood information" });
+    }
+  });
+  
+  // Update neighborhood information for a location
+  app.patch("/api/locations/:slug/neighborhood", async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const location = await storage.getLocationBySlug(slug);
+      
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      // Get existing neighborhood
+      const neighborhood = await storage.getNeighborhoodByLocationId(location.id);
+      
+      if (!neighborhood) {
+        return res.status(404).json({ message: "Neighborhood information not found" });
+      }
+      
+      // Validate request body against partial schema
+      const partialSchema = insertNeighborhoodSchema.partial();
+      const validationResult = partialSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid neighborhood data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      const updatedNeighborhood = await storage.updateNeighborhood(
+        neighborhood.id, 
+        validationResult.data
+      );
+      
+      res.json(updatedNeighborhood);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update neighborhood information" });
+    }
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);
