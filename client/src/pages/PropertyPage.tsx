@@ -16,6 +16,7 @@ interface PropertyPageProps {
 
 const PropertyPage = ({ id }: PropertyPageProps) => {
   const [, setLocation] = useLocation();
+  const [showGallery, setShowGallery] = useState(false);
   
   const { data: property, isLoading: isLoadingProperty, error: propertyError } = useQuery({
     queryKey: [`/api/properties/${id}`],
@@ -26,6 +27,20 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
     queryKey: ['/api/locations'],
     queryFn: getLocations
   });
+
+  // Sample images for the gallery - these would normally come from the backend
+  const sampleImages = [
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907976/6463_Trammel_Dr_1_vdvnqs.jpg', alt: 'Living Room' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_10_usc1cr.jpg', alt: 'Kitchen' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_11_ticwqa.jpg', alt: 'Bathroom' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_12_oznyvr.jpg', alt: 'Bedroom' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907982/6463_Trammel_Dr_13_a12ish.jpg', alt: 'Exterior' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907982/6463_Trammel_Dr_14_mslsbf.jpg', alt: 'Dining Room' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907983/6463_Trammel_Dr_15_cxskq9.jpg', alt: 'Office' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907984/6463_Trammel_Dr_16_s4uqdv.jpg', alt: 'Living Room 2' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907984/6463_Trammel_Dr_17_xyivml.jpg', alt: 'Bedroom 2' },
+    { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907985/6463_Trammel_Dr_18_k9qy7g.jpg', alt: 'Bathroom 2' },
+  ];
 
   // If invalid property ID, redirect to 404
   useEffect(() => {
@@ -73,11 +88,21 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
           <div className="text-center text-white px-4">
             <h1 className="font-heading font-bold text-4xl md:text-5xl mb-4">{property.name}</h1>
             <p className="text-xl max-w-2xl mx-auto mb-6">{property.address}</p>
-            {propertyLocation && (
-              <Badge className="px-4 py-2 text-lg" variant="secondary">
-                {propertyLocation.name}
-              </Badge>
-            )}
+            <div className="flex flex-wrap gap-2 justify-center items-center">
+              {propertyLocation && (
+                <Badge className="px-4 py-2 text-lg" variant="secondary">
+                  {propertyLocation.name}
+                </Badge>
+              )}
+              <Button 
+                variant="outline" 
+                className="text-white hover:text-white border-white hover:bg-white/10"
+                onClick={() => setShowGallery(true)}
+              >
+                <ImageIcon className="mr-2 h-4 w-4" />
+                View All Photos
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -165,7 +190,15 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 </div>
                 
                 <Button className="w-full mb-3">Schedule a Tour</Button>
-                <Button variant="outline" className="w-full">Request Info</Button>
+                <Button variant="outline" className="w-full mb-3">Request Info</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-center"
+                  onClick={() => setShowGallery(true)}
+                >
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  View Property Gallery
+                </Button>
               </CardContent>
             </Card>
 
@@ -194,6 +227,15 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         <NeighborhoodSection 
           locationSlug={propertyLocation.slug} 
           locationName={propertyLocation.name} 
+        />
+      )}
+
+      {/* Property Gallery Modal */}
+      {showGallery && (
+        <PropertyGallery
+          images={sampleImages}
+          onClose={() => setShowGallery(false)}
+          propertyName={property.name}
         />
       )}
     </>
