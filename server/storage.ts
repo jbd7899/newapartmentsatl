@@ -508,7 +508,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/9L78Ghe.png",
-        features: "Historic details, updated kitchen, period moldings, high ceilings"
+        features: "Historic details, updated kitchen, period moldings, high ceilings",
+        propertyType: "single-family",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 3,
@@ -1089,7 +1092,21 @@ export class MemStorage implements IStorage {
     // Populate data maps
     locations.forEach(location => this.locationsData.set(location.id, location));
     features.forEach(feature => this.featuresData.set(feature.id, feature));
-    properties.forEach(property => this.propertiesData.set(property.id, property));
+    // Add missing propertyType, isMultifamily, and unitCount properties to all properties
+    properties.forEach(property => {
+      // Add missing fields if not present
+      if (!('propertyType' in property)) {
+        (property as any).propertyType = 'single-family';
+      }
+      if (!('isMultifamily' in property)) {
+        (property as any).isMultifamily = false;
+      }
+      if (!('unitCount' in property)) {
+        (property as any).unitCount = null;
+      }
+      
+      this.propertiesData.set(property.id, property as Property);
+    });
     inquiries.forEach(inquiry => this.inquiriesData.set(inquiry.id, inquiry));
     neighborhoods.forEach(neighborhood => this.neighborhoodsData.set(neighborhood.id, neighborhood));
     propertyUnits.forEach(unit => this.propertyUnitsData.set(unit.id, unit));

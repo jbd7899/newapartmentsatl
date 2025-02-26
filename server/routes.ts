@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchema } from "@shared/schema";
+import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchema, insertPropertyUnitSchema, insertUnitImageSchema } from "@shared/schema";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -598,6 +598,284 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedNeighborhood);
     } catch (error) {
       res.status(500).json({ message: "Failed to update neighborhood information" });
+    }
+  });
+
+  // ----- Property Units Routes -----
+  
+  // Get all units for a property
+  app.get("/api/properties/:id/units", async (req: Request, res: Response) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      const property = await storage.getProperty(propertyId);
+      
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      // Get all units for this property
+      const units = await storage.getPropertyUnits(propertyId);
+      res.json(units);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch property units" });
+    }
+  });
+  
+  // Get single unit by ID
+  app.get("/api/property-units/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid unit ID" });
+      }
+      
+      const unit = await storage.getPropertyUnit(id);
+      
+      if (!unit) {
+        return res.status(404).json({ message: "Property unit not found" });
+      }
+      
+      res.json(unit);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch property unit" });
+    }
+  });
+  
+  // Create a new property unit
+  app.post("/api/property-units", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = insertPropertyUnitSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid property unit data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      // Verify property exists and is multifamily
+      const property = await storage.getProperty(validationResult.data.propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      if (!property.isMultifamily) {
+        return res.status(400).json({ message: "Cannot add units to non-multifamily property" });
+      }
+      
+      const unit = await storage.createPropertyUnit(validationResult.data);
+      res.status(201).json(unit);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create property unit" });
+    }
+  });
+  
+  // Update a property unit
+  app.patch("/api/property-units/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid unit ID" });
+      }
+      
+      // Get existing unit
+      const unit = await storage.getPropertyUnit(id);
+      
+      if (!unit) {
+        return res.status(404).json({ message: "Property unit not found" });
+      }
+      
+      // Validate request body against partial schema
+      const partialSchema = insertPropertyUnitSchema.partial();
+      const validationResult = partialSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid property unit data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      const updatedUnit = await storage.updatePropertyUnit(id, validationResult.data);
+      res.json(updatedUnit);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update property unit" });
+    }
+  });
+  
+  // Delete a property unit
+  app.delete("/api/property-units/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid unit ID" });
+      }
+      
+      const unit = await storage.getPropertyUnit(id);
+      
+      if (!unit) {
+        return res.status(404).json({ message: "Property unit not found" });
+      }
+      
+      const success = await storage.deletePropertyUnit(id);
+      
+      if (success) {
+        res.status(204).end();
+      } else {
+        res.status(500).json({ message: "Failed to delete property unit" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete property unit" });
+    }
+  });
+  
+  // ----- Unit Images Routes -----
+  
+  // Get all images for a unit
+  app.get("/api/property-units/:id/images", async (req: Request, res: Response) => {
+    try {
+      const unitId = parseInt(req.params.id);
+      
+      if (isNaN(unitId)) {
+        return res.status(400).json({ message: "Invalid unit ID" });
+      }
+      
+      const unit = await storage.getPropertyUnit(unitId);
+      
+      if (!unit) {
+        return res.status(404).json({ message: "Property unit not found" });
+      }
+      
+      const images = await storage.getUnitImages(unitId);
+      res.json(images);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch unit images" });
+    }
+  });
+  
+  // Add a new unit image
+  app.post("/api/unit-images", async (req: Request, res: Response) => {
+    try {
+      // Check if we're getting data URL along with the URL
+      const { data, ...restOfBody } = req.body;
+      
+      // Process the URL if needed (convert data URLs to file URLs)
+      let processedUrl = req.body.url;
+      if (data && typeof data === 'string') {
+        processedUrl = processImageData(req.body.url, data);
+      }
+      
+      // Prepare the body with the processed URL
+      const bodyWithProcessedUrl = {
+        ...restOfBody,
+        url: processedUrl
+      };
+      
+      // Validate request body
+      const validationResult = insertUnitImageSchema.safeParse(bodyWithProcessedUrl);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid image data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      // Verify unit exists
+      const unit = await storage.getPropertyUnit(bodyWithProcessedUrl.unitId);
+      if (!unit) {
+        return res.status(404).json({ message: "Property unit not found" });
+      }
+      
+      const image = await storage.createUnitImage(validationResult.data);
+      res.status(201).json(image);
+    } catch (error) {
+      console.error('Error creating unit image:', error);
+      res.status(500).json({ message: "Failed to create unit image" });
+    }
+  });
+  
+  // Update unit image order
+  app.patch("/api/unit-images/:id/order", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
+      const { displayOrder } = req.body;
+      
+      if (displayOrder === undefined || typeof displayOrder !== 'number') {
+        return res.status(400).json({ message: "Display order is required and must be a number" });
+      }
+      
+      const updatedImage = await storage.updateUnitImageOrder(id, displayOrder);
+      
+      if (!updatedImage) {
+        return res.status(404).json({ message: "Unit image not found" });
+      }
+      
+      res.json(updatedImage);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update unit image order" });
+    }
+  });
+  
+  // Set image as featured
+  app.patch("/api/unit-images/:id/featured", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
+      const { isFeatured } = req.body;
+      
+      if (isFeatured === undefined || typeof isFeatured !== 'boolean') {
+        return res.status(400).json({ message: "Featured status is required and must be a boolean" });
+      }
+      
+      const updatedImage = await storage.updateUnitImageFeatured(id, isFeatured);
+      
+      if (!updatedImage) {
+        return res.status(404).json({ message: "Unit image not found" });
+      }
+      
+      res.json(updatedImage);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update unit image featured status" });
+    }
+  });
+  
+  // Delete a unit image
+  app.delete("/api/unit-images/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
+      const success = await storage.deleteUnitImage(id);
+      
+      if (success) {
+        res.status(204).end();
+      } else {
+        res.status(500).json({ message: "Failed to delete unit image" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete unit image" });
     }
   });
 
