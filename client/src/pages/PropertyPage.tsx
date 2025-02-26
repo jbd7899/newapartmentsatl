@@ -1,13 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getProperty, getLocations } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, MapPin, ParkingCircle, Home, Check } from "lucide-react";
+import { Building, MapPin, ParkingCircle, Home, Check, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Property, Location } from "@shared/schema";
 import NeighborhoodSection from "@/components/NeighborhoodSection";
+import PropertyGallery, { GalleryImage } from "@/components/PropertyGallery";
 
 interface PropertyPageProps {
   id: string;
