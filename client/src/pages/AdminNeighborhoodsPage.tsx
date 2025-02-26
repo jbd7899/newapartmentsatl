@@ -443,6 +443,28 @@ const AdminNeighborhoodsPage = () => {
                             )}
                           />
                         </TabsContent>
+                        
+                        {/* History Tab */}
+                        <TabsContent value="history" className="pt-4">
+                          <FormField
+                            control={form.control}
+                            name="historicalInfo"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Historical Background</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Describe the neighborhood's history, notable events, and historical significance..."
+                                    className="min-h-32"
+                                    {...field}
+                                    value={field.value || ''}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </TabsContent>
                       </Tabs>
                       
                       <div className="flex justify-end pt-4">
