@@ -75,7 +75,7 @@ export class MemStorage implements IStorage {
         slug: "midtown",
         name: "Midtown, Atlanta",
         description: "Walk to parks, restaurants, and cultural attractions from our carefully preserved historic properties.",
-        imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://i.imgur.com/THKfFjB.png",
         linkText: "View Midtown Properties"
       },
       {
@@ -83,7 +83,7 @@ export class MemStorage implements IStorage {
         slug: "virginia-highland",
         name: "Virginia-Highland, Atlanta",
         description: "Experience the charm of Atlanta's most walkable neighborhood in our character-rich homes.",
-        imageUrl: "https://images.unsplash.com/photo-1559329645-f27af53910c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://i.imgur.com/xHkf2HL.jpg",
         linkText: "View Va-Hi Properties"
       },
       {
@@ -91,7 +91,7 @@ export class MemStorage implements IStorage {
         slug: "dallas",
         name: "Dallas, Texas",
         description: "Explore our growing collection of distinctive properties in Dallas's most desirable areas.",
-        imageUrl: "https://images.unsplash.com/photo-1545566239-0c4f2986d38a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://i.imgur.com/dMU0oEE.jpg",
         linkText: "View Dallas Properties"
       }
     ];
@@ -137,7 +137,7 @@ export class MemStorage implements IStorage {
         rent: 1800,
         available: true,
         locationId: 1,
-        imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://i.imgur.com/JXgBGbX.jpg",
         features: "High ceilings, hardwood floors, exposed brick, stainless appliances"
       },
       {
@@ -151,7 +151,7 @@ export class MemStorage implements IStorage {
         rent: 1500,
         available: true,
         locationId: 2,
-        imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://i.imgur.com/VK5QbW3.jpg",
         features: "Original moldings, updated kitchen, walk-in closet, courtyard"
       },
       {
@@ -165,7 +165,7 @@ export class MemStorage implements IStorage {
         rent: 1650,
         available: true,
         locationId: 3,
-        imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://i.imgur.com/8NKWp3I.jpg",
         features: "Concrete floors, open concept, balcony, fitness center"
       }
     ];

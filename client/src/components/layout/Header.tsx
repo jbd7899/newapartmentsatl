@@ -17,7 +17,7 @@ const Header = () => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="text-[hsl(var(--brand-orange))] font-heading font-bold text-3xl">
+        <Link href="/" className="text-[hsl(var(--brand-orange))] font-heading font-bold text-2xl md:text-3xl">
           ApartmentsATL
         </Link>
         <nav className="hidden md:flex space-x-6 items-center">
