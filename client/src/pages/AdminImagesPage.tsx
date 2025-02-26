@@ -259,6 +259,14 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
     
     setIsProcessing(true);
     
+    // Show a loading toast for large uploads
+    if (files.length > 2) {
+      toast({
+        title: "Processing Images",
+        description: `Uploading ${files.length} images. This may take a moment...`,
+      });
+    }
+    
     try {
       // We need to convert the File objects to URLs that can be stored
       // Pass both the storage URL and full data URL to the upload handler
@@ -277,6 +285,10 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
       setFiles([]);
       setPreviews([]);
       
+      toast({
+        title: "Success",
+        description: `${files.length} image${files.length > 1 ? 's' : ''} uploaded and saved to permanent storage.`,
+      });
     } catch (error) {
       toast({
         title: "Error",
