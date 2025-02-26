@@ -382,7 +382,7 @@ export class MemStorage implements IStorage {
         bedrooms: 1,
         bathrooms: 1,
         sqft: 800,
-        rent: 1500,
+        rent: 0,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/ASrp6Cl.jpg",
@@ -396,7 +396,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 950,
-        rent: 1650,
+        rent: 0,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/DI66TQ0.png",
@@ -410,7 +410,7 @@ export class MemStorage implements IStorage {
         bedrooms: 1,
         bathrooms: 1,
         sqft: 775,
-        rent: 1475,
+        rent: 0,
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/CGq20NX.png",
@@ -426,11 +426,11 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 1050,
-        rent: 1800,
+        rent: 0,
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/OWMqzbK.png",
-        features: "Classic architectural details, modern kitchen, hardwood floors, large windows"
+        features: "4 units - 2x (2BD/1BA), 2x (1BD/1BA), hardwood floors, walk-in closets, balconies, updated kitchens, large windows, private patios"
       },
       {
         id: 9,
@@ -440,7 +440,7 @@ export class MemStorage implements IStorage {
         bedrooms: 1,
         bathrooms: 1,
         sqft: 900,
-        rent: 1600,
+        rent: 0,
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/Qqrynp5.png",
@@ -454,7 +454,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1150,
-        rent: 1900,
+        rent: 0,
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/GQPUMr8.png",
@@ -470,7 +470,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1100,
-        rent: 1750,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/psQEwWF.jpg",
@@ -484,7 +484,7 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2,
         sqft: 1450,
-        rent: 2200,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/gsremPD.jpg",
@@ -498,7 +498,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1250,
-        rent: 1950,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/GmGrXBV.jpg",
@@ -512,7 +512,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 1000,
-        rent: 1700,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/P62glux.jpg",
@@ -526,7 +526,7 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2,
         sqft: 1500,
-        rent: 2300,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/Pw0RRJ6.jpg",
@@ -540,11 +540,11 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2.5,
         sqft: 1800,
-        rent: 2600,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/5QfQiJD.png",
-        features: "Upscale finishes, gourmet kitchen, private yard, garage"
+        features: "Upscale townhouse, gourmet kitchen, private yard, garage, modern finishes"
       },
       {
         id: 17,
@@ -554,7 +554,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1200,
-        rent: 1850,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/ZC9OEET.jpg",
@@ -568,7 +568,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 1100,
-        rent: 1750,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/KyxXN2C.jpg",
@@ -582,11 +582,11 @@ export class MemStorage implements IStorage {
         bedrooms: 3,
         bathrooms: 2,
         sqft: 1650,
-        rent: 2400,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/kQrkgX6.jpg",
-        features: "Modern finishes, open concept, large windows, outdoor entertainment area"
+        features: "Single-family home, modern finishes, open concept, large windows, outdoor entertainment area"
       },
       {
         id: 20,
@@ -596,7 +596,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 1,
         sqft: 950,
-        rent: 1600,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/eER5hbA.jpg",
@@ -610,7 +610,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1250,
-        rent: 1950,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/Mzh4Dn2.jpg",
@@ -624,7 +624,7 @@ export class MemStorage implements IStorage {
         bedrooms: 2,
         bathrooms: 2,
         sqft: 1150,
-        rent: 1850,
+        rent: 0,
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/cOicEI4.png",
@@ -896,6 +896,75 @@ export class MemStorage implements IStorage {
         alt: "Bathroom of 903 Myrtle St NE",
         displayOrder: 2,
         isFeatured: false,
+        createdAt: new Date()
+      },
+      
+      // Property 8 (1031 Lanier Blvd NE) images
+      {
+        id: 9,
+        propertyId: 8,
+        url: "https://i.imgur.com/OWMqzbK.png",
+        alt: "Main exterior view of 1031 Lanier Blvd NE",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      {
+        id: 10,
+        propertyId: 8, 
+        url: "https://i.imgur.com/OWMqzbK.png",
+        alt: "Unit 1 of 1031 Lanier Blvd NE - 2 Bed, 1 Bath",
+        displayOrder: 1,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 11,
+        propertyId: 8,
+        url: "https://i.imgur.com/OWMqzbK.png",
+        alt: "Unit 2 of 1031 Lanier Blvd NE - 1 Bed, 1 Bath",
+        displayOrder: 2,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 12,
+        propertyId: 8,
+        url: "https://i.imgur.com/OWMqzbK.png",
+        alt: "Unit 3 of 1031 Lanier Blvd NE - 2 Bed, 1 Bath",
+        displayOrder: 3,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      {
+        id: 13,
+        propertyId: 8,
+        url: "https://i.imgur.com/OWMqzbK.png",
+        alt: "Unit 4 of 1031 Lanier Blvd NE - 1 Bed, 1 Bath",
+        displayOrder: 4,
+        isFeatured: false,
+        createdAt: new Date()
+      },
+      
+      // Property 16 (6646 E Lovers Ln) images
+      {
+        id: 14,
+        propertyId: 16,
+        url: "https://i.imgur.com/5QfQiJD.png",
+        alt: "Main exterior view of 6646 E Lovers Ln",
+        displayOrder: 0,
+        isFeatured: true,
+        createdAt: new Date()
+      },
+      
+      // Property 19 (1015 Cameron Ave) images
+      {
+        id: 15,
+        propertyId: 19,
+        url: "https://i.imgur.com/kQrkgX6.jpg",
+        alt: "Main exterior view of 1015 Cameron Ave",
+        displayOrder: 0,
+        isFeatured: true,
         createdAt: new Date()
       }
     ];

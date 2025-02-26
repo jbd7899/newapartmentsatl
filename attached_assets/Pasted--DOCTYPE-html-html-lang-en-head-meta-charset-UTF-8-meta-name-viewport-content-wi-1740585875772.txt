@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Discover 6646 E Lovers Ln, an elegant townhouse in the desirable Lakewood/Lake Highlands area of Dallas.">
+  <meta name="keywords" content="Dallas townhouse, Lakewood rentals, Lovers Lane houses">
+  <meta name="author" content="ApartmentsATL">
+  <title>6646 E Lovers Ln | ApartmentsATL</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="../index.html" aria-label="ApartmentsATL Home">ApartmentsATL</a>
+      </div>
+      <div class="nav-buttons">
+        <a href="https://apartmentsatl.appfolio.com/connect/users/sign_in" 
+           class="button-link button-primary" 
+           target="_blank" 
+           rel="noopener">
+          Resident Portal
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="hero" style="background-image: url('https://i.imgur.com/5QfQiJD.png'); background-size: cover; background-position: center;">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>6646 E Lovers Ln</h1>
+        <p>Elegant living near shopping and dining. Situated in the desirable Lakewood/Lake Highlands area, minutes from White Rock Lake and the Dallas Arboretum. Convenient access to Northwest Highway and Skillman Street for easy commuting.</p>
+        <div class="hero-cta"> <a href="/properties/images/lovers1107.html" class="button-link button-primary">View Property Photos</a> </div>
+      </div>
+    </section>
+
+    <!-- Property Section -->
+    <section class="locations-section highlighted-section" aria-labelledby="property-heading">
+      <div class="container">
+        <h2 id="property-heading"><center>Property Details</center></h2>
+      </div>
+    </section>
+
+    <!-- Integrated Location Section -->
+    <section class="location-explore-section">
+      <div class="container">
+        <h2>Explore Lakewood/Lake Highlands</h2>
+        <p class="neighborhood-description">
+          The Lakewood/Lake Highlands area offers an exceptional blend of natural beauty and urban convenience. This sought-after neighborhood provides easy access to White Rock Lake's recreational activities, the Dallas Arboretum's botanical gardens, and numerous shopping and dining destinations while maintaining its peaceful residential character.
+        </p>
+        <div class="location-explore-grid">
+          <!-- Map Column -->
+          <div class="map-column">
+            <div class="map-container">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3351.8876543210987!2d-96.77234567891234!3d32.82345678912345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864e9f9e1234567%3A0x987654321abcdef!2s6646%20E%20Lovers%20Ln%2C%20Dallas%2C%20TX%2075214!5e0!3m2!1sen!2sus!4v1635187234567!5m2!1sen!2sus"
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy"
+                title="6646 E Lovers Ln Location Map">
+              </iframe>
+            </div>
+          </div>
+          <!-- Hotspots Column -->
+          <div class="hotspots-column">
+            <div class="hotspots-scroll">
+              <a href="#" class="hotspot-card">
+                <img src="/api/placeholder/400/320" alt="White Rock Lake" loading="lazy">
+                <div class="hotspot-content">
+                  <h3>White Rock Lake</h3>
+                  <p>Popular recreational destination with trails and water activities</p>
+                  <span class="distance">1.2 miles away</span>
+                </div>
+              </a>
+              <a href="#" class="hotspot-card">
+                <img src="/api/placeholder/400/320" alt="Dallas Arboretum" loading="lazy">
+                <div class="hotspot-content">
+                  <h3>Dallas Arboretum</h3>
+                  <p>66-acre botanical garden with seasonal displays and events</p>
+                  <span class="distance">1.5 miles away</span>
+                </div>
+              </a>
+              <a href="#" class="hotspot-card">
+                <img src="/api/placeholder/400/320" alt="Lakewood Shopping Center" loading="lazy">
+                <div class="hotspot-content">
+                  <h3>Lakewood Shopping Center</h3>
+                  <p>Historic shopping district with local restaurants and boutiques</p>
+                  <span class="distance">0.8 miles away</span>
+                </div>
+              </a>
+              <a href="#" class="hotspot-card">
+                <img src="/api/placeholder/400/320" alt="Skillman/Live Oak Shopping" loading="lazy">
+                <div class="hotspot-content">
+                  <h3>Skillman/Live Oak Shopping</h3>
+                  <p>Convenient retail center with dining and daily amenities</p>
+                  <span class="distance">0.4 miles away</span>
+                </div>
+              </a>
+              <a href="#" class="hotspot-card">
+                <img src="/api/placeholder/400/320" alt="Northwest Highway District" loading="lazy">
+                <div class="hotspot-content">
+                  <h3>Northwest Highway District</h3>
+                  <p>Major retail and dining corridor with diverse options</p>
+                  <span class="distance">0.6 miles away</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="cta-section">
+      <div class="cta-content">
+        <h2>Ready to Call 6646 E Lovers Ln Home?</h2>
+        <a href="apartment-finder.html" class="button-link button-primary">Contact Us</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-columns">
+        <!-- Contact Us Section -->
+        <div class="footer-column">
+          <h3 class="footer-heading">Contact Us</h3>
+          <div class="footer-contact">
+            <a href="mailto:apartmentsatl@gmail.com" class="footer-link">
+              apartmentsatl@gmail.com
+            </a>
+            <a href="tel:7702562787" class="footer-link">
+              (770) 256-2787
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick Links Section -->
+        <div class="footer-column">
+          <h3 class="footer-heading">Quick Links</h3>
+          <ul class="footer-links">
+            <li>
+              <a href="available-properties.html" class="footer-link">
+                Available Properties
+              </a>
+            </li>
+            <li>
+              <a href="apartment-finder.html" class="footer-link">
+                Apartment Finder
+              </a>
+            </li>
+            <li>
+              <a href="https://apartmentsatl.appfolio.com/connect/users/sign_in" class="footer-link">
+                Resident Portal
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Our Locations Section -->
+        <div class="footer-column">
+          <h3 class="footer-heading">Our Locations</h3>
+          <ul class="footer-links">
+            <li>Midtown Atlanta</li>
+            <li>Virginia-Highland</li>
+            <li>Dallas, Texas</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Copyright Section -->
+      <div class="footer-copyright">
+        <p>&copy; 2025 ApartmentsATL. Family-owned and operated for over 20 years.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
