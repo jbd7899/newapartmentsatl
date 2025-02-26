@@ -84,17 +84,45 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
       return;
     }
     
-    // Add the new files to the existing files
-    setFiles(prevFiles => [...prevFiles, ...imageFiles]);
+    // Check file size (max 10MB per file)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    const oversizedFiles = imageFiles.filter(file => file.size > MAX_FILE_SIZE);
     
-    // Generate previews for the images
-    imageFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "Error",
+        description: `${oversizedFiles.length} file(s) exceed the maximum size of 10MB`,
+        variant: "destructive",
+      });
+      
+      // Continue with files that are within size limit
+      const validFiles = imageFiles.filter(file => file.size <= MAX_FILE_SIZE);
+      if (validFiles.length === 0) return;
+      
+      // Add the valid files to the existing files
+      setFiles(prevFiles => [...prevFiles, ...validFiles]);
+      
+      // Generate previews for the images
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } else {
+      // All files are valid, add them to the existing files
+      setFiles(prevFiles => [...prevFiles, ...imageFiles]);
+      
+      // Generate previews for the images
+      imageFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
   };
   
   // Remove an image from the upload list
