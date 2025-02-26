@@ -1,8 +1,9 @@
 import { 
-  locations, properties, features,
+  locations, properties, features, inquiries,
   type Location, type InsertLocation, 
   type Property, type InsertProperty,
-  type Feature, type InsertFeature 
+  type Feature, type InsertFeature,
+  type Inquiry, type InsertInquiry
 } from "@shared/schema";
 
 // Storage Interface
@@ -30,11 +31,14 @@ export class MemStorage implements IStorage {
   private locationsData: Map<number, Location>;
   private propertiesData: Map<number, Property>;
   private featuresData: Map<number, Feature>;
+  private inquiriesData: Map<number, Inquiry>;
+  private nextInquiryId: number = 1;
 
   constructor() {
     this.locationsData = new Map();
     this.propertiesData = new Map();
     this.featuresData = new Map();
+    this.inquiriesData = new Map();
     
     // Seed initial data
     this.seedData();
@@ -69,6 +73,41 @@ export class MemStorage implements IStorage {
   // Feature methods
   async getFeatures(): Promise<Feature[]> {
     return Array.from(this.featuresData.values());
+  }
+  
+  // Inquiry methods
+  async getInquiries(): Promise<Inquiry[]> {
+    return Array.from(this.inquiriesData.values()).sort((a, b) => {
+      // Sort by createdAt descending (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+  
+  async createInquiry(inquiry: InsertInquiry): Promise<Inquiry> {
+    const id = this.nextInquiryId++;
+    const createdAt = new Date();
+    
+    const newInquiry: Inquiry = {
+      id,
+      ...inquiry,
+      createdAt,
+    };
+    
+    this.inquiriesData.set(id, newInquiry);
+    return newInquiry;
+  }
+  
+  async updateInquiryStatus(id: number, status: string): Promise<Inquiry | undefined> {
+    const inquiry = this.inquiriesData.get(id);
+    if (!inquiry) return undefined;
+    
+    const updatedInquiry: Inquiry = {
+      ...inquiry,
+      status
+    };
+    
+    this.inquiriesData.set(id, updatedInquiry);
+    return updatedInquiry;
   }
 
   // Seed data for demo
@@ -446,10 +485,73 @@ export class MemStorage implements IStorage {
       }
     ];
 
+    // Sample inquiries for demo
+    const inquiries: Inquiry[] = [
+      {
+        id: 1,
+        name: "John Smith",
+        email: "john.smith@example.com",
+        phone: "404-555-1234",
+        message: "I'm interested in the 253 14th St NE property. Is it still available for the first week of next month?",
+        propertyId: 1,
+        propertyName: "253 14th St NE",
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        status: "new"
+      },
+      {
+        id: 2,
+        name: "Emily Johnson",
+        email: "emily.johnson@example.com",
+        phone: "404-555-6789",
+        message: "Hello, I'd like to schedule a viewing of the property on Myrtle St. Is it possible to see it this weekend?",
+        propertyId: 2,
+        propertyName: "965 Myrtle St NE",
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        status: "contacted"
+      },
+      {
+        id: 3,
+        name: "Michael Brown",
+        email: "michael.brown@example.com",
+        phone: "214-555-4321",
+        message: "I have questions about the pet policy for the Dallas property on Live Oak St. Do you allow small dogs?",
+        propertyId: 11,
+        propertyName: "4806 Live Oak St",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        status: "new"
+      },
+      {
+        id: 4,
+        name: "Sarah Davis",
+        email: "sarah.davis@example.com",
+        phone: "404-555-8765",
+        message: "I'm relocating to Atlanta next month and interested in the Virginia Highland neighborhood. Can you tell me more about the available properties there?",
+        propertyId: null,
+        propertyName: null,
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        status: "resolved"
+      },
+      {
+        id: 5,
+        name: "David Wilson",
+        email: "david.wilson@example.com",
+        phone: "214-555-9876",
+        message: "Hi, I'm interested in the Martel Ave property. What utilities are included in the rent?",
+        propertyId: 12,
+        propertyName: "6212 Martel Ave",
+        createdAt: new Date(), // today
+        status: "new"
+      }
+    ];
+    
+    // Set the next inquiry ID based on our seed data
+    this.nextInquiryId = inquiries.length + 1;
+
     // Populate data maps
     locations.forEach(location => this.locationsData.set(location.id, location));
     features.forEach(feature => this.featuresData.set(feature.id, feature));
     properties.forEach(property => this.propertiesData.set(property.id, property));
+    inquiries.forEach(inquiry => this.inquiriesData.set(inquiry.id, inquiry));
   }
 }
 
