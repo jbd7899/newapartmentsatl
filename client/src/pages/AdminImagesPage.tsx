@@ -535,7 +535,21 @@ const AdminImagesPage = () => {
                 Add multiple images to a property in one go.
               </DialogDescription>
             </DialogHeader>
-            <MultipleUploadForm onUpload={handleUploadImage} />
+            
+            <Tabs defaultValue="url" className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="url">URL Upload</TabsTrigger>
+                <TabsTrigger value="file">File Upload</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="url" className="mt-4">
+                <MultipleUploadForm onUpload={handleUploadImage} />
+              </TabsContent>
+              
+              <TabsContent value="file" className="mt-4">
+                <FileUploadForm onUpload={handleUploadImage} />
+              </TabsContent>
+            </Tabs>
           </DialogContent>
         </Dialog>
       </div>
