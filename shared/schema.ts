@@ -55,6 +55,8 @@ export const properties = pgTable("properties", {
   imageUrl: text("image_url").notNull(),
   features: text("features").notNull(),
   propertyType: text("property_type").notNull().default("multi-family"), // single-family, multi-family, townhome
+  isMultifamily: boolean("is_multifamily").notNull().default(false),
+  unitCount: integer("unit_count").default(0),
 });
 
 export const insertPropertySchema = createInsertSchema(properties).omit({
@@ -125,3 +127,45 @@ export const insertPropertyImageSchema = createInsertSchema(propertyImages).omit
 
 export type PropertyImage = typeof propertyImages.$inferSelect;
 export type InsertPropertyImage = z.infer<typeof insertPropertyImageSchema>;
+
+// Property Units table
+export const propertyUnits = pgTable("property_units", {
+  id: serial("id").primaryKey(),
+  propertyId: integer("property_id").notNull(),
+  unitNumber: text("unit_number").notNull(),
+  bedrooms: integer("bedrooms").notNull(),
+  bathrooms: integer("bathrooms").notNull(),
+  sqft: integer("sqft").notNull(),
+  rent: integer("rent"),
+  available: boolean("available").notNull().default(true),
+  description: text("description").notNull().default(""),
+  features: text("features").notNull().default(""),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPropertyUnitSchema = createInsertSchema(propertyUnits).omit({
+  id: true,
+  createdAt: true
+});
+
+export type PropertyUnit = typeof propertyUnits.$inferSelect;
+export type InsertPropertyUnit = z.infer<typeof insertPropertyUnitSchema>;
+
+// Unit Images table
+export const unitImages = pgTable("unit_images", {
+  id: serial("id").primaryKey(),
+  unitId: integer("unit_id").notNull(),
+  url: text("url").notNull(),
+  alt: text("alt").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUnitImageSchema = createInsertSchema(unitImages).omit({
+  id: true,
+  createdAt: true
+});
+
+export type UnitImage = typeof unitImages.$inferSelect;
+export type InsertUnitImage = z.infer<typeof insertUnitImageSchema>;

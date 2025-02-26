@@ -1,11 +1,14 @@
 import { 
   locations, properties, features, inquiries, propertyImages, neighborhoods,
+  propertyUnits, unitImages,
   type Location, type InsertLocation, 
   type Property, type InsertProperty,
   type Feature, type InsertFeature,
   type Inquiry, type InsertInquiry,
   type PropertyImage, type InsertPropertyImage,
-  type Neighborhood, type InsertNeighborhood
+  type Neighborhood, type InsertNeighborhood,
+  type PropertyUnit, type InsertPropertyUnit,
+  type UnitImage, type InsertUnitImage
 } from "@shared/schema";
 
 // Storage Interface
@@ -23,6 +26,7 @@ export interface IStorage {
   getProperties(): Promise<Property[]>;
   getPropertiesByLocation(locationId: number): Promise<Property[]>;
   getProperty(id: number): Promise<Property | undefined>;
+  updateProperty(id: number, data: Partial<InsertProperty>): Promise<Property | undefined>;
   
   // Features
   getFeatures(): Promise<Feature[]>;
@@ -39,6 +43,20 @@ export interface IStorage {
   updatePropertyImageOrder(id: number, displayOrder: number): Promise<PropertyImage | undefined>;
   updatePropertyImageFeatured(id: number, isFeatured: boolean): Promise<PropertyImage | undefined>;
   deletePropertyImage(id: number): Promise<boolean>;
+  
+  // Property Units
+  getPropertyUnits(propertyId: number): Promise<PropertyUnit[]>;
+  getPropertyUnit(id: number): Promise<PropertyUnit | undefined>;
+  createPropertyUnit(unit: InsertPropertyUnit): Promise<PropertyUnit>;
+  updatePropertyUnit(id: number, data: Partial<InsertPropertyUnit>): Promise<PropertyUnit | undefined>;
+  deletePropertyUnit(id: number): Promise<boolean>;
+  
+  // Unit Images
+  getUnitImages(unitId: number): Promise<UnitImage[]>;
+  createUnitImage(image: InsertUnitImage): Promise<UnitImage>;
+  updateUnitImageOrder(id: number, displayOrder: number): Promise<UnitImage | undefined>;
+  updateUnitImageFeatured(id: number, isFeatured: boolean): Promise<UnitImage | undefined>;
+  deleteUnitImage(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -49,9 +67,13 @@ export class MemStorage implements IStorage {
   private inquiriesData: Map<number, Inquiry>;
   private propertyImagesData: Map<number, PropertyImage>;
   private neighborhoodsData: Map<number, Neighborhood>;
+  private propertyUnitsData: Map<number, PropertyUnit>;
+  private unitImagesData: Map<number, UnitImage>;
   private nextInquiryId: number = 1;
   private nextPropertyImageId: number = 1;
   private nextNeighborhoodId: number = 1;
+  private nextPropertyUnitId: number = 1;
+  private nextUnitImageId: number = 1;
 
   constructor() {
     this.locationsData = new Map();
@@ -60,6 +82,8 @@ export class MemStorage implements IStorage {
     this.inquiriesData = new Map();
     this.propertyImagesData = new Map();
     this.neighborhoodsData = new Map();
+    this.propertyUnitsData = new Map();
+    this.unitImagesData = new Map();
     
     // Seed initial data
     this.seedData();
@@ -206,6 +230,141 @@ export class MemStorage implements IStorage {
 
   async getProperty(id: number): Promise<Property | undefined> {
     return this.propertiesData.get(id);
+  }
+  
+  async updateProperty(id: number, data: Partial<InsertProperty>): Promise<Property | undefined> {
+    const property = this.propertiesData.get(id);
+    if (!property) return undefined;
+    
+    const updatedProperty: Property = {
+      ...property,
+      ...data
+    };
+    
+    this.propertiesData.set(id, updatedProperty);
+    return updatedProperty;
+  }
+  
+  // Property Units methods
+  async getPropertyUnits(propertyId: number): Promise<PropertyUnit[]> {
+    return Array.from(this.propertyUnitsData.values())
+      .filter(unit => unit.propertyId === propertyId)
+      .sort((a, b) => a.unitNumber.localeCompare(b.unitNumber));
+  }
+  
+  async getPropertyUnit(id: number): Promise<PropertyUnit | undefined> {
+    return this.propertyUnitsData.get(id);
+  }
+  
+  async createPropertyUnit(unit: InsertPropertyUnit): Promise<PropertyUnit> {
+    const id = this.nextPropertyUnitId++;
+    const createdAt = new Date();
+    
+    const newUnit: PropertyUnit = {
+      id,
+      propertyId: unit.propertyId,
+      unitNumber: unit.unitNumber,
+      bedrooms: unit.bedrooms,
+      bathrooms: unit.bathrooms,
+      sqft: unit.sqft,
+      rent: unit.rent,
+      available: unit.available,
+      description: unit.description || "",
+      features: unit.features || "",
+      createdAt
+    };
+    
+    this.propertyUnitsData.set(id, newUnit);
+    return newUnit;
+  }
+  
+  async updatePropertyUnit(id: number, data: Partial<InsertPropertyUnit>): Promise<PropertyUnit | undefined> {
+    const unit = this.propertyUnitsData.get(id);
+    if (!unit) return undefined;
+    
+    const updatedUnit: PropertyUnit = {
+      ...unit,
+      ...data
+    };
+    
+    this.propertyUnitsData.set(id, updatedUnit);
+    return updatedUnit;
+  }
+  
+  async deletePropertyUnit(id: number): Promise<boolean> {
+    // Delete associated unit images first
+    Array.from(this.unitImagesData.values())
+      .filter(image => image.unitId === id)
+      .forEach(image => this.unitImagesData.delete(image.id));
+    
+    return this.propertyUnitsData.delete(id);
+  }
+  
+  // Unit Images methods
+  async getUnitImages(unitId: number): Promise<UnitImage[]> {
+    return Array.from(this.unitImagesData.values())
+      .filter(image => image.unitId === unitId)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+  
+  async createUnitImage(image: InsertUnitImage): Promise<UnitImage> {
+    const id = this.nextUnitImageId++;
+    const createdAt = new Date();
+    
+    const newImage: UnitImage = {
+      id,
+      unitId: image.unitId,
+      url: image.url,
+      alt: image.alt,
+      displayOrder: image.displayOrder ?? 0,
+      isFeatured: image.isFeatured ?? false,
+      createdAt
+    };
+    
+    this.unitImagesData.set(id, newImage);
+    return newImage;
+  }
+  
+  async updateUnitImageOrder(id: number, displayOrder: number): Promise<UnitImage | undefined> {
+    const image = this.unitImagesData.get(id);
+    if (!image) return undefined;
+    
+    const updatedImage: UnitImage = {
+      ...image,
+      displayOrder
+    };
+    
+    this.unitImagesData.set(id, updatedImage);
+    return updatedImage;
+  }
+  
+  async updateUnitImageFeatured(id: number, isFeatured: boolean): Promise<UnitImage | undefined> {
+    const image = this.unitImagesData.get(id);
+    if (!image) return undefined;
+    
+    // If setting as featured, unset any other featured image for this unit
+    if (isFeatured) {
+      Array.from(this.unitImagesData.values())
+        .filter(img => img.unitId === image.unitId && img.isFeatured && img.id !== id)
+        .forEach(img => {
+          this.unitImagesData.set(img.id, {
+            ...img,
+            isFeatured: false
+          });
+        });
+    }
+    
+    const updatedImage: UnitImage = {
+      ...image,
+      isFeatured
+    };
+    
+    this.unitImagesData.set(id, updatedImage);
+    return updatedImage;
+  }
+  
+  async deleteUnitImage(id: number): Promise<boolean> {
+    return this.unitImagesData.delete(id);
   }
 
   // Feature methods
