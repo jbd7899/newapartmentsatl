@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Property } from "@shared/schema";
 import { MapIcon, Building, Bike, ParkingCircle, Utensils, Library } from "lucide-react";
+import NeighborhoodSection from "@/components/NeighborhoodSection";
 
 interface LocationPageProps {
   location: string;
@@ -272,6 +273,9 @@ const LocationPage = ({ location }: LocationPageProps) => {
         </div>
       </section>
 
+      {/* Neighborhood Information Section */}
+      <NeighborhoodSection locationSlug={location} locationName={locationData.name} />
+      
       {/* CTA Section */}
       <section className="bg-primary py-16">
         <div className="container mx-auto px-4 text-center">
