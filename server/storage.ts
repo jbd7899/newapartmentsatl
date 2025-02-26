@@ -169,6 +169,10 @@ export class MemStorage implements IStorage {
       schoolsInfo: neighborhood.schoolsInfo || null,
       parksAndRecreation: neighborhood.parksAndRecreation || null,
       historicalInfo: neighborhood.historicalInfo || null,
+      // Explore section
+      exploreDescription: neighborhood.exploreDescription || null,
+      exploreMapUrl: neighborhood.exploreMapUrl || null,
+      exploreHotspots: neighborhood.exploreHotspots || null,
       createdAt
     };
     
@@ -703,6 +707,31 @@ export class MemStorage implements IStorage {
         schoolsInfo: "Public schools include Springdale Park Elementary, Morningside Elementary, and Midtown High School. Private options include The Children's School and Paideia. Georgia Tech and SCAD Atlanta provide higher education.",
         parksAndRecreation: "Piedmont Park (189 acres) is the crown jewel with sports facilities, trails, and Lake Clara Meer. The Atlanta BeltLine's Eastside Trail runs along the eastern edge of Midtown. Also features Renaissance Park and Central Park.",
         historicalInfo: "Originally a residential district of mansions built by Atlanta's elite in the early 1900s, Midtown experienced decline after WWII. A renaissance began in the 1980s transforming it into a prime commercial and cultural district while preserving many historic buildings. The area includes the Midtown Historic District and several other listings on the National Register of Historic Places.",
+        exploreDescription: "Midtown Atlanta is the heart of the city's arts and culture scene, offering a perfect blend of urban sophistication and creative energy. With its walkable streets, world-class cultural venues, and innovative dining scene, Midtown represents Atlanta's dynamic future while honoring its rich cultural heritage.",
+        exploreMapUrl: "https://www.google.com/maps/d/u/0/embed?mid=1XLv06Buip8bENLqmPSeiPE9ehpdzfQY&ehbc=2E312F&noprof=1",
+        exploreHotspots: JSON.stringify([
+          {
+            name: "High Museum of Art",
+            description: "Southeast's premier art museum featuring classic and contemporary exhibitions.",
+            distance: "0.4 miles from center",
+            imageUrl: "https://i.imgur.com/sdHC6Hr.jpg",
+            link: "https://high.org"
+          },
+          {
+            name: "Piedmont Park",
+            description: "Atlanta's central park offering green spaces, recreational facilities, and city views.",
+            distance: "0.2 miles from center",
+            imageUrl: "https://i.imgur.com/bAy8idc.jpg",
+            link: "https://piedmontpark.org"
+          },
+          {
+            name: "Atlanta Botanical Garden",
+            description: "Urban oasis featuring stunning plant collections and seasonal exhibitions.",
+            distance: "0.5 miles from center",
+            imageUrl: "https://i.imgur.com/xq6r9MA.jpg",
+            link: "https://atlantabg.org"
+          }
+        ]),
         createdAt: new Date()
       },
       {
@@ -716,6 +745,31 @@ export class MemStorage implements IStorage {
         schoolsInfo: "Served by Atlanta Public Schools including Springdale Park Elementary, Inman Middle School, and Midtown High School. Several private schools are also nearby.",
         parksAndRecreation: "John Howell Park, Orme Park, and easy access to Piedmont Park and the Atlanta BeltLine's Eastside Trail for walking, running, and cycling.",
         historicalInfo: "Developed primarily in the early 1900s, Virginia-Highland was named for the intersection of Virginia and Highland Avenues. The neighborhood architecture includes Craftsman bungalows, Tudor Revival, and Colonial Revival homes. It was at the center of highway revolts in the 1970s that prevented I-485 from cutting through the neighborhood, helping preserve its historic character.",
+        exploreDescription: "The vibrant Virginia Highland neighborhood offers a perfect blend of historic charm and modern amenities. Ideal for those who want to live in one of Atlanta's most sought-after areas, with easy access to dining, shopping, and entertainment.",
+        exploreMapUrl: "https://www.google.com/maps/d/u/0/embed?mid=1mLjD6MgRd5Cq3tRresLx63wYe01d600&ehbc=2E312F&noprof=1",
+        exploreHotspots: JSON.stringify([
+          {
+            name: "Ponce City Market",
+            description: "Historic marketplace with dining, shopping, and entertainment.",
+            distance: "1.2 miles from neighborhood center",
+            imageUrl: "https://i.imgur.com/1zBCVnO.jpg",
+            link: "http://poncecitymarket.com"
+          },
+          {
+            name: "Virginia Highland Shopping District",
+            description: "Boutique shopping and local businesses in a charming setting.",
+            distance: "In the heart of the neighborhood",
+            imageUrl: "https://i.imgur.com/mmnSr5n.jpg",
+            link: "https://www.virginiahighlanddistrict.com"
+          },
+          {
+            name: "Piedmont Park",
+            description: "Atlanta's premier green space with walking trails and events.",
+            distance: "0.8 miles from neighborhood center",
+            imageUrl: "https://i.imgur.com/toEfT5z.jpg",
+            link: "https://piedmontpark.org"
+          }
+        ]),
         createdAt: new Date()
       },
       {

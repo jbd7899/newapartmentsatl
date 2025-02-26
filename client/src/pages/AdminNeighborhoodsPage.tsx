@@ -32,6 +32,10 @@ const AdminNeighborhoodsPage = () => {
     schoolsInfo: z.string().optional().nullable(),
     parksAndRecreation: z.string().optional().nullable(),
     historicalInfo: z.string().optional().nullable(),
+    // Explore section fields
+    exploreDescription: z.string().optional().nullable(),
+    exploreMapUrl: z.string().optional().nullable(),
+    exploreHotspots: z.string().optional().nullable(),
   });
 
   type FormValues = z.infer<typeof formSchema>;

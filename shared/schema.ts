@@ -24,6 +24,10 @@ export const neighborhoods = pgTable("neighborhoods", {
   schoolsInfo: text("schools_info"),
   parksAndRecreation: text("parks_and_recreation"),
   historicalInfo: text("historical_info"),
+  // Explore section
+  exploreDescription: text("explore_description"),
+  exploreMapUrl: text("explore_map_url"),
+  exploreHotspots: text("explore_hotspots"), // JSON string of hotspots
   createdAt: timestamp("created_at").defaultNow(),
 });
 
