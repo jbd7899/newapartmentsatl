@@ -3,7 +3,7 @@ import { Neighborhood } from "@shared/schema";
 import { getNeighborhoodByLocation } from "@/lib/data";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapIcon, UtensilsIcon, TrainIcon, School, PalmtreeIcon, LandmarkIcon, Building2Icon } from "lucide-react";
+import { MapIcon, UtensilsIcon, TrainIcon, School, PalmtreeIcon, LandmarkIcon, Building2Icon, CompassIcon, ExternalLinkIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface NeighborhoodSectionProps {
@@ -52,7 +52,7 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
         )}
 
         <Tabs defaultValue="attractions" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full h-auto">
+          <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full h-auto">
             <TabsTrigger value="attractions" className="flex flex-col items-center py-3">
               <LandmarkIcon className="h-5 w-5 mb-1" />
               <span>Attractions</span>
@@ -76,6 +76,10 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
             <TabsTrigger value="history" className="flex flex-col items-center py-3">
               <Building2Icon className="h-5 w-5 mb-1" />
               <span>History</span>
+            </TabsTrigger>
+            <TabsTrigger value="explore" className="flex flex-col items-center py-3">
+              <CompassIcon className="h-5 w-5 mb-1" />
+              <span>Explore</span>
             </TabsTrigger>
           </TabsList>
           
@@ -171,6 +175,94 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
                 <p className="whitespace-pre-line">
                   {neighborhood.historicalInfo}
                 </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="explore" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CompassIcon className="h-5 w-5 mr-2" />
+                  Explore {locationName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {neighborhood.exploreDescription && (
+                  <div className="mb-6">
+                    <p className="text-lg font-medium mb-2">About the Area</p>
+                    <p className="whitespace-pre-line text-slate-600">
+                      {neighborhood.exploreDescription}
+                    </p>
+                  </div>
+                )}
+                
+                {neighborhood.exploreMapUrl && (
+                  <div className="mb-8">
+                    <p className="text-lg font-medium mb-2">Interactive Map</p>
+                    <div className="border rounded-lg overflow-hidden h-72 w-full">
+                      <iframe 
+                        src={neighborhood.exploreMapUrl} 
+                        className="w-full h-full border-0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title={`Interactive map of ${locationName}`}
+                      ></iframe>
+                    </div>
+                  </div>
+                )}
+                
+                {neighborhood.exploreHotspots && (
+                  <div className="mb-6">
+                    <p className="text-lg font-medium mb-4">Local Hotspots</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {(() => {
+                        try {
+                          const hotspots = JSON.parse(neighborhood.exploreHotspots);
+                          return hotspots.map((hotspot: any, index: number) => (
+                            <div key={index} className="border rounded-lg overflow-hidden flex flex-col">
+                              {hotspot.imageUrl && (
+                                <div className="h-40 relative">
+                                  <img 
+                                    src={hotspot.imageUrl}
+                                    alt={hotspot.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x250?text=No+Image';
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div className="p-4 flex-grow">
+                                <h3 className="font-medium text-lg">{hotspot.name}</h3>
+                                {hotspot.distance && (
+                                  <p className="text-sm text-slate-500 mb-2">{hotspot.distance}</p>
+                                )}
+                                <p className="text-sm mb-3">{hotspot.description}</p>
+                                {hotspot.link && (
+                                  <a 
+                                    href={hotspot.link}
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-primary inline-flex items-center text-sm hover:underline"
+                                  >
+                                    Visit website <ExternalLinkIcon className="h-3 w-3 ml-1" />
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ));
+                        } catch (e) {
+                          return (
+                            <div className="col-span-3 text-slate-500 italic">
+                              Unable to display hotspots information
+                            </div>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
