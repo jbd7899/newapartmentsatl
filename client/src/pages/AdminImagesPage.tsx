@@ -33,6 +33,8 @@ import {
   Star,
   ArrowUp,
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   Plus,
   Image as ImageIcon,
   FolderOpen,
