@@ -585,10 +585,11 @@ const AdminImagesPage = () => {
     
     // Upload each image with incremental display order
     formData.imageUrls.forEach((imageData, index) => {
-      // Use the URL reference instead of the full data
+      // Pass both the URL and the full data to the server
       createImageMutation.mutate({
         propertyId,
         url: imageData.url,
+        data: imageData.data, // Pass the full image data
         alt: formData.alt || `Image of ${properties.find(p => p.id === propertyId)?.name}`,
         displayOrder: highestOrder + index + 1,
         isFeatured: existingImages.length === 0 && index === 0 // Make first image featured if no existing images

@@ -125,7 +125,7 @@ export async function getPropertyImagesByProperty(propertyId: number): Promise<P
   return response.json();
 }
 
-export async function createPropertyImage(image: InsertPropertyImage): Promise<PropertyImage> {
+export async function createPropertyImage(image: InsertPropertyImage & { data?: string }): Promise<PropertyImage> {
   return apiRequest<PropertyImage>({
     url: '/api/property-images',
     method: 'POST',
