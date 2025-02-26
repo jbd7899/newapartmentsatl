@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, varchar, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -57,3 +57,24 @@ export type InsertProperty = z.infer<typeof insertPropertySchema>;
 
 export type Feature = typeof features.$inferSelect;
 export type InsertFeature = z.infer<typeof insertFeatureSchema>;
+
+// Inquiries table
+export const inquiries = pgTable("inquiries", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  message: text("message").notNull(),
+  propertyId: integer("property_id"),
+  propertyName: text("property_name"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  status: text("status").notNull().default("new") // "new", "contacted", "resolved"
+});
+
+export const insertInquirySchema = createInsertSchema(inquiries).omit({
+  id: true,
+  createdAt: true
+});
+
+export type Inquiry = typeof inquiries.$inferSelect;
+export type InsertInquiry = z.infer<typeof insertInquirySchema>;

@@ -18,6 +18,11 @@ export interface IStorage {
   
   // Features
   getFeatures(): Promise<Feature[]>;
+  
+  // Inquiries
+  getInquiries(): Promise<Inquiry[]>;
+  createInquiry(inquiry: InsertInquiry): Promise<Inquiry>;
+  updateInquiryStatus(id: number, status: string): Promise<Inquiry | undefined>;
 }
 
 // In-memory storage implementation
