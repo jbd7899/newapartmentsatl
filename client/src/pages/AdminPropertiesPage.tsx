@@ -234,88 +234,6 @@ const AdminPropertiesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="rent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rent ($/month)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      value={field.value ?? ''} 
-                      onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                      ref={field.ref}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="bedrooms"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bedrooms</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="bathrooms"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bathrooms</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="sqft"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Square Feet</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="features"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Features</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Modern,Updated,Spacious" />
-                  </FormControl>
-                  <FormDescription>
-                    Enter features separated by commas
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="propertyType"
               render={({ field }) => (
                 <FormItem>
@@ -335,6 +253,95 @@ const AdminPropertiesPage = () => {
               )}
             />
           </div>
+          
+          {/* Only show these fields for non-multifamily properties */}
+          {!isMultifamily && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rent ($/month)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          value={field.value ?? ''} 
+                          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="bedrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bedrooms</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="bathrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bathrooms</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="sqft"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Square Feet</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="features"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Features</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Modern,Updated,Spacious" />
+                      </FormControl>
+                      <FormDescription>
+                        Enter features separated by commas
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </>
+          )}
           
           <FormField
             control={form.control}
@@ -538,7 +545,11 @@ const AdminPropertiesPage = () => {
                         ) : 'Multi Family'}
                       </td>
                       <td className="px-6 py-4">
-                        ${typeof property.rent === 'number' ? property.rent.toLocaleString() : 'N/A'}
+                        {property.isMultifamily ? (
+                          <span className="text-blue-600">See unit details</span>
+                        ) : (
+                          <span>${typeof property.rent === 'number' ? property.rent.toLocaleString() : 'N/A'}</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {property.isMultifamily ? (
