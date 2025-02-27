@@ -305,15 +305,17 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
               )}
               
               <div className="space-y-4 mb-2">
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-500">Status</span>
-                  <span className="font-semibold">
-                    {property.available ? 
-                      <span className="text-green-600">Available Now</span> : 
-                      <span className="text-red-600">Unavailable</span>
-                    }
-                  </span>
-                </div>
+                {!property.isMultifamily && (
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-500">Status</span>
+                    <span className="font-semibold">
+                      {property.available ? 
+                        <span className="text-green-600">Available Now</span> : 
+                        <span className="text-red-600">Unavailable</span>
+                      }
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between py-2 border-t border-gray-100">
                   <span className="text-gray-500">Property Type</span>
                   <span className="font-semibold capitalize">
