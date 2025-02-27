@@ -256,6 +256,26 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 </div>
               </div>
               
+              {/* Integrated Neighborhood Section */}
+              {propertyLocation && (
+                <div ref={neighborhoodRef} className="mb-8">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-orange-500" />
+                    Neighborhood
+                  </h3>
+                  <p className="text-gray-700 mb-4">
+                    This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
+                  </p>
+                  
+                  <div className="bg-gray-50 p-6 rounded-lg mb-6">
+                    <NeighborhoodSection 
+                      locationSlug={propertyLocation.slug} 
+                      locationName={propertyLocation.name} 
+                    />
+                  </div>
+                </div>
+              )}
+              
               {!property.isMultifamily && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4">Features & Amenities</h3>
@@ -333,45 +353,27 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
             </div>
 
             {/* Image Gallery Card */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-              <div className="aspect-video bg-gray-100 overflow-hidden">
-                <img 
-                  src={featuredImage} 
-                  alt={property.name} 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="font-bold text-lg mb-2">Photo Gallery</h3>
-                <p className="text-gray-500 mb-3">View all {galleryImages.length} photos of this property</p>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-orange-500 text-orange-500 hover:bg-orange-50"
-                  onClick={() => setShowGallery(true)}
-                >
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  View All Photos
-                </Button>
-              </div>
-            </div>
-
-            {/* Neighborhood Preview */}
-            {propertyLocation && (
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h3 className="font-bold text-lg flex items-center mb-3">
-                  <MapPin className="h-5 w-5 mr-2 text-orange-500" />
-                  Neighborhood
-                </h3>
-                <p className="text-gray-700 mb-4">
-                  This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="border-orange-500 text-orange-500 hover:bg-orange-50"
-                  onClick={() => scrollToSection('neighborhood')}
-                >
-                  Explore {propertyLocation.name}
-                </Button>
+            {!property.isMultifamily && (
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+                <div className="aspect-video bg-gray-100 overflow-hidden">
+                  <img 
+                    src={featuredImage} 
+                    alt={property.name} 
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-bold text-lg mb-2">Photo Gallery</h3>
+                  <p className="text-gray-500 mb-3">View all {galleryImages.length} photos of this property</p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-orange-500 text-orange-500 hover:bg-orange-50"
+                    onClick={() => setShowGallery(true)}
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    View All Photos
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -426,19 +428,6 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         </div>
       )}
       
-      {/* Neighborhood Section */}
-      {propertyLocation && (
-        <div ref={neighborhoodRef} className="bg-white py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-8 pb-2 border-b border-gray-200">Explore the Neighborhood</h2>
-            <NeighborhoodSection 
-              locationSlug={propertyLocation.slug} 
-              locationName={propertyLocation.name} 
-            />
-          </div>
-        </div>
-      )}
-
       {/* Property Gallery Modal */}
       {showGallery && (
         <PropertyGallery
