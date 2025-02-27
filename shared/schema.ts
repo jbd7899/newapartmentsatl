@@ -169,3 +169,21 @@ export const insertUnitImageSchema = createInsertSchema(unitImages).omit({
 
 export type UnitImage = typeof unitImages.$inferSelect;
 export type InsertUnitImage = z.infer<typeof insertUnitImageSchema>;
+
+// Image Storage table for storing binary data
+export const imageStorage = pgTable("image_storage", {
+  id: serial("id").primaryKey(),
+  objectKey: text("object_key").notNull().unique(),
+  mimeType: text("mime_type").notNull(),
+  data: text("data").notNull(), // Base64 encoded image data
+  size: integer("size").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertImageStorageSchema = createInsertSchema(imageStorage).omit({
+  id: true,
+  createdAt: true
+});
+
+export type ImageStorage = typeof imageStorage.$inferSelect;
+export type InsertImageStorage = z.infer<typeof insertImageStorageSchema>;

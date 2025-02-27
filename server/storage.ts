@@ -1,6 +1,6 @@
 import { 
   locations, properties, features, inquiries, propertyImages, neighborhoods,
-  propertyUnits, unitImages,
+  propertyUnits, unitImages, imageStorage,
   type Location, type InsertLocation, 
   type Property, type InsertProperty,
   type Feature, type InsertFeature,
@@ -8,7 +8,8 @@ import {
   type PropertyImage, type InsertPropertyImage,
   type Neighborhood, type InsertNeighborhood,
   type PropertyUnit, type InsertPropertyUnit,
-  type UnitImage, type InsertUnitImage
+  type UnitImage, type InsertUnitImage,
+  type ImageStorage, type InsertImageStorage
 } from "@shared/schema";
 
 // Storage Interface
@@ -70,6 +71,12 @@ export interface IStorage {
   
   // Add method to get all property units
   getAllPropertyUnits(): Promise<PropertyUnit[]>;
+  
+  // Image Storage - Database Binary Storage
+  saveImageData(data: InsertImageStorage): Promise<ImageStorage>;
+  getImageDataByObjectKey(objectKey: string): Promise<ImageStorage | undefined>;
+  deleteImageDataByObjectKey(objectKey: string): Promise<boolean>;
+  getAllStoredImages(): Promise<ImageStorage[]>;
 }
 
 // In-memory storage implementation
