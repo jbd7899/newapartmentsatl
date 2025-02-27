@@ -6,6 +6,8 @@ import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchem
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import { uploadImage, deleteImage, getImageData, getFilenameFromObjectKey } from "./object-storage";
+import { upload, handleUploadErrors } from "./upload-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create uploads directory if it doesn't exist

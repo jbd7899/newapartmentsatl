@@ -64,6 +64,7 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
       return null;
     }
     
+    // value is already a Buffer from downloadAsBytes, so return it directly
     return value;
   } catch (error) {
     console.error("Error downloading from object storage:", error);
