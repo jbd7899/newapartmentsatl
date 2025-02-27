@@ -429,13 +429,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simplified property image upload endpoint - uses only Object Storage
+  // Property image endpoint - only accepts external URLs
   app.post("/api/property-images", async (req: Request, res: Response) => {
     try {
-      const { data, propertyId, alt, displayOrder, isFeatured } = req.body;
-
-      // Import from storage-utils
-      const { uploadImage, getImageUrl } = await import('./storage-utils');
+      const { propertyId, url, alt, displayOrder, isFeatured } = req.body;
 
       // Verify property exists
       const property = await storage.getProperty(propertyId);
@@ -443,20 +440,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Property not found" });
       }
 
-      // If image data is provided, process it
-      let objectKey = '';
-      let url = '';
-
-      if (data && typeof data === 'string') {
-        // Upload the image to Object Storage
-        objectKey = await uploadImage(data, 'property-image.jpg', 'property-images');
-        url = getImageUrl(objectKey);
-      } else if (req.body.url && req.body.url.startsWith('http')) {
-        // If URL is an external URL, use it directly
-        url = req.body.url;
-        objectKey = null;
-      } else {
-        return res.status(400).json({ message: "Either image data or external URL is required" });
+      // Validate URL
+      if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+        return res.status(400).json({ message: "A valid external image URL is required" });
       }
 
       // Create the property image in the database
@@ -465,9 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         url,
         alt: alt || '',
         displayOrder: displayOrder || 0,
-        isFeatured: isFeatured || false,
-        objectKey: objectKey || null,
-        storageType: objectKey ? "object-storage" : "external"
+        isFeatured: isFeatured || false
       };
 
       // Validate request body

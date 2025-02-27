@@ -109,17 +109,14 @@ export const insertInquirySchema = createInsertSchema(inquiries).omit({
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
 
-// Property Images table - using only Object Storage
+// Property Images table - using only external URLs now
 export const propertyImages = pgTable("property_images", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").notNull(),
-  url: text("url").notNull(),     // URL to display the image
-  objectKey: text("object_key"),  // Storage key in object storage - can be null for external URLs
+  url: text("url").notNull(),     // External URL to the image
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
-  mimeType: text("mime_type"),    // MIME type of the image
-  size: integer("size"),          // Size in bytes
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -154,16 +151,14 @@ export const insertPropertyUnitSchema = createInsertSchema(propertyUnits).omit({
 export type PropertyUnit = typeof propertyUnits.$inferSelect;
 export type InsertPropertyUnit = z.infer<typeof insertPropertyUnitSchema>;
 
-// Unit Images table - using only Object Storage
+// Unit Images table - using only external URLs now
 export const unitImages = pgTable("unit_images", {
   id: serial("id").primaryKey(),
   unitId: integer("unit_id").notNull(),
-  objectKey: text("object_key").notNull(),  // Storage key in object storage
+  url: text("url").notNull(),     // External URL to the image
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
-  mimeType: text("mime_type"),    // MIME type of the image
-  size: integer("size"),          // Size in bytes
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
