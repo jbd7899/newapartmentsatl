@@ -91,6 +91,16 @@ const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, onClose, prop
 
   // Function to get optimized image URL for different sizes
   const getOptimizedImageUrl = (originalUrl: string, width: number): string => {
+    // For Cloudinary URLs, we can use their built-in transformations for optimization
+    if (originalUrl && originalUrl.includes('cloudinary.com')) {
+      // Extract parts of the Cloudinary URL
+      const parts = originalUrl.split('/upload/');
+      if (parts.length === 2) {
+        // Insert transformation parameters
+        return `${parts[0]}/upload/c_fill,w_${width},q_auto/${parts[1]}`;
+      }
+    }
+    
     // Handle object storage URLs using our utility function
     return getImageUrl(originalUrl);
   };
