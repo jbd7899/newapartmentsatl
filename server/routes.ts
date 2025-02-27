@@ -1,8 +1,18 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+// Use the global storage instance which can be either in-memory or PostgreSQL
+const storage = (global as any).storage || await import('./storage').then(m => m.storage);
 import { z } from "zod";
-import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchema, insertPropertyUnitSchema, insertUnitImageSchema } from "@shared/schema";
+import { 
+  insertInquirySchema, 
+  insertPropertyImageSchema, 
+  insertNeighborhoodSchema, 
+  insertPropertyUnitSchema, 
+  insertUnitImageSchema,
+  type PropertyImage,
+  type UnitImage,
+  type ImageStorage
+} from "@shared/schema";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -1156,7 +1166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dbImages = await storage.getAllStoredImages();
       
       // Format database images to match the expected output
-      const formattedDbImages = dbImages.map(img => ({
+      const formattedDbImages = dbImages.map((img: ImageStorage) => ({
         key: img.objectKey,
         url: `/api/db-images/${img.objectKey}`,
         size: img.size,
@@ -1193,7 +1203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Find property image with this objectKey
       const images = await storage.getPropertyImages();
-      const image = images.find(img => img.objectKey === objectKey);
+      const image = images.find((img: PropertyImage) => img.objectKey === objectKey);
       
       if (!image) {
         return res.status(404).send('Property image not found');
@@ -1230,7 +1240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const unit of allUnits) {
         const images = await storage.getUnitImages(unit.id);
-        const image = images.find(img => img.objectKey === objectKey);
+        const image = images.find((img: UnitImage) => img.objectKey === objectKey);
         if (image) {
           unitImage = image;
           break;

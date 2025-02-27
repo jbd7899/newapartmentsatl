@@ -1,6 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { PgStorage } from "./pg-storage";
+import { storage } from "./storage";
+
+// Replace the in-memory storage with PostgreSQL storage
+// Comment this line if you want to use in-memory storage for development
+(global as any).storage = new PgStorage();
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
