@@ -117,6 +117,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(404).send('File not found');
   });
   
+  // Serve images directly from database storage
+  app.get('/api/db-images/:objectKey', async (req: Request, res: Response) => {
+    try {
+      const objectKey = req.params.objectKey;
+      console.log(`Serving image from database: ${objectKey}`);
+      
+      if (!objectKey) {
+        console.log('No object key provided');
+        return res.status(404).send('Image not found');
+      }
+      
+      // Get the image data from database storage
+      const imageData = await storage.getImageDataByObjectKey(objectKey);
+      
+      if (!imageData) {
+        console.log(`Image not found in database: ${objectKey}`);
+        
+        // If this is an object storage key, try to get it from object storage
+        if (isObjectStorageKey(objectKey)) {
+          console.log(`Trying object storage for: ${objectKey}`);
+          const imageBuffer = await getImageData(objectKey);
+          
+          if (imageBuffer) {
+            // Determine MIME type based on filename
+            const filename = getFilenameFromObjectKey(objectKey);
+            let mimeType = 'image/jpeg';
+            if (filename.endsWith('.png')) mimeType = 'image/png';
+            else if (filename.endsWith('.gif')) mimeType = 'image/gif';
+            else if (filename.endsWith('.webp')) mimeType = 'image/webp';
+            else if (filename.endsWith('.svg')) mimeType = 'image/svg+xml';
+            
+            res.contentType(mimeType);
+            return res.send(imageBuffer);
+          }
+        }
+        
+        return res.status(404).send('Image not found');
+      }
+      
+      // Extract base64 data and convert to buffer
+      const buffer = Buffer.from(imageData.data, 'base64');
+      
+      // Set proper content type
+      res.contentType(imageData.mimeType);
+      console.log(`Serving image from database, size: ${buffer.length} bytes`);
+      
+      return res.send(buffer);
+    } catch (error) {
+      console.error('Error serving image from database:', error);
+      return res.status(500).send('Error processing image');
+    }
+  });
+  
   // Process image data and save to store
   const processImageData = async (url: string, data?: string): Promise<string> => {
     console.log(`Processing image data. URL: ${url?.substring(0, 30)}..., Data provided: ${!!data}`);
@@ -130,6 +183,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // If the URL is already an object storage key, return it as is
     if (isObjectStorageKey(url)) {
       console.log(`URL is already an object storage key: ${url}`);
+      return url;
+    }
+    
+    // If the URL is already a database image URL, return it as is
+    if (url.startsWith('/api/db-images/')) {
+      console.log(`URL is already a database image URL: ${url}`);
       return url;
     }
     
@@ -148,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const mimeType = matches[1];
-      const buffer = Buffer.from(matches[2], 'base64');
+      const base64Data = matches[2];
       
       // Determine file extension based on MIME type
       let extension = '.jpg';
@@ -157,29 +216,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       else if (mimeType === 'image/webp') extension = '.webp';
       else if (mimeType === 'image/svg+xml') extension = '.svg';
       
-      // Generate a filename for the image
-      let filename;
-      if (url.startsWith('/uploads/')) {
-        // Extract the filename from the URL
-        filename = url.split('/uploads/')[1];
-        console.log(`Extracted filename from URL: ${filename}`);
-        
-        // Sanitize the filename to remove path separators and other invalid characters
-        filename = filename.replace(/[\/\\?%*:|"<>]/g, '_');
-      } else {
-        // Generate a new filename
-        const timestamp = Date.now();
-        const randomStr = crypto.randomBytes(4).toString('hex');
-        filename = `image_${timestamp}_${randomStr}${extension}`;
-        console.log(`Generated new filename: ${filename}`);
-      }
+      // Generate a filename/objectKey for the image
+      const timestamp = Date.now();
+      const randomStr = crypto.randomBytes(4).toString('hex');
+      const objectKey = `dbimg_${timestamp}_${randomStr}${extension}`;
+      console.log(`Generated new object key: ${objectKey}`);
       
-      // Upload to object storage
-      const objectKey = await uploadImage(buffer, filename);
-      console.log(`Uploaded image to object storage with key: ${objectKey}`);
+      // Calculate size
+      const bufferSize = Buffer.from(base64Data, 'base64').length;
       
-      // Return the object key as the URL
-      return objectKey;
+      // Store image in database
+      await storage.saveImageData({
+        objectKey,
+        mimeType,
+        data: base64Data,
+        size: bufferSize
+      });
+      
+      console.log(`Stored image in database with key: ${objectKey}`);
+      
+      // Return the path to the image with our API endpoint
+      return `/api/db-images/${objectKey}`;
     } catch (error) {
       console.error('Error processing image data:', error);
       return url;
@@ -532,8 +589,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Image not found" });
       }
       
+      // Check if this is a database-stored image
+      if (image.url && image.url.startsWith('/api/db-images/')) {
+        try {
+          // Extract object key from URL
+          const objectKey = image.url.split('/api/db-images/')[1];
+          if (objectKey) {
+            // Delete from database storage
+            await storage.deleteImageDataByObjectKey(objectKey);
+            console.log(`Deleted image from database storage: ${objectKey}`);
+          }
+        } catch (error) {
+          console.error(`Failed to delete image from database storage: ${image.url}`, error);
+          // Continue with deletion from database even if storage deletion fails
+        }
+      }
       // If the image URL is an object storage key (not an external URL), delete it from storage
-      if (image.url && !image.url.startsWith('http')) {
+      else if (image.url && !image.url.startsWith('http')) {
         try {
           // Delete from object storage
           await deleteImage(image.url);
@@ -906,8 +978,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Image not found" });
       }
       
+      // Check if this is a database-stored image
+      if (image.url && image.url.startsWith('/api/db-images/')) {
+        try {
+          // Extract object key from URL
+          const objectKey = image.url.split('/api/db-images/')[1];
+          if (objectKey) {
+            // Delete from database storage
+            await storage.deleteImageDataByObjectKey(objectKey);
+            console.log(`Deleted image from database storage: ${objectKey}`);
+          }
+        } catch (error) {
+          console.error(`Failed to delete image from database storage: ${image.url}`, error);
+          // Continue with deletion from database even if storage deletion fails
+        }
+      }
       // If the image URL is an object storage key (not an external URL), delete it from storage
-      if (image.url && !image.url.startsWith('http')) {
+      else if (image.url && !image.url.startsWith('http')) {
         try {
           // Delete from object storage
           await deleteImage(image.url);
@@ -998,8 +1085,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // List all images in storage
   app.get("/api/images", async (req: Request, res: Response) => {
     try {
-      const images = await listImages();
-      res.json({ images });
+      // Get images from both storage systems
+      const objectStorageImages = await listImages();
+      const dbImages = await storage.getAllStoredImages();
+      
+      // Format database images to match the expected output
+      const formattedDbImages = dbImages.map(img => ({
+        key: img.objectKey,
+        url: `/api/db-images/${img.objectKey}`,
+        size: img.size,
+        type: img.mimeType,
+        source: 'database'
+      }));
+      
+      // Format object storage images
+      const formattedObjectStorageImages = objectStorageImages.map(key => ({
+        key,
+        url: `/api/images/${key}`,
+        source: 'object-storage'
+      }));
+      
+      res.json({ 
+        images: [...formattedDbImages, ...formattedObjectStorageImages],
+        counts: {
+          database: formattedDbImages.length,
+          objectStorage: formattedObjectStorageImages.length,
+          total: formattedDbImages.length + formattedObjectStorageImages.length
+        }
+      });
     } catch (error) {
       console.error('Error listing images:', error);
       res.status(500).json({ message: "Failed to list images" });
