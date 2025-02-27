@@ -20,6 +20,27 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
   const [, setLocation] = useLocation();
   const [showGallery, setShowGallery] = useState(false);
   const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  // References for scrolling to sections
+  const overviewRef = React.useRef<HTMLDivElement>(null);
+  const unitsRef = React.useRef<HTMLDivElement>(null);
+  const neighborhoodRef = React.useRef<HTMLDivElement>(null);
+  
+  // Function to scroll to section
+  const scrollToSection = (section: string) => {
+    setActiveTab(section);
+    
+    setTimeout(() => {
+      if (section === 'overview' && overviewRef.current) {
+        overviewRef.current.scrollIntoView({ behavior: 'smooth' });
+      } else if (section === 'units' && unitsRef.current) {
+        unitsRef.current.scrollIntoView({ behavior: 'smooth' });
+      } else if (section === 'neighborhood' && neighborhoodRef.current) {
+        neighborhoodRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
   
   const { data: property, isLoading: isLoadingProperty, error: propertyError } = useQuery({
     queryKey: [`/api/properties/${id}`],
@@ -130,31 +151,78 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
 
   return (
     <>
-      {/* Property Hero */}
-      <div className="relative h-[60vh] bg-cover bg-center" style={{ backgroundImage: `url(${featuredImage})` }}>
-        <div className="absolute inset-0 bg-black/50"></div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white px-4">
-            <h1 className="font-heading font-bold text-4xl md:text-5xl mb-4">{property.name}</h1>
-            <p className="text-xl max-w-2xl mx-auto mb-6">{property.address}</p>
-            <div className="flex flex-wrap gap-2 justify-center items-center">
-              {propertyLocation && (
-                <Badge className="px-4 py-2 text-lg" variant="secondary">
-                  {propertyLocation.name}
-                </Badge>
+      {/* Property Hero - Updated with modern design */}
+      <div className="relative h-64 md:h-[50vh] bg-gray-300 bg-center bg-cover" style={{ backgroundImage: `url(${featuredImage})` }}>
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 text-white">
+          <div className="container mx-auto">
+            <div className="flex flex-wrap items-center mb-2">
+              {property.available && (
+                <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-semibold mr-2 mb-2">
+                  Available Now
+                </span>
               )}
+              {propertyLocation && (
+                <span className="flex items-center px-3 py-1 bg-white bg-opacity-20 backdrop-blur-sm rounded-full text-sm mr-2 mb-2">
+                  <MapPin size={14} className="mr-1" /> {propertyLocation.name}
+                </span>
+              )}
+            </div>
+            
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 drop-shadow-md">
+              {property.name}
+            </h1>
+            
+            <p className="text-lg mb-2 drop-shadow-sm">
+              {property.address}
+            </p>
+            
+            <div className="mt-4">
               <Button 
-                variant="secondary" 
-                className="font-semibold bg-white text-black hover:bg-white/90"
                 onClick={() => setShowGallery(true)}
+                className="bg-white/90 text-black hover:bg-white font-medium"
+                size="sm"
               >
                 <ImageIcon className="mr-2 h-4 w-4" />
-                View All Photos
+                View Photos
               </Button>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Quick Info Tabs */}
+      <section className="bg-white shadow-md sticky top-0 z-10">
+        <div className="container mx-auto">
+          <div className="flex overflow-x-auto">
+            <button 
+              className={`px-6 py-4 text-sm font-medium border-b-2 flex-1 text-center whitespace-nowrap
+                ${activeTab === 'overview' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-600 hover:text-orange-500'}`}
+              onClick={() => scrollToSection('overview')}
+            >
+              Overview
+            </button>
+            {property.isMultifamily && (
+              <button 
+                className={`px-6 py-4 text-sm font-medium border-b-2 flex-1 text-center whitespace-nowrap
+                  ${activeTab === 'units' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-600 hover:text-orange-500'}`}
+                onClick={() => scrollToSection('units')}
+              >
+                Units
+              </button>
+            )}
+            {propertyLocation && (
+              <button 
+                className={`px-6 py-4 text-sm font-medium border-b-2 flex-1 text-center whitespace-nowrap
+                  ${activeTab === 'neighborhood' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-600 hover:text-orange-500'}`}
+                onClick={() => scrollToSection('neighborhood')}
+              >
+                Neighborhood
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* Property Details */}
       <div className="container mx-auto px-4 py-16">
