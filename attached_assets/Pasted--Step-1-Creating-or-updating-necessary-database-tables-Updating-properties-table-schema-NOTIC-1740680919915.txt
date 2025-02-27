@@ -1,0 +1,87 @@
+
+Step 1: Creating or updating necessary database tables...
+Updating properties table schema...
+NOTICE:  column "property_type" of relation "properties" already exists, skipping
+NOTICE:  column "is_multifamily" of relation "properties" already exists, skipping
+NOTICE:  column "unit_count" of relation "properties" already exists, skipping
+ALTER TABLE
+Creating image_storage table if it doesn't exist...
+NOTICE:  relation "image_storage" already exists, skipping
+CREATE TABLE
+Schema updates completed successfully!
+
+Step 2: Running data migration from in-memory to PostgreSQL...
+/home/runner/workspace/server/migration.ts:431
+if (require.main === module) {
+^
+
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+    at <anonymous> (/home/runner/workspace/server/migration.ts:431:1)
+    at ModuleJob.run (node:internal/modules/esm/module_job:234:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:473:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:122:5)
+
+Node.js v20.18.1
+Data migration failed. Exiting.
+~/workspace$ chmod +x run-migration.sh
+ Environment updated. Reloading shell...
+~/workspace$  ./run-migration.sh
+====================================================
+  Real Estate Property Management System Migration
+====================================================
+
+Step 1: Creating or updating necessary database tables...
+Updating properties table schema...
+NOTICE:  column "property_type" of relation "properties" already exists, skipping
+NOTICE:  column "is_multifamily" of relation "properties" already exists, skipping
+NOTICE:  column "unit_count" of relation "properties" already exists, skipping
+ALTER TABLE
+Creating image_storage table if it doesn't exist...
+NOTICE:  relation "image_storage" already exists, skipping
+CREATE TABLE
+Schema updates completed successfully!
+
+Step 2: Running data migration from in-memory to PostgreSQL...
+Starting migration from in-memory storage to PostgreSQL...
+Starting migration from in-memory storage to PostgreSQL database...
+Migrating locations...
+Migrated 3 locations
+Migrating neighborhoods...
+Migrated 3 neighborhoods
+Migrating properties...
+Migration failed: PostgresError: invalid input syntax for type integer: "2.5"
+    at ErrorResponse (file:///home/runner/workspace/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///home/runner/workspace/node_modules/postgres/src/connection.js:474:6)
+    at TLSSocket.data (file:///home/runner/workspace/node_modules/postgres/src/connection.js:315:9)
+    at TLSSocket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '22P02',
+  where: "unnamed portal parameter $6 = '...'",
+  file: 'numutils.c',
+  line: '617',
+  routine: 'pg_strtoint32_safe'
+}
+Migration failed: PostgresError: invalid input syntax for type integer: "2.5"
+    at ErrorResponse (file:///home/runner/workspace/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///home/runner/workspace/node_modules/postgres/src/connection.js:474:6)
+    at TLSSocket.data (file:///home/runner/workspace/node_modules/postgres/src/connection.js:315:9)
+    at TLSSocket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '22P02',
+  where: "unnamed portal parameter $6 = '...'",
+  file: 'numutils.c',
+  line: '617',
+  routine: 'pg_strtoint32_safe'
+}
+Data migration failed. Exiting.
