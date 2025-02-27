@@ -395,8 +395,10 @@ async function migrateUnitImages(): Promise<void> {
     // Download and upload the image to object storage if it's a URL
     let objectKey = image.objectKey;
     
+    // @ts-ignore - Handle URL legacy field from MemStorage
     if (!objectKey && image.url && image.url.startsWith('http')) {
       try {
+        // @ts-ignore - Handle URL legacy field from MemStorage
         const imageBuffer = await downloadImage(image.url);
         objectKey = await uploadImage(imageBuffer, `unit_image_${image.id}.jpg`);
       } catch (error) {
