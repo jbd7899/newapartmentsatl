@@ -256,26 +256,6 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 </div>
               </div>
               
-              {/* Integrated Neighborhood Section */}
-              {propertyLocation && (
-                <div ref={neighborhoodRef} className="mb-8">
-                  <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-orange-500" />
-                    Neighborhood
-                  </h3>
-                  <p className="text-gray-700 mb-4">
-                    This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
-                  </p>
-                  
-                  <div className="bg-gray-50 p-6 rounded-lg mb-6">
-                    <NeighborhoodSection 
-                      locationSlug={propertyLocation.slug} 
-                      locationName={propertyLocation.name} 
-                    />
-                  </div>
-                </div>
-              )}
-              
               {!property.isMultifamily && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4">Features & Amenities</h3>
@@ -424,6 +404,27 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Neighborhood Section */}
+      {propertyLocation && (
+        <div ref={neighborhoodRef} className="bg-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Discover {propertyLocation.name}</h2>
+              <p className="text-gray-700 mb-6">
+                This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
+              </p>
+            </div>
+            
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <NeighborhoodSection 
+                locationSlug={propertyLocation.slug} 
+                locationName={propertyLocation.name} 
+              />
+            </div>
           </div>
         </div>
       )}
