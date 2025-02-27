@@ -67,6 +67,7 @@ export async function deleteImage(objectKey: string): Promise<boolean> {
 // Get image data for download
 export async function getImageData(objectKey: string): Promise<Buffer | null> {
   try {
+    console.log(`Attempting to download image data for: ${objectKey}`);
     const { ok, value, error } = await client.downloadAsBytes(objectKey);
     
     if (!ok || !value) {
@@ -74,6 +75,7 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
       return null;
     }
     
+    console.log(`Successfully retrieved image data for ${objectKey}, size: ${value.length} bytes`);
     // Convert to unknown first to satisfy TypeScript
     return (value as unknown) as Buffer;
   } catch (error) {
