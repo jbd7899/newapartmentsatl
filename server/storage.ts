@@ -66,6 +66,16 @@ export interface IStorage {
 
   // Add method to get all property units
   getAllPropertyUnits(): Promise<PropertyUnit[]>;
+  
+  // Image Storage (Object Storage Integration)
+  saveImageData(data: InsertImageStorage): Promise<ImageStorage>;
+  getImageDataByObjectKey(objectKey: string): Promise<ImageStorage | undefined>;
+  deleteImageDataByObjectKey(objectKey: string): Promise<boolean>;
+  getAllStoredImages(): Promise<ImageStorage[]>;
+  
+  // Update methods to use objectKey instead of URL
+  updatePropertyImageObjectKey(id: number, objectKey: string): Promise<PropertyImage | undefined>;
+  updateUnitImageObjectKey(id: number, objectKey: string): Promise<UnitImage | undefined>;
 }
 
 // In-memory storage implementation

@@ -174,4 +174,19 @@ export const insertUnitImageSchema = createInsertSchema(unitImages).omit({
 export type UnitImage = typeof unitImages.$inferSelect;
 export type InsertUnitImage = z.infer<typeof insertUnitImageSchema>;
 
-// No database image storage - using only object storage
+// Image storage tracking table - for object storage metadata
+export const imageStorage = pgTable("image_storage", {
+  id: serial("id").primaryKey(),
+  objectKey: text("object_key").notNull().unique(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertImageStorageSchema = createInsertSchema(imageStorage).omit({
+  id: true,
+  createdAt: true
+});
+
+export type ImageStorage = typeof imageStorage.$inferSelect;
+export type InsertImageStorage = z.infer<typeof insertImageStorageSchema>;
