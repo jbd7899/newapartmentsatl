@@ -104,14 +104,10 @@ export async function listImages(): Promise<string[]> {
     
     console.log("Object keys extracted:", objectKeys);
     
-    // Filter to only include image files
-    const imageFiles = objectKeys.filter(key => {
-      const ext = path.extname(key).toLowerCase();
-      return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
-    });
-    
-    console.log("Filtered image files:", imageFiles);
-    return imageFiles;
+    // No need to filter by extension - just return all keys
+    // We'll assume all objects in the bucket are images
+    console.log("All image files:", objectKeys);
+    return objectKeys;
   } catch (error) {
     console.error("Error listing images in storage:", error);
     return [];

@@ -436,9 +436,11 @@ const ObjectStorageManager = () => {
   
   // Query to fetch all images from object storage
   const { data: storageImages, isLoading, error, refetch } = useQuery({
-    queryKey: ['storageImages'],
+    queryKey: ['/api/images'],
     queryFn: listStorageImages
   });
+  
+  console.log("Storage images from query:", storageImages);
   
   // Mutation to delete an image from storage
   const deleteImageMutation = useMutation({
@@ -448,7 +450,7 @@ const ObjectStorageManager = () => {
         title: "Success",
         description: "Image deleted from storage",
       });
-      queryClient.invalidateQueries({ queryKey: ['storageImages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/images'] });
     },
     onError: (error) => {
       toast({

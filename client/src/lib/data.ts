@@ -255,11 +255,14 @@ export async function deleteUnitImage(id: number): Promise<void> {
 
 // Object Storage API functions
 export async function listStorageImages(): Promise<string[]> {
+  console.log("Fetching images from object storage...");
   const response = await fetch('/api/images');
   if (!response.ok) {
+    console.error("Failed to fetch images from object storage:", response.status, response.statusText);
     throw new Error('Failed to fetch images from object storage');
   }
   const data = await response.json();
+  console.log("Received object storage images:", data);
   return data.images || [];
 }
 
