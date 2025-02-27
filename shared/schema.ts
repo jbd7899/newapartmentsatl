@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, varchar, timestamp, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -47,7 +47,7 @@ export const properties = pgTable("properties", {
   description: text("description").notNull(),
   address: text("address").notNull(),
   bedrooms: integer("bedrooms").notNull(),
-  bathrooms: integer("bathrooms").notNull(),
+  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }).notNull(),
   sqft: integer("sqft").notNull(),
   rent: integer("rent"),
   available: boolean("available").notNull().default(true),
@@ -136,7 +136,7 @@ export const propertyUnits = pgTable("property_units", {
   propertyId: integer("property_id").notNull(),
   unitNumber: text("unit_number").notNull(),
   bedrooms: integer("bedrooms").notNull(),
-  bathrooms: integer("bathrooms").notNull(),
+  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }).notNull(),
   sqft: integer("sqft").notNull(),
   rent: integer("rent"),
   available: boolean("available").notNull().default(true),
