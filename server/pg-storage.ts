@@ -213,19 +213,49 @@ export class PgStorage implements IStorage {
     return results[0];
   }
 
-  // Update property image URL
-  async updatePropertyImageUrl(id: number, url: string): Promise<PropertyImage | undefined> {
+  // Update property image object key
+  async updatePropertyImageObjectKey(id: number, objectKey: string): Promise<PropertyImage | undefined> {
     const results = await db.update(schema.propertyImages)
-      .set({ url })
+      .set({ objectKey })
       .where(eq(schema.propertyImages.id, id))
       .returning();
     return results[0];
   }
 
-  // Update unit image URL
-  async updateUnitImageUrl(id: number, url: string): Promise<UnitImage | undefined> {
+  // Update unit image object key
+  async updateUnitImageObjectKey(id: number, objectKey: string): Promise<UnitImage | undefined> {
     const results = await db.update(schema.unitImages)
-      .set({ url })
+      .set({ objectKey })
+      .where(eq(schema.unitImages.id, id))
+      .returning();
+    return results[0];
+  }
+  
+  // Legacy methods - kept for backwards compatibility
+  async updatePropertyImageUrl(id: number, url: string): Promise<PropertyImage | undefined> {
+    console.warn('updatePropertyImageUrl is deprecated, use updatePropertyImageObjectKey instead');
+    // Extract object key from URL if it's from our API
+    let objectKey = url;
+    if (url.startsWith('/api/images/')) {
+      objectKey = decodeURIComponent(url.replace('/api/images/', ''));
+    }
+    const results = await db.update(schema.propertyImages)
+      .set({ objectKey })
+      .where(eq(schema.propertyImages.id, id))
+      .returning();
+    return results[0];
+  }
+
+  // Legacy method - kept for backwards compatibility
+  async updateUnitImageUrl(id: number, url: string): Promise<UnitImage | undefined> {
+    console.warn('updateUnitImageUrl is deprecated, use updateUnitImageObjectKey instead');
+    // Extract object key from URL if it's from our API
+    let objectKey = url;
+    if (url.startsWith('/api/images/')) {
+      objectKey = decodeURIComponent(url.replace('/api/images/', ''));
+    }
+    const results = await db.update(schema.unitImages)
+      .set({ objectKey })
       .where(eq(schema.unitImages.id, id))
       .returning();
     return results[0];

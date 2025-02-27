@@ -21,6 +21,17 @@ export function getImageUrl(objectKeyOrUrl: string | null | undefined): string {
     return objectKeyOrUrl;
   }
   
+  // If it's a legacy URL path from /uploads/
+  if (objectKeyOrUrl.startsWith('/uploads/')) {
+    return objectKeyOrUrl;
+  }
+  
+  // Special handling for property or unit image endpoints
+  if (objectKeyOrUrl.startsWith('/api/property-images/') || 
+      objectKeyOrUrl.startsWith('/api/unit-images/')) {
+    return objectKeyOrUrl;
+  }
+  
   // If it's an object storage key, use the API endpoint
   return `/api/images/${encodeURIComponent(objectKeyOrUrl)}`;
 }
@@ -41,8 +52,49 @@ export function isObjectStorageKey(url: string | null | undefined): boolean {
     return false;
   }
   
+  // If it starts with these paths, it's not an object storage key
+  if (url.startsWith('/uploads/') || 
+      url.startsWith('/api/property-images/') || 
+      url.startsWith('/api/unit-images/')) {
+    return false;
+  }
+  
   // If it starts with 'images/', it's likely an object storage key
   return url.startsWith('images/');
+}
+
+/**
+ * Determine the type of image URL
+ * 
+ * @param url - The URL to check
+ * @returns The type of URL ('external', 'legacy', 'property', 'unit', or 'object-storage')
+ */
+export function getImageUrlType(url: string | null | undefined): 'external' | 'legacy' | 'property' | 'unit' | 'object-storage' | 'unknown' {
+  if (!url) {
+    return 'unknown';
+  }
+  
+  if (url.startsWith('http')) {
+    return 'external';
+  }
+  
+  if (url.startsWith('/uploads/')) {
+    return 'legacy';
+  }
+  
+  if (url.startsWith('/api/property-images/')) {
+    return 'property';
+  }
+  
+  if (url.startsWith('/api/unit-images/')) {
+    return 'unit';
+  }
+  
+  if (url.startsWith('images/')) {
+    return 'object-storage';
+  }
+  
+  return 'unknown';
 }
 
 /**

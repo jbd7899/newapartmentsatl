@@ -20,7 +20,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Use PostgreSQL storage instead of in-memory storage
-const pgStorage = new PgStorage();
+// This will be the primary storage interface used by the application
+export const pgStorage = new PgStorage();
 
 // Middleware
 app.use(cors());

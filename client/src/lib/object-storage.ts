@@ -22,6 +22,13 @@ export function isObjectStorageKey(url: string): boolean {
     return false;
   }
   
+  // If it starts with these paths, it's not an object storage key
+  if (url.startsWith('/uploads/') || 
+      url.startsWith('/api/property-images/') || 
+      url.startsWith('/api/unit-images/')) {
+    return false;
+  }
+  
   // If it starts with 'images/', it's likely an object storage key
   return url.startsWith('images/');
 }
@@ -34,15 +41,8 @@ export function isObjectStorageKey(url: string): boolean {
  * @returns True if the URL is a property or unit image URL
  */
 export function isPropertyImageUrl(url: string): boolean {
-  if (!url) {
-    return false;
-  }
-  
-  // Property/unit images use these endpoints
   return url.startsWith('/api/property-images/') || 
-         url.startsWith('/api/unit-images/') ||
-         url.startsWith('propimg_') || 
-         url.startsWith('unitimg_');
+         url.startsWith('/api/unit-images/');
 }
 
 /**
@@ -54,46 +54,33 @@ export function isPropertyImageUrl(url: string): boolean {
  */
 export function getImageUrl(objectKey: string, type?: 'property' | 'unit'): string {
   if (!objectKey) {
-    return '';
+    return '/placeholder-image.jpg';
   }
   
-  // If the URL is already a full URL (e.g., https://...), return it as is
+  // If it's already a full URL, return it as is
   if (objectKey.startsWith('http')) {
     return objectKey;
   }
   
-  // If it's a legacy URL starting with /uploads/, return it as is
+  // If it's a legacy URL path from /uploads/
   if (objectKey.startsWith('/uploads/')) {
     return objectKey;
   }
   
-  // If it's already an API image URL, return it as is
+  // If it's already formatted as a property or unit image URL
   if (objectKey.startsWith('/api/property-images/') || 
       objectKey.startsWith('/api/unit-images/')) {
     return objectKey;
   }
   
-  // If it's a property image with type hint
+  // If type is specified, use the appropriate endpoint
   if (type === 'property') {
     return `/api/property-images/${encodeURIComponent(objectKey)}`;
-  }
-  
-  // If it's a unit image with type hint
-  if (type === 'unit') {
+  } else if (type === 'unit') {
     return `/api/unit-images/${encodeURIComponent(objectKey)}`;
   }
   
-  // If it's a property image key without the full path
-  if (objectKey.startsWith('propimg_')) {
-    return `/api/property-images/${objectKey}`;
-  }
-  
-  // If it's a unit image key without the full path
-  if (objectKey.startsWith('unitimg_')) {
-    return `/api/unit-images/${objectKey}`;
-  }
-  
-  // If it's an object storage key or any other key, use the object storage API endpoint
+  // Default to the generic images endpoint
   return `/api/images/${encodeURIComponent(objectKey)}`;
 }
 
@@ -108,16 +95,7 @@ export function getFilenameFromObjectKey(objectKey: string): string {
     return '';
   }
   
-  // For special types of image URLs
-  if (objectKey.startsWith('/api/property-images/')) {
-    objectKey = objectKey.split('/api/property-images/')[1];
-  } else if (objectKey.startsWith('/api/unit-images/')) {
-    objectKey = objectKey.split('/api/unit-images/')[1];
-  } else if (objectKey.startsWith('/api/images/')) {
-    objectKey = objectKey.split('/api/images/')[1];
-  }
-  
-  // Split by '/' and get the last part
+  // Extract the filename from the object key
   const parts = objectKey.split('/');
   return parts[parts.length - 1];
 }
@@ -133,21 +111,25 @@ export function getImageSourceType(url: string): 'object-storage' | 'property-im
     return 'external';
   }
   
-  if (url.startsWith('/api/property-images/') || url.startsWith('propimg_')) {
-    return 'property-image';
-  }
-  
-  if (url.startsWith('/api/unit-images/') || url.startsWith('unitimg_')) {
-    return 'unit-image';
-  }
-  
-  if (url.startsWith('/api/images/') || isObjectStorageKey(url)) {
-    return 'object-storage';
+  if (url.startsWith('http')) {
+    return 'external';
   }
   
   if (url.startsWith('/uploads/')) {
     return 'legacy';
   }
   
+  if (url.startsWith('/api/property-images/')) {
+    return 'property-image';
+  }
+  
+  if (url.startsWith('/api/unit-images/')) {
+    return 'unit-image';
+  }
+  
+  if (url.startsWith('images/')) {
+    return 'object-storage';
+  }
+  
   return 'external';
-} 
+}

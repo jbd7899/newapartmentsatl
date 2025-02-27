@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
+import { getImageUrl } from '@/lib/image-utils';
 
 export interface GalleryImage {
   url: string;
   alt: string;
+  objectKey?: string;
 }
 
 interface PropertyGalleryProps {
@@ -89,9 +91,8 @@ const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, onClose, prop
 
   // Function to get optimized image URL for different sizes
   const getOptimizedImageUrl = (originalUrl: string, width: number): string => {
-    // This is a placeholder for actual image optimization
-    // In a real implementation, you'd use a service like Cloudinary, imgix, etc.
-    return originalUrl;
+    // Handle object storage URLs using our utility function
+    return getImageUrl(originalUrl);
   };
 
   return (
@@ -119,10 +120,10 @@ const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, onClose, prop
                     key={`${rowIndex}-${imgIndex}`} 
                     className={`gallery-item flex-${flexValue} mb-4 md:mb-0 w-full md:w-auto overflow-hidden rounded-lg cursor-pointer transition-transform hover:scale-[1.02]`}
                     style={{ flex: flexValue }}
-                    onClick={() => setModalImage(image.url)}
+                    onClick={() => setModalImage(image.objectKey || image.url)}
                   >
                     <img 
-                      src={getOptimizedImageUrl(image.url, flexValue === 1 ? 400 : 800)} 
+                      src={getOptimizedImageUrl(image.objectKey || image.url, flexValue === 1 ? 400 : 800)} 
                       alt={image.alt} 
                       className="w-full h-full object-cover transition-transform hover:scale-[1.05]"
                       loading="lazy"
