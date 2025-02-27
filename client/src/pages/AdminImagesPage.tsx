@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProperties, getPropertyImages, getPropertyImagesByProperty, createPropertyImage, updatePropertyImageOrder, updatePropertyImageFeatured, deletePropertyImage } from "@/lib/data";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -22,6 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { 
   Trash2,
   Star,
@@ -29,7 +31,8 @@ import {
   ArrowDown,
   Plus,
   Image as ImageIcon,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ListPlus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -40,10 +43,12 @@ import { getImageUrl } from "@/lib/image-utils";
 const ExternalUrlForm = ({ onUpload, properties }: { onUpload: (data: any) => void, properties: Property[] }) => {
   const [propertyId, setPropertyId] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [bulkUrls, setBulkUrls] = useState("");
   const [alt, setAlt] = useState("");
+  const [isBulkMode, setIsBulkMode] = useState(false);
   const { toast } = useToast();
 
-  // Handle form submission
+  // Handle single URL submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -71,7 +76,7 @@ const ExternalUrlForm = ({ onUpload, properties }: { onUpload: (data: any) => vo
       alt: alt || `Property Image`,
       url: imageUrl,
       displayOrder: 0,
-      isFeatured: true // Mark as featured by default
+      isFeatured: false // Don't automatically mark as featured for single uploads
     });
     
     // Reset form
@@ -79,8 +84,83 @@ const ExternalUrlForm = ({ onUpload, properties }: { onUpload: (data: any) => vo
     setAlt("");
   };
   
+  // Handle bulk URL submission
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "Please select a property",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!bulkUrls.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one image URL",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Parse URLs - supports comma-separated, newline-separated, or URLs in quotes
+    const urlPattern = /(https?:\/\/[^\s,'"]+)/g;
+    const urls = bulkUrls.match(urlPattern);
+    
+    if (!urls || urls.length === 0) {
+      toast({
+        title: "Error",
+        description: "No valid URLs found. URLs must start with http:// or https://",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Processing",
+      description: `Adding ${urls.length} images...`,
+    });
+    
+    // Upload each URL
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i].trim();
+      if (url.startsWith('http')) {
+        onUpload({
+          propertyId: parseInt(propertyId),
+          alt: alt || `Property Image ${i + 1}`,
+          url: url,
+          displayOrder: i,
+          isFeatured: i === 0 // Mark first image as featured
+        });
+      }
+    }
+    
+    // Reset form
+    setBulkUrls("");
+    setAlt("");
+    
+    toast({
+      title: "Success",
+      description: `Submitted ${urls.length} images for processing`,
+    });
+  };
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="bulk-mode"
+          checked={isBulkMode}
+          onCheckedChange={setIsBulkMode}
+        />
+        <Label htmlFor="bulk-mode" className="font-medium">
+          {isBulkMode ? "Bulk Mode" : "Single Image Mode"}
+        </Label>
+      </div>
+      
       <div className="grid w-full gap-1.5">
         <Label htmlFor="property">Property</Label>
         <select 
@@ -98,36 +178,64 @@ const ExternalUrlForm = ({ onUpload, properties }: { onUpload: (data: any) => vo
       </div>
       
       <div className="grid w-full gap-1.5">
-        <Label htmlFor="imageUrl">Image URL</Label>
-        <Input
-          id="imageUrl"
-          type="url"
-          placeholder="https://example.com/image.jpg"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          required
-        />
-        <p className="text-sm text-muted-foreground">Enter an external image URL (must start with http)</p>
-      </div>
-      
-      <div className="grid w-full gap-1.5">
         <Label htmlFor="alt">Alt Text</Label>
         <Input
           id="alt"
-          placeholder="Description of image"
+          placeholder="Description of image(s)"
           value={alt}
           onChange={(e) => setAlt(e.target.value)}
         />
         <p className="text-sm text-muted-foreground">Description for accessibility</p>
       </div>
       
-      <div className="flex justify-end">
-        <Button type="submit" className="flex items-center gap-2">
-          <LinkIcon className="h-4 w-4" />
-          Add External Image
-        </Button>
-      </div>
-    </form>
+      {isBulkMode ? (
+        <form onSubmit={handleBulkSubmit} className="space-y-4">
+          <div className="grid w-full gap-1.5">
+            <Label htmlFor="bulkUrls">Bulk Image URLs</Label>
+            <Textarea
+              id="bulkUrls"
+              placeholder="Paste URLs here, one per line or comma-separated or from a cloudinary gallery"
+              value={bulkUrls}
+              onChange={(e) => setBulkUrls(e.target.value)}
+              className="min-h-[200px]"
+              required
+            />
+            <p className="text-sm text-muted-foreground">
+              Paste multiple image URLs in any format. The system will extract valid URLs (starting with http:// or https://).
+            </p>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button type="submit" className="flex items-center gap-2">
+              <ListPlus className="h-4 w-4" />
+              Add Bulk Images
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid w-full gap-1.5">
+            <Label htmlFor="imageUrl">Image URL</Label>
+            <Input
+              id="imageUrl"
+              type="url"
+              placeholder="https://example.com/image.jpg"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              required
+            />
+            <p className="text-sm text-muted-foreground">Enter an external image URL (must start with http)</p>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button type="submit" className="flex items-center gap-2">
+              <LinkIcon className="h-4 w-4" />
+              Add External Image
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 };
 
@@ -454,7 +562,10 @@ const AdminImagesPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Add External Images</CardTitle>
-                <CardDescription>Add images from external URLs to your properties</CardDescription>
+                <CardDescription>
+                  Add images from external URLs to your properties.
+                  Use Bulk Mode to paste multiple Cloudinary URLs at once.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ExternalUrlForm 
