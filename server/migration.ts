@@ -427,15 +427,5 @@ async function migrateUnitImages(): Promise<void> {
   console.log(`Migrated ${unitImages.length} unit images`);
 }
 
-// Run the migration if this file is executed directly
-if (require.main === module) {
-  migrateData()
-    .then(() => {
-      console.log('Migration completed successfully!');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('Migration failed:', error);
-      process.exit(1);
-    });
-} 
+// In ESM, we don't use require.main === module check
+// The run-migration.ts file will call migrateData directly 
