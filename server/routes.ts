@@ -487,56 +487,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add a new property image
+  // Simplified property image upload endpoint
   app.post("/api/property-images", async (req: Request, res: Response) => {
     try {
-      // Check if we're getting data URL along with the URL
-      const { data, ...restOfBody } = req.body;
+      const { data, propertyId, alt, displayOrder, isFeatured } = req.body;
       
-      // Prepare the image object with the integrated storage approach
-      let imageData: any = {
-        ...restOfBody,
-        url: req.body.url
-      };
+      // Import from new storage-utils
+      const { uploadImage, getImageUrl } = await import('./storage-utils');
+      
+      // Verify property exists
+      const property = await storage.getProperty(propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
       
       // If image data is provided, process it
+      let objectKey = '';
+      let url = '';
+      
       if (data && typeof data === 'string') {
-        const dataMatches = data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-        
-        if (dataMatches && dataMatches.length === 3) {
-          const mimeType = dataMatches[1];
-          const base64Data = dataMatches[2];
-          
-          // Determine file extension based on MIME type
-          let extension = '.jpg';
-          if (mimeType === 'image/png') extension = '.png';
-          else if (mimeType === 'image/gif') extension = '.gif';
-          else if (mimeType === 'image/webp') extension = '.webp';
-          else if (mimeType === 'image/svg+xml') extension = '.svg';
-          
-          // Generate a unique object key
-          const timestamp = Date.now();
-          const randomStr = crypto.randomBytes(4).toString('hex');
-          const objectKey = `prop_img_${timestamp}_${randomStr}${extension}`;
-          
-          // Calculate size
-          const bufferSize = Buffer.from(base64Data, 'base64').length;
-          
-          // Create a URL that references the object key
-          const url = `/api/property-images/${objectKey}`;
-          
-          // Update the image data with storage information
-          imageData = {
-            ...imageData,
-            url,
-            objectKey,
-            mimeType,
-            size: bufferSize,
-            imageData: base64Data,
-            storageType: "database"
-          };
-        }
+        // Upload the image to Object Storage
+        objectKey = await uploadImage(data, 'property-image.jpg', 'property-images');
+        url = getImageUrl(objectKey);
+      } else if (req.body.url) {
+        // If URL is provided but no data, use the URL directly
+        url = req.body.url;
+      } else {
+        return res.status(400).json({ message: "Either image data or URL is required" });
       }
+      
+      // Create the property image in the database
+      const imageData = {
+        propertyId,
+        url,
+        alt: alt || '',
+        displayOrder: displayOrder || 0,
+        isFeatured: isFeatured || false,
+        objectKey: objectKey || null,
+        storageType: objectKey ? "object-storage" : "external"
+      };
       
       // Validate request body
       const validationResult = insertPropertyImageSchema.safeParse(imageData);
@@ -546,12 +535,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Invalid image data", 
           errors: validationResult.error.format() 
         });
-      }
-      
-      // Verify property exists
-      const property = await storage.getProperty(imageData.propertyId);
-      if (!property) {
-        return res.status(404).json({ message: "Property not found" });
       }
       
       const image = await storage.createPropertyImage(validationResult.data);
@@ -1095,17 +1078,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve images from object storage
+  // Simplified image serving endpoint - only from object storage
   app.get('/api/images/:objectKey(*)', async (req, res) => {
     try {
       const objectKey = req.params.objectKey;
       console.log(`Serving image from object storage: ${objectKey}`);
       
-      // Get the image data from object storage
+      // Import from new storage-utils
+      const { getImageData } = await import('./storage-utils');
+      
+      // Get the image data
       const imageData = await getImageData(objectKey);
       
       if (!imageData) {
-        console.log(`Image not found in object storage: ${objectKey}`);
+        console.log(`Image not found: ${objectKey}`);
         return res.status(404).send('Image not found');
       }
       
@@ -1124,7 +1110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.send(imageData);
     } catch (error) {
-      console.error('Error serving image from object storage:', error);
+      console.error('Error serving image:', error);
       return res.status(500).send('Error serving image');
     }
   });
