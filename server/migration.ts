@@ -337,8 +337,10 @@ async function migratePropertyImages(): Promise<void> {
     // Download and upload the image to object storage if it's a URL
     let objectKey = image.objectKey;
     
+    // @ts-ignore - Handle URL legacy field from MemStorage
     if (!objectKey && image.url && image.url.startsWith('http')) {
       try {
+        // @ts-ignore - Handle URL legacy field from MemStorage
         const imageBuffer = await downloadImage(image.url);
         objectKey = await uploadImage(imageBuffer, `property_image_${image.id}.jpg`);
       } catch (error) {
@@ -379,7 +381,7 @@ async function migrateUnitImages(): Promise<void> {
   const propertyUnits = await memStorage.getAllPropertyUnits();
   
   // Get all unit images for each unit
-  let unitImages = [];
+  let unitImages: any[] = [];
   for (const unit of propertyUnits) {
     const images = await memStorage.getUnitImages(unit.id);
     unitImages = [...unitImages, ...images];
