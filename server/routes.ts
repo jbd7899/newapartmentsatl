@@ -905,7 +905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify unit exists
       const unit = await storage.getPropertyUnit(unitId);
       if (!unit) {
-        return res.status(404).json({ message: ""Property unit not found" });
+        return res.status(404).json({ message: "Property unit not found" });
       }
 
       // If image data is provided, process it
