@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Location } from "@shared/schema";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface PropertyCardProps {
   location: Location;
@@ -11,7 +12,7 @@ const PropertyCard = ({ location }: PropertyCardProps) => {
     <Card className="overflow-hidden transition transform hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-60">
         <img 
-          src={location.imageUrl} 
+          src={getImageUrl(location.imageUrl)} 
           alt={location.name} 
           className="w-full h-full object-cover"
         />
