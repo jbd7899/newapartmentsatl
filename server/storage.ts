@@ -57,6 +57,19 @@ export interface IStorage {
   updateUnitImageOrder(id: number, displayOrder: number): Promise<UnitImage | undefined>;
   updateUnitImageFeatured(id: number, isFeatured: boolean): Promise<UnitImage | undefined>;
   deleteUnitImage(id: number): Promise<boolean>;
+
+  // Add method to get a single property image by ID
+  getPropertyImage(id: number): Promise<PropertyImage | undefined>;
+
+  // Add method to get a single unit image by ID
+  getUnitImage(id: number): Promise<UnitImage | undefined>;
+
+  // Add methods for image URL updates
+  updatePropertyImageUrl(id: number, url: string): Promise<PropertyImage | undefined>;
+  updateUnitImageUrl(id: number, url: string): Promise<UnitImage | undefined>;
+  
+  // Add method to get all property units
+  getAllPropertyUnits(): Promise<PropertyUnit[]>;
 }
 
 // In-memory storage implementation
@@ -492,9 +505,9 @@ export class MemStorage implements IStorage {
         locationId: 1,
         imageUrl: "https://i.imgur.com/O9Fu46o.png",
         features: "Hardwood floors, updated appliances, large windows, central AC",
-        propertyType: "multi-family",
+        propertyType: "apartment",
         isMultifamily: true,
-        unitCount: 3
+        unitCount: 4
       },
       {
         id: 2,
@@ -509,7 +522,7 @@ export class MemStorage implements IStorage {
         locationId: 1,
         imageUrl: "https://i.imgur.com/9L78Ghe.png",
         features: "Historic details, updated kitchen, period moldings, high ceilings",
-        propertyType: "single-family",
+        propertyType: "apartment",
         isMultifamily: false,
         unitCount: null
       },
@@ -525,7 +538,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/Qt30zdg.png",
-        features: "Renovated bathroom, original details, shared garden, quiet street"
+        features: "Renovated bathroom, original details, shared garden, quiet street",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 4
       },
       {
         id: 4,
@@ -539,7 +555,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/eFdi7sd.jpg",
-        features: "Updated kitchen, modern appliances, spacious closets, pet-friendly"
+        features: "Updated kitchen, modern appliances, spacious closets, pet-friendly",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 6
       },
       {
         id: 5,
@@ -553,7 +572,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/ASrp6Cl.jpg",
-        features: "Cozy layout, on-site laundry, hardwood floors, exposed brick"
+        features: "Cozy layout, on-site laundry, hardwood floors, exposed brick",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 8
       },
       {
         id: 6,
@@ -567,7 +589,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/DI66TQ0.png",
-        features: "Historic building, renovated interior, original woodwork, large windows"
+        features: "Historic building, renovated interior, original woodwork, large windows",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 4
       },
       {
         id: 7,
@@ -581,7 +606,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 1,
         imageUrl: "https://i.imgur.com/CGq20NX.png",
-        features: "Recently updated, bright spaces, outdoor patio, community garden"
+        features: "Recently updated, bright spaces, outdoor patio, community garden",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 6
       },
       
       // Virginia-Highland Properties
@@ -597,7 +625,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/OWMqzbK.png",
-        features: "Classic architectural details, modern kitchen, hardwood floors, large windows"
+        features: "Classic architectural details, modern kitchen, hardwood floors, large windows",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 9,
@@ -611,7 +642,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/Qqrynp5.png",
-        features: "Historic building, renovated interior, high ceilings, restored details"
+        features: "Historic building, renovated interior, high ceilings, restored details",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 4
       },
       {
         id: 10,
@@ -625,7 +659,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 2,
         imageUrl: "https://i.imgur.com/GQPUMr8.png",
-        features: "Newly renovated, spacious layout, private patio, pet-friendly"
+        features: "Newly renovated, spacious layout, private patio, pet-friendly",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       
       // Dallas Properties
@@ -641,7 +678,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/psQEwWF.jpg",
-        features: "Modern finishes, open concept, stainless appliances, hardwood floors"
+        features: "Modern finishes, open concept, stainless appliances, hardwood floors",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 8
       },
       {
         id: 12,
@@ -655,7 +695,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/gsremPD.jpg",
-        features: "Tudor-style architecture, updated interior, backyard, garage parking"
+        features: "Tudor-style architecture, updated interior, backyard, garage parking",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 13,
@@ -669,7 +712,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/GmGrXBV.jpg",
-        features: "Original hardwoods, updated kitchen, fenced yard, covered porch"
+        features: "Original hardwoods, updated kitchen, fenced yard, covered porch",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 14,
@@ -683,7 +729,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/P62glux.jpg",
-        features: "Historic character, modern updates, energy-efficient appliances, large porch"
+        features: "Historic character, modern updates, energy-efficient appliances, large porch",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 15,
@@ -697,7 +746,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/Pw0RRJ6.jpg",
-        features: "Contemporary design, open floor plan, modern kitchen, outdoor space"
+        features: "Contemporary design, open floor plan, modern kitchen, outdoor space",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 16,
@@ -711,7 +763,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/5QfQiJD.png",
-        features: "Upscale finishes, gourmet kitchen, private yard, garage"
+        features: "Upscale finishes, gourmet kitchen, private yard, garage",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 17,
@@ -725,7 +780,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/ZC9OEET.jpg",
-        features: "Character-rich details, updated systems, mature landscaping, sunroom"
+        features: "Character-rich details, updated systems, mature landscaping, sunroom",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 18,
@@ -739,7 +797,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/KyxXN2C.jpg",
-        features: "Original woodwork, updated bathroom, eat-in kitchen, front porch"
+        features: "Original woodwork, updated bathroom, eat-in kitchen, front porch",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 19,
@@ -753,7 +814,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/kQrkgX6.jpg",
-        features: "Modern finishes, open concept, large windows, outdoor entertainment area"
+        features: "Modern finishes, open concept, large windows, outdoor entertainment area",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 20,
@@ -767,7 +831,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/eER5hbA.jpg",
-        features: "Cozy layout, updated kitchen, private backyard, walking distance to parks"
+        features: "Cozy layout, updated kitchen, private backyard, walking distance to parks",
+        propertyType: "house",
+        isMultifamily: false,
+        unitCount: null
       },
       {
         id: 21,
@@ -781,7 +848,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/Mzh4Dn2.jpg",
-        features: "Completely renovated, premium finishes, open floor plan, private patio"
+        features: "Completely renovated, premium finishes, open floor plan, private patio",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 4
       },
       {
         id: 22,
@@ -795,7 +865,10 @@ export class MemStorage implements IStorage {
         available: true,
         locationId: 3,
         imageUrl: "https://i.imgur.com/cOicEI4.png",
-        features: "Contemporary design, energy-efficient, gourmet kitchen, private balcony"
+        features: "Contemporary design, energy-efficient, gourmet kitchen, private balcony",
+        propertyType: "apartment",
+        isMultifamily: true,
+        unitCount: 6
       }
     ];
 
@@ -1195,6 +1268,49 @@ export class MemStorage implements IStorage {
     
     propertyImages.forEach(image => this.propertyImagesData.set(image.id, image));
     this.nextPropertyImageId = Math.max(...propertyImages.map(image => image.id)) + 1;
+  }
+
+  // Add method to get a single property image by ID
+  async getPropertyImage(id: number): Promise<PropertyImage | undefined> {
+    return this.propertyImagesData.get(id);
+  }
+
+  // Add method to get a single unit image by ID
+  async getUnitImage(id: number): Promise<UnitImage | undefined> {
+    return this.unitImagesData.get(id);
+  }
+
+  // Update property image URL
+  async updatePropertyImageUrl(id: number, url: string): Promise<PropertyImage | undefined> {
+    const image = this.propertyImagesData.get(id);
+    if (!image) return undefined;
+    
+    const updatedImage: PropertyImage = {
+      ...image,
+      url
+    };
+    
+    this.propertyImagesData.set(id, updatedImage);
+    return updatedImage;
+  }
+  
+  // Update unit image URL
+  async updateUnitImageUrl(id: number, url: string): Promise<UnitImage | undefined> {
+    const image = this.unitImagesData.get(id);
+    if (!image) return undefined;
+    
+    const updatedImage: UnitImage = {
+      ...image,
+      url
+    };
+    
+    this.unitImagesData.set(id, updatedImage);
+    return updatedImage;
+  }
+  
+  // Get all property units
+  async getAllPropertyUnits(): Promise<PropertyUnit[]> {
+    return Array.from(this.propertyUnitsData.values());
   }
 }
 

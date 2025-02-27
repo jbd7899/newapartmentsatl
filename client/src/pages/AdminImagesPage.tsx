@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProperties, getPropertyImages, getPropertyImagesByProperty, createPropertyImage, updatePropertyImageOrder, updatePropertyImageFeatured, deletePropertyImage } from "@/lib/data";
+import { getProperties, getPropertyImages, getPropertyImagesByProperty, createPropertyImage, updatePropertyImageOrder, updatePropertyImageFeatured, deletePropertyImage, listStorageImages, deleteStorageImage } from "@/lib/data";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -40,12 +40,15 @@ import {
   FolderOpen,
   FilePlus2,
   ImagePlus,
-  Sparkles
+  Sparkles,
+  Database,
+  HardDrive
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Property, PropertyImage } from "@shared/schema";
 import imageCompression from "browser-image-compression";
+import { isObjectStorageKey, getImageUrl } from "@/lib/object-storage";
 
 // Define the preview type
 interface ImagePreview {
@@ -423,6 +426,153 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
         </Button>
       </DialogFooter>
     </form>
+  );
+};
+
+// Add this new component for object storage management
+const ObjectStorageManager = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Query to fetch all images from object storage
+  const { data: storageImages, isLoading, error, refetch } = useQuery({
+    queryKey: ['storageImages'],
+    queryFn: listStorageImages
+  });
+  
+  // Mutation to delete an image from storage
+  const deleteImageMutation = useMutation({
+    mutationFn: deleteStorageImage,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Image deleted from storage",
+      });
+      queryClient.invalidateQueries({ queryKey: ['storageImages'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete image: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Handle image deletion
+  const handleDeleteImage = (objectKey: string) => {
+    if (confirm("Are you sure you want to delete this image? This action cannot be undone.")) {
+      deleteImageMutation.mutate(objectKey);
+    }
+  };
+  
+  // Get image URL for display
+  const getDisplayUrl = (objectKey: string) => {
+    return `/api/images/${encodeURIComponent(objectKey)}`;
+  };
+  
+  // Extract filename from object key
+  const getFilename = (objectKey: string) => {
+    return objectKey.split('/').pop() || objectKey;
+  };
+  
+  // Format file size
+  const formatFileSize = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <HardDrive className="h-5 w-5" />
+          Object Storage Images
+        </CardTitle>
+        <CardDescription>
+          Manage all images stored in Replit Object Storage
+        </CardDescription>
+        <div className="flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="text-center text-destructive p-4">
+            Error loading images: {String(error)}
+          </div>
+        ) : !storageImages || storageImages.length === 0 ? (
+          <div className="text-center text-muted-foreground p-4">
+            No images found in object storage
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {storageImages.map((objectKey) => (
+              <div 
+                key={objectKey} 
+                className="border rounded-md overflow-hidden flex flex-col"
+              >
+                <div className="relative aspect-video bg-muted">
+                  <img 
+                    src={getDisplayUrl(objectKey)}
+                    alt={getFilename(objectKey)}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Error+Loading+Image';
+                    }}
+                  />
+                </div>
+                <div className="p-3 flex-1 flex flex-col">
+                  <div className="text-sm font-medium truncate mb-1" title={getFilename(objectKey)}>
+                    {getFilename(objectKey)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-2">
+                    <Badge variant="outline" className="mr-2">
+                      {objectKey.startsWith('images/') ? 'Object Storage' : 'External'}
+                    </Badge>
+                  </div>
+                  <div className="mt-auto flex justify-between items-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(objectKey);
+                        toast({
+                          title: "Copied",
+                          description: "Image key copied to clipboard",
+                        });
+                      }}
+                    >
+                      Copy Key
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteImage(objectKey)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -929,281 +1079,70 @@ const AdminImagesPage = () => {
   
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Property Image Gallery</h1>
-          <p className="text-gray-500">Upload, organize, and manage all your property images</p>
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Image Management</h1>
         </div>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center">
-              <UploadCloud className="h-4 w-4 mr-2" />
+        
+        <Tabs defaultValue="property-images">
+          <TabsList className="mb-4">
+            <TabsTrigger value="property-images" className="flex items-center gap-1">
+              <FileImage className="h-4 w-4" />
+              Property Images
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex items-center gap-1">
+              <UploadCloud className="h-4 w-4" />
               Upload Images
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Upload New Images</DialogTitle>
-              <DialogDescription>
-                Add multiple images to a property in one go.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Tabs defaultValue="url" className="mt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="url">URL Upload</TabsTrigger>
-                <TabsTrigger value="file">File Upload</TabsTrigger>
-              </TabsList>
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="flex items-center gap-1">
+              <Database className="h-4 w-4" />
+              Object Storage
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="property-images">
+            <PropertyImageGrid />
+          </TabsContent>
+          
+          <TabsContent value="upload">
+            <div className="grid grid-cols-1 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImagePlus className="h-5 w-5" />
+                    Upload New Images
+                  </CardTitle>
+                  <CardDescription>
+                    Upload images for properties
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FileUploadForm onUpload={handleUploadImage} properties={properties || []} />
+                </CardContent>
+              </Card>
               
-              <TabsContent value="url" className="mt-4">
-                <MultipleUploadForm onUpload={handleUploadImage} />
-              </TabsContent>
-              
-              <TabsContent value="file" className="mt-4">
-                <FileUploadForm onUpload={handleUploadImage} properties={properties} />
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FilePlus2 className="h-5 w-5" />
+                    Add External Images
+                  </CardTitle>
+                  <CardDescription>
+                    Add images from external URLs
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <MultipleUploadForm onUpload={handleUploadImage} />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="storage">
+            <ObjectStorageManager />
+          </TabsContent>
+        </Tabs>
       </div>
-      
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Image Library</CardTitle>
-              <CardDescription>
-                Manage all your property images in one place
-              </CardDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
-              <div className="flex items-center space-x-2">
-                <select 
-                  value={selectedProperty ? selectedProperty.toString() : ""}
-                  onChange={(e) => setSelectedProperty(e.target.value ? parseInt(e.target.value) : null)}
-                  className="flex h-10 min-w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">All Properties</option>
-                  {properties.map((property: Property) => (
-                    <option key={property.id} value={property.id.toString()}>
-                      {property.name}
-                    </option>
-                  ))}
-                </select>
-                <Input 
-                  className="w-48" 
-                  placeholder="Search images..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => {
-                  queryClient.invalidateQueries({ queryKey: ['/api/property-images'] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/properties', selectedProperty, 'images'] });
-                }}
-                title="Refresh"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6 grid w-full grid-cols-2">
-              <TabsTrigger value="gallery">
-                All Images ({filteredImages.length})
-              </TabsTrigger>
-              <TabsTrigger value="featured">
-                Featured Images ({filteredImages.filter((img: PropertyImage) => img.isFeatured).length})
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="gallery">
-              <PropertyImageGrid />
-              
-              {/* Pagination UI */}
-              {!selectedProperty && !searchQuery && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between my-6">
-                  <div className="text-sm text-gray-500">
-                    Showing {Math.min(pagination.limit, pagination.total)} of {pagination.total} images
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      disabled={pagination.page === 1}
-                      onClick={() => setPage(1)}
-                    >
-                      First
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      disabled={pagination.page === 1}
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="text-sm">
-                      Page {pagination.page} of {pagination.totalPages}
-                    </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      disabled={pagination.page === pagination.totalPages}
-                      onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      disabled={pagination.page === pagination.totalPages}
-                      onClick={() => setPage(pagination.totalPages)}
-                    >
-                      Last
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="featured">
-              <PropertyImageGrid />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      <div className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Image Usage Statistics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-3xl font-bold">{propertyImages.length}</div>
-                <div className="text-sm text-gray-500">Total Images</div>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-3xl font-bold text-yellow-600">
-                  {propertyImages.filter((img: PropertyImage) => img.isFeatured).length}
-                </div>
-                <div className="text-sm text-gray-500">Featured Images</div>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-3xl font-bold text-blue-500">
-                  {Object.keys(
-                    propertyImages.reduce((acc: Record<number, boolean>, img: PropertyImage) => {
-                      acc[img.propertyId] = true;
-                      return acc;
-                    }, {} as Record<number, boolean>)
-                  ).length}
-                </div>
-                <div className="text-sm text-gray-500">Properties with Images</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Image Viewer Dialog */}
-      <Dialog open={viewImageDialog.open} onOpenChange={(open) => setViewImageDialog({ ...viewImageDialog, open })}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {viewImageDialog.image && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Image Details</DialogTitle>
-              </DialogHeader>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative rounded-md overflow-hidden">
-                  <img 
-                    src={viewImageDialog.image.url} 
-                    alt={viewImageDialog.image.alt}
-                    className="w-full h-auto object-contain"
-                  />
-                  {viewImageDialog.image.isFeatured && (
-                    <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
-                      Featured
-                    </div>
-                  )}
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Property</h3>
-                    <p className="mt-1 text-lg">
-                      {properties.find(p => p.id === viewImageDialog.image?.propertyId)?.name || 'Unknown'}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                    <p className="mt-1">{viewImageDialog.image.alt}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Display Order</h3>
-                    <p className="mt-1">{viewImageDialog.image.displayOrder}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Added on</h3>
-                    <p className="mt-1">{new Date(viewImageDialog.image.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Image URL</h3>
-                    <p className="mt-1 text-xs break-all">{viewImageDialog.image.url}</p>
-                  </div>
-                  
-                  <div className="pt-4 flex justify-end space-x-2">
-                    <Button 
-                      variant={viewImageDialog.image.isFeatured ? "default" : "outline"}
-                      onClick={() => {
-                        if (viewImageDialog.image) {
-                          handleToggleFeatured(viewImageDialog.image);
-                          setViewImageDialog({
-                            ...viewImageDialog,
-                            image: {
-                              ...viewImageDialog.image,
-                              isFeatured: !viewImageDialog.image.isFeatured
-                            }
-                          });
-                        }
-                      }}
-                    >
-                      <Star className={`h-4 w-4 mr-2 ${viewImageDialog.image.isFeatured ? 'text-yellow-500 fill-yellow-500' : ''}`} />
-                      {viewImageDialog.image.isFeatured ? 'Unmark Featured' : 'Mark as Featured'}
-                    </Button>
-                    
-                    <Button 
-                      variant="destructive"
-                      onClick={() => {
-                        if (confirm("Are you sure you want to delete this image? This action cannot be undone.")) {
-                          deleteImageMutation.mutate(viewImageDialog.image?.id as number);
-                          setViewImageDialog({ open: false, image: null });
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Image
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };

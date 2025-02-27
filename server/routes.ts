@@ -6,7 +6,7 @@ import { insertInquirySchema, insertPropertyImageSchema, insertNeighborhoodSchem
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { uploadImage, deleteImage, getImageData, getFilenameFromObjectKey } from "./object-storage";
+import { uploadImage, deleteImage, getImageData, getFilenameFromObjectKey, imageExists, listImages, isObjectStorageKey } from "./object-storage";
 import { upload, handleUploadErrors } from "./upload-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Process image data and save to store
-  const processImageData = (url: string, data?: string): string => {
+  const processImageData = async (url: string, data?: string): Promise<string> => {
     console.log(`Processing image data. URL: ${url?.substring(0, 30)}..., Data provided: ${!!data}`);
     
     // For external URLs (http/https), just return them as is
@@ -127,54 +127,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return url;
     }
     
-    // Generate a filename for the image - either extract from URL or create new one
-    let filename;
-    if (url.startsWith('/uploads/')) {
-      // Extract the filename from the URL
-      filename = url.split('/uploads/')[1];
-      console.log(`Extracted filename from URL: ${filename}`);
-      
-      // Sanitize the filename to remove path separators and other invalid characters
-      filename = filename.replace(/[\/\\?%*:|"<>]/g, '_');
-    } else {
-      // Generate a new filename
-      const timestamp = Date.now();
-      const randomStr = crypto.randomBytes(4).toString('hex');
-      filename = `image_${timestamp}_${randomStr}.jpg`;
-      console.log(`Generated new filename: ${filename}`);
+    // If the URL is already an object storage key, return it as is
+    if (isObjectStorageKey(url)) {
+      console.log(`URL is already an object storage key: ${url}`);
+      return url;
     }
     
-    // Save the image data to the in-memory store (if provided)
-    if (data && data.startsWith('data:')) {
-      console.log(`Storing image data in memory with key: ${filename}`);
-      imageDataStore.set(filename, data);
+    // If no data is provided, return the URL as is
+    if (!data) {
+      return url;
+    }
+    
+    try {
+      // Convert data URL to buffer
+      const matches = data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       
-      // Always save file to disk
-      try {
-        const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-        const filePath = path.join(uploadsDir, filename);
-        
-        // Ensure the parent directory exists
-        const dirname = path.dirname(filePath);
-        if (!fs.existsSync(dirname)) {
-          fs.mkdirSync(dirname, { recursive: true });
-        }
-        
-        console.log(`Saving image to disk at: ${filePath}`);
-        fs.writeFileSync(filePath, buffer);
-        console.log(`Image saved to disk, size: ${buffer.length} bytes`);
-      } catch (error) {
-        console.error('Error saving image to disk:', error);
+      if (!matches || matches.length !== 3) {
+        console.error('Invalid data URL format');
+        return url;
       }
-    } else {
-      console.log('No valid data provided for image, only storing URL reference');
+      
+      const mimeType = matches[1];
+      const buffer = Buffer.from(matches[2], 'base64');
+      
+      // Determine file extension based on MIME type
+      let extension = '.jpg';
+      if (mimeType === 'image/png') extension = '.png';
+      else if (mimeType === 'image/gif') extension = '.gif';
+      else if (mimeType === 'image/webp') extension = '.webp';
+      else if (mimeType === 'image/svg+xml') extension = '.svg';
+      
+      // Generate a filename for the image
+      let filename;
+      if (url.startsWith('/uploads/')) {
+        // Extract the filename from the URL
+        filename = url.split('/uploads/')[1];
+        console.log(`Extracted filename from URL: ${filename}`);
+        
+        // Sanitize the filename to remove path separators and other invalid characters
+        filename = filename.replace(/[\/\\?%*:|"<>]/g, '_');
+      } else {
+        // Generate a new filename
+        const timestamp = Date.now();
+        const randomStr = crypto.randomBytes(4).toString('hex');
+        filename = `image_${timestamp}_${randomStr}${extension}`;
+        console.log(`Generated new filename: ${filename}`);
+      }
+      
+      // Upload to object storage
+      const objectKey = await uploadImage(buffer, filename);
+      console.log(`Uploaded image to object storage with key: ${objectKey}`);
+      
+      // Return the object key as the URL
+      return objectKey;
+    } catch (error) {
+      console.error('Error processing image data:', error);
+      return url;
     }
-    
-    // Return the URL for the image
-    const imageUrl = `/uploads/${filename}`;
-    console.log(`Returning image URL: ${imageUrl}`);
-    return imageUrl;
   };
   
   // API routes with /api prefix
@@ -420,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process the URL if needed (convert data URLs to file URLs)
       let processedUrl = req.body.url;
       if (data && typeof data === 'string') {
-        processedUrl = processImageData(req.body.url, data);
+        processedUrl = await processImageData(req.body.url, data);
       }
       
       // Prepare the body with the processed URL
@@ -516,6 +525,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
       
+      // Get the image first to get its URL
+      const image = await storage.getPropertyImage(id);
+      
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      // If the image URL is an object storage key (not an external URL), delete it from storage
+      if (image.url && !image.url.startsWith('http')) {
+        try {
+          // Delete from object storage
+          await deleteImage(image.url);
+          console.log(`Deleted image from object storage: ${image.url}`);
+        } catch (error) {
+          console.error(`Failed to delete image from object storage: ${image.url}`, error);
+          // Continue with deletion from database even if storage deletion fails
+        }
+      }
+      
+      // Delete from database
       const result = await storage.deletePropertyImage(id);
       
       if (!result) {
@@ -524,6 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).end();
     } catch (error) {
+      console.error('Error deleting image:', error);
       res.status(500).json({ message: "Failed to delete image" });
     }
   });
@@ -773,7 +803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process the URL if needed (convert data URLs to file URLs)
       let processedUrl = req.body.url;
       if (data && typeof data === 'string') {
-        processedUrl = processImageData(req.body.url, data);
+        processedUrl = await processImageData(req.body.url, data);
       }
       
       // Prepare the body with the processed URL
@@ -860,7 +890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Delete a unit image
+  // Delete unit image
   app.delete("/api/unit-images/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -869,15 +899,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
       
-      const success = await storage.deleteUnitImage(id);
+      // Get the image first to get its URL
+      const image = await storage.getUnitImage(id);
       
-      if (success) {
-        res.status(204).end();
-      } else {
-        res.status(500).json({ message: "Failed to delete unit image" });
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
       }
+      
+      // If the image URL is an object storage key (not an external URL), delete it from storage
+      if (image.url && !image.url.startsWith('http')) {
+        try {
+          // Delete from object storage
+          await deleteImage(image.url);
+          console.log(`Deleted image from object storage: ${image.url}`);
+        } catch (error) {
+          console.error(`Failed to delete image from object storage: ${image.url}`, error);
+          // Continue with deletion from database even if storage deletion fails
+        }
+      }
+      
+      // Delete from database
+      const result = await storage.deleteUnitImage(id);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      res.status(204).end();
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete unit image" });
+      console.error('Error deleting image:', error);
+      res.status(500).json({ message: "Failed to delete image" });
+    }
+  });
+
+  // Serve images from object storage
+  app.get('/api/images/:objectKey(*)', async (req, res) => {
+    try {
+      const objectKey = req.params.objectKey;
+      console.log(`Serving image from object storage: ${objectKey}`);
+      
+      // Get the image data from object storage
+      const imageData = await getImageData(objectKey);
+      
+      if (!imageData) {
+        console.log(`Image not found in object storage: ${objectKey}`);
+        return res.status(404).send('Image not found');
+      }
+      
+      // Determine content type based on file extension
+      const ext = path.extname(objectKey).toLowerCase();
+      let contentType = 'image/jpeg'; // Default
+      
+      if (ext === '.png') contentType = 'image/png';
+      else if (ext === '.gif') contentType = 'image/gif';
+      else if (ext === '.webp') contentType = 'image/webp';
+      else if (ext === '.svg') contentType = 'image/svg+xml';
+      
+      // Set cache headers (cache for 1 day)
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Content-Type', contentType);
+      
+      return res.send(imageData);
+    } catch (error) {
+      console.error('Error serving image from object storage:', error);
+      return res.status(500).send('Error serving image');
+    }
+  });
+
+  // List all images in storage
+  app.get("/api/images", async (req: Request, res: Response) => {
+    try {
+      const images = await listImages();
+      res.json({ images });
+    } catch (error) {
+      console.error('Error listing images:', error);
+      res.status(500).json({ message: "Failed to list images" });
     }
   });
 

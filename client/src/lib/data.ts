@@ -252,3 +252,23 @@ export async function deleteUnitImage(id: number): Promise<void> {
     method: 'DELETE',
   });
 }
+
+// Object Storage API functions
+export async function listStorageImages(): Promise<string[]> {
+  const response = await fetch('/api/images');
+  if (!response.ok) {
+    throw new Error('Failed to fetch images from object storage');
+  }
+  const data = await response.json();
+  return data.images || [];
+}
+
+export async function deleteStorageImage(objectKey: string): Promise<void> {
+  const response = await fetch(`/api/images/${encodeURIComponent(objectKey)}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to delete image: ${objectKey}`);
+  }
+}
