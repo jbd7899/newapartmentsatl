@@ -64,18 +64,8 @@ export interface IStorage {
   // Add method to get a single unit image by ID
   getUnitImage(id: number): Promise<UnitImage | undefined>;
 
-  // Add methods for image URL updates
-  updatePropertyImageUrl(id: number, url: string): Promise<PropertyImage | undefined>;
-  updateUnitImageUrl(id: number, url: string): Promise<UnitImage | undefined>;
-  
   // Add method to get all property units
   getAllPropertyUnits(): Promise<PropertyUnit[]>;
-  
-  // Image Storage - Database Binary Storage
-  saveImageData(data: InsertImageStorage): Promise<ImageStorage>;
-  getImageDataByObjectKey(objectKey: string): Promise<ImageStorage | undefined>;
-  deleteImageDataByObjectKey(objectKey: string): Promise<boolean>;
-  getAllStoredImages(): Promise<ImageStorage[]>;
 }
 
 // In-memory storage implementation
@@ -103,7 +93,6 @@ export class MemStorage implements IStorage {
     this.neighborhoodsData = new Map();
     this.propertyUnitsData = new Map();
     this.unitImagesData = new Map();
-    this.imageStorageData = new Map();
     
     // Seed initial data
     this.seedData();
@@ -127,16 +116,12 @@ export class MemStorage implements IStorage {
     const newImage: PropertyImage = {
       id,
       propertyId: image.propertyId,
-      url: image.url,
+      objectKey: image.objectKey,
       alt: image.alt,
       displayOrder: image.displayOrder ?? 0,
       isFeatured: image.isFeatured ?? false,
-      // Include storage fields
-      objectKey: image.objectKey ?? null,
       mimeType: image.mimeType ?? null,
       size: image.size ?? null,
-      imageData: image.imageData ?? null,
-      storageType: image.storageType ?? "external",
       createdAt
     };
     
@@ -340,16 +325,12 @@ export class MemStorage implements IStorage {
     const newImage: UnitImage = {
       id,
       unitId: image.unitId,
-      url: image.url,
+      objectKey: image.objectKey,
       alt: image.alt,
       displayOrder: image.displayOrder ?? 0,
       isFeatured: image.isFeatured ?? false,
-      // Include storage fields
-      objectKey: image.objectKey ?? null,
       mimeType: image.mimeType ?? null,
       size: image.size ?? null,
-      imageData: image.imageData ?? null,
-      storageType: image.storageType ?? "external",
       createdAt
     };
     
@@ -452,7 +433,6 @@ export class MemStorage implements IStorage {
     this.propertyImagesData = new Map();
     this.propertyUnitsData = new Map();
     this.unitImagesData = new Map();
-    this.imageStorageData = new Map();
     // Locations
     const locations: Location[] = [
       {
