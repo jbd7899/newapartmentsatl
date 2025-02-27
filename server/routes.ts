@@ -10,8 +10,7 @@ import {
   insertPropertyUnitSchema, 
   insertUnitImageSchema,
   type PropertyImage,
-  type UnitImage,
-  type ImageStorage
+  type UnitImage
 } from "@shared/schema";
 import * as fs from 'fs';
 import * as path from 'path';
@@ -127,60 +126,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(404).send('File not found');
   });
 
-  // Serve images directly from database storage
-  app.get('/api/db-images/:objectKey', async (req: Request, res: Response) => {
-    try {
-      const objectKey = req.params.objectKey;
-      console.log(`Serving image from database: ${objectKey}`);
+  // Note: Database image storage has been removed in favor of object storage only
 
-      if (!objectKey) {
-        console.log('No object key provided');
-        return res.status(404).send('Image not found');
-      }
-
-      // Get the image data from database storage
-      const imageData = await storage.getImageDataByObjectKey(objectKey);
-
-      if (!imageData) {
-        console.log(`Image not found in database: ${objectKey}`);
-
-        // If this is an object storage key, try to get it from object storage
-        if (isObjectStorageKey(objectKey)) {
-          console.log(`Trying object storage for: ${objectKey}`);
-          const imageBuffer = await getImageData(objectKey);
-
-          if (imageBuffer) {
-            // Determine MIME type based on filename
-            const filename = getFilenameFromObjectKey(objectKey);
-            let mimeType = 'image/jpeg';
-            if (filename.endsWith('.png')) mimeType = 'image/png';
-            else if (filename.endsWith('.gif')) mimeType = 'image/gif';
-            else if (filename.endsWith('.webp')) mimeType = 'image/webp';
-            else if (filename.endsWith('.svg')) mimeType = 'image/svg+xml';
-
-            res.contentType(mimeType);
-            return res.send(imageBuffer);
-          }
-        }
-
-        return res.status(404).send('Image not found');
-      }
-
-      // Extract base64 data and convert to buffer
-      const buffer = Buffer.from(imageData.data, 'base64');
-
-      // Set proper content type
-      res.contentType(imageData.mimeType);
-      console.log(`Serving image from database, size: ${buffer.length} bytes`);
-
-      return res.send(buffer);
-    } catch (error) {
-      console.error('Error serving image from database:', error);
-      return res.status(500).send('Error processing image');
-    }
-  });
-
-  // Process image data and save to store
+  // Process image data and save to object storage
   const processImageData = async (url: string, data?: string): Promise<string> => {
     console.log(`Processing image data. URL: ${url?.substring(0, 30)}..., Data provided: ${!!data}`);
 
@@ -196,9 +144,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return url;
     }
 
-    // If the URL is already a database image URL, return it as is
-    if (url.startsWith('/api/db-images/')) {
-      console.log(`URL is already a database image URL: ${url}`);
+    // If the URL is already a property/unit image URL, return it as is
+    if (url.startsWith('/api/property-images/') || url.startsWith('/api/unit-images/')) {
+      console.log(`URL is already a property/unit image URL: ${url}`);
       return url;
     }
 
@@ -226,27 +174,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       else if (mimeType === 'image/webp') extension = '.webp';
       else if (mimeType === 'image/svg+xml') extension = '.svg';
 
-      // Generate a filename/objectKey for the image
+      // Convert base64 to buffer
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      // Generate a filename for the image
       const timestamp = Date.now();
       const randomStr = crypto.randomBytes(4).toString('hex');
-      const objectKey = `dbimg_${timestamp}_${randomStr}${extension}`;
-      console.log(`Generated new object key: ${objectKey}`);
-
-      // Calculate size
-      const bufferSize = Buffer.from(base64Data, 'base64').length;
-
-      // Store image in database
-      await storage.saveImageData({
-        objectKey,
-        mimeType,
-        data: base64Data,
-        size: bufferSize
-      });
-
-      console.log(`Stored image in database with key: ${objectKey}`);
+      const filename = `img_${timestamp}_${randomStr}${extension}`;
+      
+      // Upload to object storage
+      const objectKey = await uploadImage(buffer, filename);
+      
+      console.log(`Uploaded image to object storage with key: ${objectKey}`);
 
       // Return the path to the image with our API endpoint
-      return `/api/db-images/${objectKey}`;
+      return `/api/images/${objectKey}`;
     } catch (error) {
       console.error('Error processing image data:', error);
       return url;
@@ -609,36 +551,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
 
-      // Get the image first to get its URL
+      // Get the image first to get its objectKey
       const image = await storage.getPropertyImage(id);
 
       if (!image) {
         return res.status(404).json({ message: "Image not found" });
       }
 
-      // Check if this is a database-stored image
-      if (image.url && image.url.startsWith('/api/db-images/')) {
-        try {
-          // Extract object key from URL
-          const objectKey = image.url.split('/api/db-images/')[1];
-          if (objectKey) {
-            // Delete from database storage
-            await storage.deleteImageDataByObjectKey(objectKey);
-            console.log(`Deleted image from database storage: ${objectKey}`);
-          }
-        } catch (error) {
-          console.error(`Failed to delete image from database storage: ${image.url}`, error);
-          // Continue with deletion from database even if storage deletion fails
-        }
-      }
-      // If the image URL is an object storage key (not an external URL), delete it from storage
-      else if (image.url && !image.url.startsWith('http')) {
+      // If the image has an objectKey and it's not an external URL, delete it from object storage
+      if (image.objectKey && !image.objectKey.startsWith('http')) {
         try {
           // Delete from object storage
-          await deleteImage(image.url);
-          console.log(`Deleted image from object storage: ${image.url}`);
+          await deleteImage(image.objectKey);
+          console.log(`Deleted image from object storage: ${image.objectKey}`);
         } catch (error) {
-          console.error(`Failed to delete image from object storage: ${image.url}`, error);
+          console.error(`Failed to delete image from object storage: ${image.objectKey}`, error);
           // Continue with deletion from database even if storage deletion fails
         }
       }
@@ -1133,18 +1060,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // List all images in storage
   app.get("/api/images", async (req: Request, res: Response) => {
     try {
-      // Get images from both storage systems
+      console.log("Listing all images in object storage...");
+      // Get images from object storage only
       const objectStorageImages = await listImages();
-      const dbImages = await storage.getAllStoredImages();
-
-      // Format database images to match the expected output
-      const formattedDbImages = dbImages.map((img: ImageStorage) => ({
-        key: img.objectKey,
-        url: `/api/db-images/${img.objectKey}`,
-        size: img.size,
-        type: img.mimeType,
-        source: 'database'
-      }));
+      console.log("Raw objects from storage:", objectStorageImages);
 
       // Format object storage images
       const formattedObjectStorageImages = objectStorageImages.map(key => ({
@@ -1153,12 +1072,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: 'object-storage'
       }));
 
+      console.log("Object keys extracted:", objectStorageImages);
+      console.log("All image files:", formattedObjectStorageImages);
+
       res.json({ 
-        images: [...formattedDbImages, ...formattedObjectStorageImages],
+        images: formattedObjectStorageImages,
         counts: {
-          database: formattedDbImages.length,
+          database: 0, // We don't use database storage anymore
           objectStorage: formattedObjectStorageImages.length,
-          total: formattedDbImages.length + formattedObjectStorageImages.length
+          total: formattedObjectStorageImages.length
         }
       });
     } catch (error) {
@@ -1167,7 +1089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve property images with integrated storage
+  // Serve property images from object storage
   app.get('/api/property-images/:objectKey(*)', async (req: Request, res: Response) => {
     try {
       const objectKey = req.params.objectKey;
@@ -1181,26 +1103,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send('Property image not found');
       }
 
-      // If image has data directly stored, serve it
-      if (image.imageData) {
-        // Determine content type
-        const mimeType = image.mimeType || 'image/jpeg';
-
-        // Convert base64 to buffer and serve
-        const buffer = Buffer.from(image.imageData, 'base64');
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-        return res.send(buffer);
+      // Get the image data from object storage
+      const imageData = await getImageData(objectKey);
+      
+      if (!imageData) {
+        return res.status(404).send('Image data not found in object storage');
       }
 
-      return res.status(404).send('Image data not found');
+      // Determine content type based on file extension or default to JPEG
+      let mimeType = 'image/jpeg';
+      if (objectKey.toLowerCase().endsWith('.png')) {
+        mimeType = 'image/png';
+      } else if (objectKey.toLowerCase().endsWith('.gif')) {
+        mimeType = 'image/gif';
+      } else if (objectKey.toLowerCase().endsWith('.webp')) {
+        mimeType = 'image/webp';
+      }
+
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      return res.send(imageData);
     } catch (error) {
       console.error('Error serving property image:', error);
       res.status(500).send('Error serving image');
     }
   });
 
-  // Serve unit images with integrated storage
+  // Serve unit images from object storage
   app.get('/api/unit-images/:objectKey(*)', async (req: Request, res: Response) => {
     try {
       const objectKey = req.params.objectKey;
@@ -1223,19 +1152,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send('Unit image not found');
       }
 
-      // If image has data directly stored, serve it
-      if (unitImage.imageData) {
-        // Determine content type
-        const mimeType = unitImage.mimeType || 'image/jpeg';
-
-        // Convert base64 to buffer and serve
-        const buffer = Buffer.from(unitImage.imageData, 'base64');
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-        return res.send(buffer);
+      // Get the image data from object storage
+      const imageData = await getImageData(objectKey);
+      
+      if (!imageData) {
+        return res.status(404).send('Image data not found in object storage');
       }
 
-      return res.status(404).send('Image data not found');
+      // Determine content type based on file extension or default to JPEG
+      let mimeType = 'image/jpeg';
+      if (objectKey.toLowerCase().endsWith('.png')) {
+        mimeType = 'image/png';
+      } else if (objectKey.toLowerCase().endsWith('.gif')) {
+        mimeType = 'image/gif';
+      } else if (objectKey.toLowerCase().endsWith('.webp')) {
+        mimeType = 'image/webp';
+      }
+
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      return res.send(imageData);
     } catch (error) {
       console.error('Error serving unit image:', error);
       res.status(500).send('Error serving image');

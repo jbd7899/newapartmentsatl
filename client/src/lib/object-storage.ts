@@ -108,9 +108,13 @@ export function getFilenameFromObjectKey(objectKey: string): string {
     return '';
   }
   
-  // For database images that include the path
-  if (objectKey.startsWith('/api/db-images/')) {
-    objectKey = objectKey.split('/api/db-images/')[1];
+  // For special types of image URLs
+  if (objectKey.startsWith('/api/property-images/')) {
+    objectKey = objectKey.split('/api/property-images/')[1];
+  } else if (objectKey.startsWith('/api/unit-images/')) {
+    objectKey = objectKey.split('/api/unit-images/')[1];
+  } else if (objectKey.startsWith('/api/images/')) {
+    objectKey = objectKey.split('/api/images/')[1];
   }
   
   // Split by '/' and get the last part
@@ -119,29 +123,25 @@ export function getFilenameFromObjectKey(objectKey: string): string {
 }
 
 /**
- * Check if an image URL is from database, object storage, or external
+ * Check if an image URL is from object storage, property/unit images, or external
  * 
  * @param url - The image URL to check
- * @returns 'database', 'object-storage', 'property-image', 'unit-image', 'legacy', or 'external'
+ * @returns 'object-storage', 'property-image', 'unit-image', 'legacy', or 'external'
  */
-export function getImageSourceType(url: string): 'database' | 'object-storage' | 'property-image' | 'unit-image' | 'legacy' | 'external' {
+export function getImageSourceType(url: string): 'object-storage' | 'property-image' | 'unit-image' | 'legacy' | 'external' {
   if (!url) {
     return 'external';
   }
   
-  if (url.startsWith('/api/property-images/')) {
+  if (url.startsWith('/api/property-images/') || url.startsWith('propimg_')) {
     return 'property-image';
   }
   
-  if (url.startsWith('/api/unit-images/')) {
+  if (url.startsWith('/api/unit-images/') || url.startsWith('unitimg_')) {
     return 'unit-image';
   }
   
-  if (url.startsWith('/api/db-images/') || url.startsWith('dbimg_')) {
-    return 'database';
-  }
-  
-  if (isObjectStorageKey(url)) {
+  if (url.startsWith('/api/images/') || isObjectStorageKey(url)) {
     return 'object-storage';
   }
   
