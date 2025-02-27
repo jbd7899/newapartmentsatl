@@ -11,6 +11,7 @@ import NeighborhoodSection from "@/components/NeighborhoodSection";
 import PropertyGallery, { GalleryImage } from "@/components/PropertyGallery";
 import UnitCard from "@/components/UnitCard";
 import UnitGallery from "@/components/UnitGallery";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface PropertyPageProps {
   id: string;
@@ -147,12 +148,26 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
   const featuresList = property.features.split(", ");
   
   // Get featured image from property images or use property image URL as fallback
-  const featuredImage = propertyImages.find((img: PropertyImage) => img.isFeatured)?.url || property.imageUrl;
+  const featuredImageUrl = propertyImages.find((img: PropertyImage) => img.isFeatured)?.url || property.imageUrl;
+  
+  // Optimize the featured image for hero display if it's a Cloudinary URL
+  const getOptimizedHeroImage = (url: string): string => {
+    if (url && url.includes('cloudinary.com')) {
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        // Optimize for hero section: high quality, responsive width
+        return `${parts[0]}/upload/c_fill,w_1600,h_800,q_auto:good/${parts[1]}`;
+      }
+    }
+    return getImageUrl(url);
+  };
+  
+  const optimizedHeroImage = getOptimizedHeroImage(featuredImageUrl);
 
   return (
     <>
       {/* Property Hero - Updated with modern design */}
-      <div className="relative h-64 md:h-[50vh] bg-gray-300 bg-center bg-cover" style={{ backgroundImage: `url(${featuredImage})` }}>
+      <div className="relative h-64 md:h-[50vh] bg-gray-300 bg-center bg-cover" style={{ backgroundImage: `url(${optimizedHeroImage})` }}>
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 text-white">
           <div className="container mx-auto">
@@ -340,7 +355,7 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
               <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
                 <div className="aspect-video bg-gray-100 overflow-hidden">
                   <img 
-                    src={featuredImage} 
+                    src={optimizedHeroImage} 
                     alt={property.name} 
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
                   />

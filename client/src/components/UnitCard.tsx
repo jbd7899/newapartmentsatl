@@ -15,6 +15,7 @@ import {
   Image as ImageIcon 
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface UnitCardProps {
   unit: PropertyUnit;
@@ -40,7 +41,21 @@ export default function UnitCard({
   const placeholderImage = "https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907976/6463_Trammel_Dr_1_vdvnqs.jpg";
   
   // Get the appropriate image URL
-  const imageUrl = featuredImage ? featuredImage.url : placeholderImage;
+  const rawImageUrl = featuredImage ? featuredImage.url : placeholderImage;
+  
+  // Optimize Cloudinary URLs for cards
+  const getOptimizedCardImage = (url: string): string => {
+    if (url && url.includes('cloudinary.com')) {
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        // Optimize for card display
+        return `${parts[0]}/upload/c_fill,w_600,h_400,q_auto/${parts[1]}`;
+      }
+    }
+    return getImageUrl(url);
+  };
+  
+  const imageUrl = getOptimizedCardImage(rawImageUrl);
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden h-full flex flex-col transition-transform hover:-translate-y-1 hover:shadow-lg">
