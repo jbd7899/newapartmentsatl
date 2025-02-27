@@ -7,8 +7,7 @@
 
 import { migrateData } from './migration';
 
-// Run the migration
-console.log('Starting migration process...');
+console.log('Starting migration from in-memory storage to PostgreSQL...');
 
 migrateData()
   .then(() => {
@@ -18,4 +17,4 @@ migrateData()
   .catch((error) => {
     console.error('Migration failed:', error);
     process.exit(1);
-  }); 
+  });
