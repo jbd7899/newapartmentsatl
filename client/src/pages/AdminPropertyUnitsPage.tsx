@@ -63,6 +63,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -80,6 +81,8 @@ import {
   ArrowUpDown,
   Check,
   Star,
+  Link as LinkIcon,
+  ListPlus,
 } from "lucide-react";
 
 // Define the form validation schema extending the insert schema
@@ -97,6 +100,10 @@ const AdminPropertyUnitsPage = () => {
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [imageData, setImageData] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [bulkUrls, setBulkUrls] = useState<string>("");
+  const [isBulkMode, setIsBulkMode] = useState<boolean>(false);
+  const [imageAlt, setImageAlt] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -711,7 +718,7 @@ const AdminPropertyUnitsPage = () => {
                   <CardContent>
                     <div className="flex justify-end mb-6">
                       <Button onClick={() => setShowImageUpload(true)}>
-                        <Plus className="mr-2 h-4 w-4" /> Upload Image
+                        <LinkIcon className="mr-2 h-4 w-4" /> Add Image URL
                       </Button>
                     </div>
 
@@ -795,66 +802,182 @@ const AdminPropertyUnitsPage = () => {
 
                     {/* Image Upload Dialog */}
                     <Dialog open={showImageUpload} onOpenChange={setShowImageUpload}>
-                      <DialogContent>
+                      <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
-                          <DialogTitle>Upload Unit Image</DialogTitle>
+                          <DialogTitle>Add Unit Image</DialogTitle>
                           <DialogDescription>
-                            Upload an image for Unit {propertyUnits.find(u => u.id === selectedUnit)?.unitNumber}
+                            Add an image for Unit {propertyUnits.find(u => u.id === selectedUnit)?.unitNumber}
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <div className="space-y-4">
-                          <div className="flex justify-center">
-                            <div className="w-full max-w-md">
-                              {imageData ? (
-                                <div className="relative aspect-video">
-                                  <img
-                                    src={imageData}
-                                    alt="Preview"
-                                    className="w-full h-full object-cover rounded-md"
-                                  />
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="absolute top-2 right-2"
-                                    onClick={() => {
-                                      setImageData(null);
-                                      setImageFile(null);
-                                    }}
-                                  >
-                                    Change
-                                  </Button>
-                                </div>
-                              ) : (
-                                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <ImageIcon className="w-8 h-8 mb-4 text-gray-500" />
-                                    <p className="mb-2 text-sm text-gray-500">
-                                      <span className="font-semibold">Click to upload</span> or drag and drop
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      PNG, JPG or WEBP (MAX. 10MB)
-                                    </p>
-                                  </div>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                  />
-                                </label>
-                              )}
-                            </div>
+                        <div className="space-y-6">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="bulk-mode"
+                              checked={isBulkMode}
+                              onCheckedChange={setIsBulkMode}
+                            />
+                            <Label htmlFor="bulk-mode" className="font-medium">
+                              {isBulkMode ? "Bulk URL Mode" : "Single URL Mode"}
+                            </Label>
                           </div>
-
-                          <DialogFooter>
-                            <Button 
-                              onClick={handleUploadImage} 
-                              disabled={!imageData || createImageMutation.isPending}
-                            >
-                              {createImageMutation.isPending ? "Uploading..." : "Upload Image"}
-                            </Button>
-                          </DialogFooter>
+                          
+                          <div className="grid w-full gap-1.5">
+                            <Label htmlFor="imageAlt">Image Description (Alt Text)</Label>
+                            <Input
+                              id="imageAlt"
+                              value={imageAlt}
+                              onChange={(e) => setImageAlt(e.target.value)}
+                              placeholder="Description of the unit image"
+                            />
+                            <p className="text-sm text-muted-foreground">Describe the image for accessibility</p>
+                          </div>
+                          
+                          {isBulkMode ? (
+                            <div className="space-y-4">
+                              <div className="grid w-full gap-1.5">
+                                <Label htmlFor="bulkUrls">Bulk Image URLs</Label>
+                                <Textarea
+                                  id="bulkUrls"
+                                  value={bulkUrls}
+                                  onChange={(e) => setBulkUrls(e.target.value)}
+                                  placeholder="Paste URLs here, one per line or comma-separated or from a cloudinary gallery"
+                                  className="min-h-[200px]"
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                  Paste multiple image URLs in any format. The system will extract valid URLs starting with http:// or https://
+                                </p>
+                              </div>
+                              
+                              <DialogFooter>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => setShowImageUpload(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button 
+                                  type="button"
+                                  onClick={() => {
+                                    if (!selectedUnit || !bulkUrls.trim()) return;
+                                    
+                                    const unit = propertyUnits.find(unit => unit.id === selectedUnit);
+                                    if (!unit) return;
+                                    
+                                    // Parse URLs
+                                    const urlPattern = /(https?:\/\/[^\s,'"]+)/g;
+                                    const urls = bulkUrls.match(urlPattern);
+                                    
+                                    if (!urls || urls.length === 0) {
+                                      toast({
+                                        title: "Error",
+                                        description: "No valid URLs found. URLs must start with http:// or https://",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+                                    
+                                    toast({
+                                      title: "Processing",
+                                      description: `Adding ${urls.length} images...`,
+                                    });
+                                    
+                                    // Get the current highest display order
+                                    const currentHighestOrder = unitImages.length > 0 
+                                      ? Math.max(...unitImages.map(img => img.displayOrder)) 
+                                      : -1;
+                                    
+                                    // Process each URL
+                                    for (let i = 0; i < urls.length; i++) {
+                                      const url = urls[i].trim();
+                                      if (url.startsWith('http')) {
+                                        createImageMutation.mutate({
+                                          unitId: selectedUnit,
+                                          url: url,
+                                          alt: imageAlt || `${unit.unitNumber} - Unit Image ${i + 1}`,
+                                          displayOrder: currentHighestOrder + i + 1,
+                                          isFeatured: unitImages.length === 0 && i === 0, // Make first image featured if no images exist
+                                          data: null
+                                        });
+                                      }
+                                    }
+                                    
+                                    // Reset the form
+                                    setBulkUrls("");
+                                    setImageAlt("");
+                                    setShowImageUpload(false);
+                                  }}
+                                  disabled={createImageMutation.isPending}
+                                >
+                                  <ListPlus className="mr-2 h-4 w-4" />
+                                  Add Bulk Images
+                                </Button>
+                              </DialogFooter>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <div className="grid w-full gap-1.5">
+                                <Label htmlFor="imageUrl">Image URL</Label>
+                                <Input
+                                  id="imageUrl"
+                                  type="url"
+                                  value={imageUrl}
+                                  onChange={(e) => setImageUrl(e.target.value)}
+                                  placeholder="https://example.com/image.jpg"
+                                />
+                                <p className="text-sm text-muted-foreground">Enter an external image URL (must start with http)</p>
+                              </div>
+                              
+                              <DialogFooter>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => setShowImageUpload(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button 
+                                  type="button"
+                                  onClick={() => {
+                                    if (!selectedUnit || !imageUrl.trim() || !imageUrl.startsWith('http')) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Please enter a valid image URL (must start with http)",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+                                    
+                                    const unit = propertyUnits.find(unit => unit.id === selectedUnit);
+                                    if (!unit) return;
+                                    
+                                    const newOrder = unitImages.length > 0 
+                                      ? Math.max(...unitImages.map(img => img.displayOrder)) + 1 
+                                      : 0;
+                                    
+                                    createImageMutation.mutate({
+                                      unitId: selectedUnit,
+                                      url: imageUrl,
+                                      alt: imageAlt || `${unit.unitNumber} - Unit Image`,
+                                      displayOrder: newOrder,
+                                      isFeatured: unitImages.length === 0, // Make it featured if it's the first image
+                                      data: null,
+                                    });
+                                    
+                                    // Reset the form
+                                    setImageUrl("");
+                                    setImageAlt("");
+                                    setShowImageUpload(false);
+                                  }}
+                                  disabled={createImageMutation.isPending}
+                                >
+                                  <LinkIcon className="mr-2 h-4 w-4" />
+                                  Add External Image
+                                </Button>
+                              </DialogFooter>
+                            </div>
+                          )}
                         </div>
                       </DialogContent>
                     </Dialog>
