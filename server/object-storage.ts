@@ -95,13 +95,20 @@ export async function listImages(): Promise<string[]> {
     
     console.log("Raw objects from storage:", value);
     
+    // Process and properly format each object name
+    const objectKeys = value.map(obj => {
+      // Extract the actual key from the object (which might have a 'name' property)
+      const objKey = obj.name ? obj.name : String(obj);
+      return objKey;
+    });
+    
+    console.log("Object keys extracted:", objectKeys);
+    
     // Filter to only include image files
-    const imageFiles = value
-      .map(obj => String(obj))
-      .filter(key => {
-        const ext = path.extname(key).toLowerCase();
-        return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
-      });
+    const imageFiles = objectKeys.filter(key => {
+      const ext = path.extname(key).toLowerCase();
+      return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+    });
     
     console.log("Filtered image files:", imageFiles);
     return imageFiles;
