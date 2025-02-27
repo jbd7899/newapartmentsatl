@@ -48,11 +48,11 @@ const Header = () => {
             </PopoverContent>
           </Popover>
         
-          <Link href="/portal">
+          <a href="https://apartmentsatl.appfolio.com/connect/users/sign_in" target="_blank" rel="noopener noreferrer">
             <Button className="bg-[hsl(var(--brand-orange))] hover:bg-[hsl(var(--brand-orange))] hover:opacity-90">
               Resident Portal
             </Button>
-          </Link>
+          </a>
         </div>
         <button 
           className="md:hidden flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg px-3 py-2 transition-colors"
@@ -88,11 +88,11 @@ const Header = () => {
             <PropertySearch onSelect={closeMobileMenu} />
           </div>
           
-          <Link href="/portal" onClick={closeMobileMenu}>
+          <a href="https://apartmentsatl.appfolio.com/connect/users/sign_in" target="_blank" rel="noopener noreferrer" onClick={closeMobileMenu}>
             <Button className="w-full bg-[hsl(var(--brand-orange))] hover:bg-[hsl(var(--brand-orange))] hover:opacity-90">
               Resident Portal
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </header>

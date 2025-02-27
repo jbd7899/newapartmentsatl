@@ -55,16 +55,6 @@ const Footer = () => {
                   Resident Portal
                 </Link>
               </li>
-              <li>
-                <Link href="/contact" className="hover:text-[hsl(var(--brand-orange))] transition">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-[hsl(var(--brand-orange))] transition">
-                  About Us
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

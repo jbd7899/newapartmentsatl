@@ -290,16 +290,22 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                 <div className="mb-4">
                   <div className="text-3xl font-bold text-orange-500 mb-1">${property.rent}</div>
                   <div className="text-gray-500 mb-3">per month</div>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2">
-                    Schedule a Tour
+                  <Button 
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2"
+                    onClick={() => window.location.href = "https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/apartment-finder"}
+                  >
+                    Contact Us
                   </Button>
                 </div>
               ) : (
                 <div className="mb-4">
                   <div className="text-xl font-semibold text-gray-700 mb-1">Contact for Pricing</div>
                   <div className="text-gray-500 mb-3">Pricing details available on request</div>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2">
-                    Request Information
+                  <Button 
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2"
+                    onClick={() => window.location.href = "https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/apartment-finder"}
+                  >
+                    Contact Us
                   </Button>
                 </div>
               )}
@@ -387,18 +393,10 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                     unit={unit}
                     unitImages={unitImagesMap[unit.id] || []}
                     onShowGallery={() => setSelectedUnitId(unit.id)}
-                    onRequestInfo={() => {}}
-                    onScheduleTour={() => {}}
+                    onRequestInfo={() => window.location.href = "https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/apartment-finder"}
+                    onScheduleTour={() => window.location.href = "https://69093949-1e87-42fc-b0f7-98f4b2d3047d-00-uk2zuggp8gib.janeway.replit.dev/apartment-finder"}
                   />
                 ))}
-              </div>
-            )}
-            
-            {propertyUnits.length > 0 && (
-              <div className="mt-10 text-center">
-                <Button className="bg-orange-500 hover:bg-orange-600">
-                  Contact Agent for More Information
-                </Button>
               </div>
             )}
           </div>
