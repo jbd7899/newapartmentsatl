@@ -526,7 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete property image
+  // Delete property image - only for external URLs
   app.delete("/api/property-images/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -535,23 +535,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
 
-      // Get the image first to get its objectKey
+      // Get the image first
       const image = await storage.getPropertyImage(id);
 
       if (!image) {
         return res.status(404).json({ message: "Image not found" });
-      }
-
-      // If the image has an objectKey and it's not an external URL, delete it from object storage
-      if (image.objectKey && !image.objectKey.startsWith('http')) {
-        try {
-          // Delete from object storage
-          await deleteImage(image.objectKey);
-          console.log(`Deleted image from object storage: ${image.objectKey}`);
-        } catch (error) {
-          console.error(`Failed to delete image from object storage: ${image.objectKey}`, error);
-          // Continue with deletion from database even if storage deletion fails
-        }
       }
 
       // Delete from database
@@ -804,14 +792,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add a new unit image - uses only Object Storage
+  // Add a new unit image - only accepts external URLs
   app.post("/api/unit-images", async (req: Request, res: Response) => {
     try {
-      // Check if we're getting data URL along with the URL
-      const { data, unitId, alt, displayOrder, isFeatured } = req.body;
-
-      // Import from storage-utils
-      const { uploadImage, getImageUrl } = await import('./storage-utils');
+      const { unitId, url, alt, displayOrder, isFeatured } = req.body;
 
       // Verify unit exists
       const unit = await storage.getPropertyUnit(unitId);
@@ -819,20 +803,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Property unit not found" });
       }
 
-      // If image data is provided, process it
-      let objectKey = '';
-      let url = '';
-
-      if (data && typeof data === 'string') {
-        // Upload the image to Object Storage
-        objectKey = await uploadImage(data, 'unit-image.jpg', 'unit-images');
-        url = getImageUrl(objectKey);
-      } else if (req.body.url && req.body.url.startsWith('http')) {
-        // If URL is an external URL, use it directly
-        url = req.body.url;
-        objectKey = null;
-      } else {
-        return res.status(400).json({ message: "Either image data or external URL is required" });
+      // Validate URL
+      if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+        return res.status(400).json({ message: "A valid external image URL is required" });
       }
 
       // Create the image data object
@@ -841,9 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         url,
         alt: alt || '',
         displayOrder: displayOrder || 0,
-        isFeatured: isFeatured || false,
-        objectKey: objectKey || null,
-        storageType: objectKey ? "object-storage" : "external"
+        isFeatured: isFeatured || false
       };
 
       // Validate request body
@@ -918,7 +889,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete unit image
+  // Delete unit image - only for external URLs
   app.delete("/api/unit-images/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -927,38 +898,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image ID" });
       }
 
-      // Get the image first to get its URL
+      // Get the image first
       const image = await storage.getUnitImage(id);
 
       if (!image) {
         return res.status(404).json({ message: "Image not found" });
-      }
-
-      // Check if this is a database-stored image
-      if (image.url && image.url.startsWith('/api/db-images/')) {
-        try {
-          // Extract object key from URL
-          const objectKey = image.url.split('/api/db-images/')[1];
-          if (objectKey) {
-            // Delete from database storage
-            await storage.deleteImageDataByObjectKey(objectKey);
-            console.log(`Deleted image from database storage: ${objectKey}`);
-          }
-        } catch (error) {
-          console.error(`Failed to delete image from database storage: ${image.url}`, error);
-          // Continue with deletion from database even if storage deletion fails
-        }
-      }
-      // If the image URL is an object storage key (not an external URL), delete it from storage
-      else if (image.url && !image.url.startsWith('http')) {
-        try {
-          // Delete from object storage
-          await deleteImage(image.url);
-          console.log(`Deleted image from object storage: ${image.url}`);
-        } catch (error) {
-          console.error(`Failed to delete image from object storage: ${image.url}`, error);
-          // Continue with deletion from database even if storage deletion fails
-        }
       }
 
       // Delete from database
