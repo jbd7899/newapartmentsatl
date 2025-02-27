@@ -549,8 +549,8 @@ const StorageManager = () => {
                   />
                 </div>
                 <div className="p-3 flex-1 flex flex-col">
-                  <div className="text-sm font-medium truncate mb-1" title={image.key}>
-                    {image.key.split('/').pop() || image.key}
+                  <div className="text-sm font-medium truncate mb-1" title={image.key || ''}>
+                    {image.key ? (image.key.split('/').pop() || image.key) : 'Unnamed Image'}
                   </div>
                   <div className="text-xs text-muted-foreground space-y-1 mb-2">
                     <div className="flex items-center justify-between">
