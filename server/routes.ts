@@ -793,10 +793,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add a new unit image - only accepts external URLs
+  // Add a new unit image - accepts objectKey for object storage or external URLs
   app.post("/api/unit-images", async (req: Request, res: Response) => {
     try {
-      const { unitId, url, alt, displayOrder, isFeatured } = req.body;
+      const { unitId, url, objectKey, alt, displayOrder, isFeatured } = req.body;
 
       // Verify unit exists
       const unit = await storage.getPropertyUnit(unitId);
@@ -804,16 +804,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Property unit not found" });
       }
 
-      // Validate URL
-      if (!url || typeof url !== 'string' || !url.startsWith('http')) {
-        return res.status(400).json({ message: "A valid external image URL is required" });
+      // Either URL or objectKey must be provided
+      if ((!url || typeof url !== 'string') && (!objectKey || typeof objectKey !== 'string')) {
+        return res.status(400).json({ message: "Either a valid URL or objectKey is required" });
       }
 
       // Create the image data object
       const imageData = {
         unitId,
-        url,
-        objectKey: url, // Store the URL as objectKey too for consistent display
+        url: url || null,
+        objectKey: objectKey || url, // If objectKey is provided, use it; otherwise use URL
         alt: alt || '',
         displayOrder: displayOrder || 0,
         isFeatured: isFeatured || false

@@ -3,10 +3,15 @@
  * Usage: node upload-unit-images.js
  */
 
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const { Client } = require('@replit/object-storage');
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { Client } from '@replit/object-storage';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Property and unit information
 const UNIT_ID = 4; // ID of the unit we created
@@ -15,8 +20,7 @@ const ALT_TEXT = '965 Myrtle St Apartment 1';
 // Initialize the Replit Object Storage client
 const client = new Client();
 
-// Your bucket ID 
-const BUCKET_ID = 'replit-objstore-8f3f1a22-cdd2-4088-9bff-f7887f5d323d';
+// The bucket ID is automatically detected by the Replit Object Storage client
 
 // Function to generate a unique filename to avoid collisions
 function generateUniqueFilename(originalFilename) {
@@ -51,26 +55,36 @@ async function uploadImageFromFile(filePath) {
 
 // Create unit image record in database
 async function createUnitImage(unitId, objectKey, alt, displayOrder, isFeatured) {
-  const response = await fetch('http://localhost:5000/api/unit-images', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      unitId,
-      objectKey,
-      alt,
-      displayOrder,
-      isFeatured,
-    }),
-  });
+  console.log(`Creating unit image record for Unit ID: ${unitId}, Object Key: ${objectKey}`);
+  
+  try {
+    const response = await fetch('http://localhost:5000/api/unit-images', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        unitId,
+        objectKey, // Send only objectKey, not URL
+        alt,
+        displayOrder,
+        isFeatured,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to create unit image: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error response from API: ${errorText}`);
+      throw new Error(`Failed to create unit image: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log(`Successfully created unit image with ID: ${data.id}`);
+    return data;
+  } catch (error) {
+    console.error(`Error creating unit image record: ${error.message}`);
+    throw error;
   }
-
-  return response.json();
 }
 
 // Process a directory of images
