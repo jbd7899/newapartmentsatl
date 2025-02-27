@@ -186,21 +186,19 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
           // Make sure to remove any characters that could be interpreted as path separators
           const shortHash = base64Data.substring(0, 8).replace(/[\/\\?%*:|"<>]/g, '_');
           
-          // Create a filename in the format: image_timestamp_random_hash.ext
-          const filename = `image_${timestamp}_${randomStr}_${shortHash}.${fileExt}`;
+          // Create a unique object key for the integrated storage system
+          const objectKey = `propimg_${timestamp}_${randomStr}_${shortHash}`;
           
-          // Instead of storing the full data URL, we'll use this generated filename
-          // In a real application, we would upload the file to a storage service
-          // and store the URL to that file. For this demo, we'll use the data URL
-          // but we'll add metadata to make it more manageable.
+          // With the new integrated approach, we'll use the property-images endpoint
+          // The actual URL will be generated on the server when the image is saved to
+          // the database with the integrated storage fields
           
-          // Set a shorter preview using a thumbnail version of the image
+          // Set a preview for user interface display
           setPreviews(prev => [...prev, { 
             fullDataUrl,
-            // Store the filename as the URL for the database
-            storageUrl: `/uploads/${filename}`,
-            // We'll include the full data as a property for now, but in production
-            // this would be uploaded to storage and not stored in the database
+            // Use a placeholder URL - this will be replaced by the server-generated URL
+            storageUrl: `/api/property-images/${objectKey}`,
+            // Pass the full data URL to be stored in the integrated image storage
             data: fullDataUrl
           }]);
         };

@@ -1365,23 +1365,25 @@ export class MemStorage implements IStorage {
     // Add the storage fields to the other property images
     propertyImages.forEach(image => {
       // Add storage fields if they're missing
-      if (!('objectKey' in image)) {
-        image.objectKey = null;
+      const typedImage = image as Partial<PropertyImage>;
+      
+      if (!typedImage.objectKey) {
+        typedImage.objectKey = null;
       }
-      if (!('mimeType' in image)) {
-        image.mimeType = null;
+      if (!typedImage.mimeType) {
+        typedImage.mimeType = null;
       }
-      if (!('size' in image)) {
-        image.size = null;
+      if (!typedImage.size) {
+        typedImage.size = null;
       }
-      if (!('imageData' in image)) {
-        image.imageData = null;
+      if (!typedImage.imageData) {
+        typedImage.imageData = null;
       }
-      if (!('storageType' in image)) {
-        image.storageType = "external";
+      if (!typedImage.storageType) {
+        typedImage.storageType = "external";
       }
       
-      this.propertyImagesData.set(image.id, image as PropertyImage);
+      this.propertyImagesData.set(typedImage.id as number, typedImage as PropertyImage);
     });
     
     this.nextPropertyImageId = Math.max(...propertyImages.map(image => image.id)) + 1;
@@ -1389,23 +1391,25 @@ export class MemStorage implements IStorage {
     // Also add storage fields to unit images if needed
     unitImages.forEach(image => {
       // Add storage fields if they're missing
-      if (!('objectKey' in image)) {
-        image.objectKey = null;
+      const typedImage = image as Partial<UnitImage>;
+      
+      if (!typedImage.objectKey) {
+        typedImage.objectKey = null;
       }
-      if (!('mimeType' in image)) {
-        image.mimeType = null;
+      if (!typedImage.mimeType) {
+        typedImage.mimeType = null;
       }
-      if (!('size' in image)) {
-        image.size = null;
+      if (!typedImage.size) {
+        typedImage.size = null;
       }
-      if (!('imageData' in image)) {
-        image.imageData = null;
+      if (!typedImage.imageData) {
+        typedImage.imageData = null;
       }
-      if (!('storageType' in image)) {
-        image.storageType = "external";
+      if (!typedImage.storageType) {
+        typedImage.storageType = "external";
       }
       
-      this.unitImagesData.set(image.id, image as UnitImage);
+      this.unitImagesData.set(typedImage.id as number, typedImage as UnitImage);
     });
   }
 
