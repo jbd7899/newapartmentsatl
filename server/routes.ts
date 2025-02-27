@@ -965,6 +965,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).send('Error serving image');
     }
   });
+  
+  // Delete an image from object storage
+  app.delete('/api/images/:objectKey(*)', async (req, res) => {
+    try {
+      const objectKey = req.params.objectKey;
+      console.log(`Deleting image from object storage: ${objectKey}`);
+      
+      // Check if the image exists first
+      const exists = await imageExists(objectKey);
+      
+      if (!exists) {
+        console.log(`Image not found in object storage: ${objectKey}`);
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      // Delete the image from object storage
+      const success = await deleteImage(objectKey);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete image from storage" });
+      }
+      
+      console.log(`Successfully deleted image from object storage: ${objectKey}`);
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting image from object storage:', error);
+      return res.status(500).json({ message: "Failed to delete image from storage" });
+    }
+  });
 
   // List all images in storage
   app.get("/api/images", async (req: Request, res: Response) => {
