@@ -1,81 +1,144 @@
 # Database Migration Guide
 
-This guide explains how to migrate data from in-memory storage to PostgreSQL database and move all images to object storage.
+This document provides detailed instructions for migrating the Real Estate Property Management System from in-memory storage to PostgreSQL, while simultaneously moving all images to Replit Object Storage.
 
 ## Overview
 
-The migration process involves:
-
-1. Moving all data from in-memory storage to PostgreSQL database
-2. Uploading all images to object storage
-3. Updating image references in the database
-4. Switching the application to use PostgreSQL storage instead of in-memory storage
+The migration process involves two main steps:
+1. **Schema Migration**: Create or update the necessary database tables in PostgreSQL
+2. **Data Migration**: Move data from in-memory storage to PostgreSQL and upload images to object storage
 
 ## Prerequisites
 
-Before running the migration, make sure you have:
+Before running the migration, ensure you have:
 
-1. PostgreSQL database set up and running
-2. Object storage service configured (Replit Object Storage)
-3. All required environment variables set:
-   - `DATABASE_URL`: PostgreSQL connection string
-   - Replit Object Storage credentials (automatically configured in Replit environment)
+- PostgreSQL database set up and configured (the DATABASE_URL environment variable is set)
+- Replit Object Storage configured and accessible
+- Node.js and npm/npx installed
+- All project dependencies installed (`npm install`)
 
 ## Running the Migration
 
-To run the migration, follow these steps:
+### Automatic Migration (Recommended)
 
-1. Install dependencies:
+The easiest way to run the complete migration is using the provided shell script:
+
+```bash
+# Make the script executable
+chmod +x run-migration.sh
+
+# Run the migration
+./run-migration.sh
+```
+
+This script will:
+1. Run the database schema migration
+2. Run the data migration from in-memory storage to PostgreSQL
+3. Upload all images to object storage
+4. Update image references in the database
+
+### Manual Migration Steps
+
+If you prefer to run the migration steps manually:
+
+1. **Schema Migration**:
    ```bash
-   npm install
+   npx tsx server/migrate.ts
    ```
 
-2. Run the migration script:
+2. **Data Migration**:
    ```bash
-   npx ts-node server/run-migration.ts
+   npx tsx server/run-migration.ts
    ```
 
-3. Verify the migration:
-   - Check the database to ensure all data has been migrated
-   - Check the object storage to ensure all images have been uploaded
-   - Start the application and verify that everything works as expected
+## Migration Details
 
-## Switching to PostgreSQL Storage
+The migration process performs the following steps:
 
-The application has been updated to use PostgreSQL storage by default. The changes include:
+1. **Schema Setup**:
+   - Creates or updates necessary database tables
+   - Adds required columns to existing tables
+   - Sets up appropriate constraints and defaults
 
-1. Using `PgStorage` instead of `MemStorage` in `server/index.ts`
-2. Updating image URLs to use object storage in the client
+2. **Data Migration**:
+   - Extracts all entities from in-memory storage
+   - Preserves all IDs and relationships
+   - Migrates locations, neighborhoods, properties, features, inquiries, property units, etc.
+
+3. **Image Migration**:
+   - Downloads images from external URLs
+   - Uploads images to Replit Object Storage
+   - Stores object storage keys in the database
+   - Updates image references to use object storage keys
 
 ## Troubleshooting
 
-If you encounter any issues during the migration:
+### Common Issues
 
-1. Check the logs for error messages
-2. Verify database connection settings
-3. Verify object storage configuration
-4. Run the migration script with the `--debug` flag for more detailed logs:
-   ```bash
-   npx ts-node server/run-migration.ts --debug
-   ```
+#### Database Connection Issues
 
-## Rollback
+**Symptom**: Error connecting to PostgreSQL database
+
+**Solution**:
+- Verify the DATABASE_URL environment variable is set correctly
+- Ensure the PostgreSQL database is running and accessible
+- Check network connectivity to the database server
+
+#### Object Storage Issues
+
+**Symptom**: Errors uploading or accessing images in object storage
+
+**Solution**:
+- Verify object storage configuration
+- Check Replit object storage access permissions
+- Ensure all required environment variables for object storage are set
+
+#### Migration Failures
+
+**Symptom**: Migration script fails with errors
+
+**Solution**:
+- Check the error message for specific issues
+- Verify the database is accessible
+- Check for missing tables or columns
+- Run the schema migration before the data migration
+
+### Rollback Procedure
 
 If you need to rollback the migration:
 
-1. The application can still use in-memory storage by modifying `server/index.ts`
-2. No data will be lost from the in-memory storage as it's still available
+1. **Database Rollback**:
+   ```sql
+   -- Delete data from migrated tables
+   TRUNCATE TABLE properties CASCADE;
+   TRUNCATE TABLE locations CASCADE;
+   TRUNCATE TABLE neighborhoods CASCADE;
+   TRUNCATE TABLE features CASCADE;
+   TRUNCATE TABLE inquiries CASCADE;
+   TRUNCATE TABLE property_images CASCADE;
+   TRUNCATE TABLE property_units CASCADE;
+   TRUNCATE TABLE unit_images CASCADE;
+   TRUNCATE TABLE image_storage CASCADE;
+   ```
 
-## Data Validation
+2. **Code Rollback**:
+   - Switch the storage implementation back to in-memory storage in `server/index.ts`
+   - Update client code to handle image URLs instead of object keys
 
-After migration, you should validate:
+## Verification
 
-1. All locations, properties, and other entities are correctly migrated
-2. All images are accessible through object storage
-3. All relationships between entities are preserved
+After migration, verify that:
 
-## Additional Notes
+1. All data has been properly migrated
+2. All images are accessible via object storage
+3. All entity relationships are preserved
+4. The application functions correctly with the new storage backend
 
-- The migration process is idempotent and can be run multiple times without duplicating data
-- The migration script clears existing data in the database before inserting new data
-- All images are uploaded to object storage with unique filenames to avoid collisions 
+## Support
+
+If you encounter any issues during the migration process, please:
+
+1. Check the console logs for specific error messages
+2. Verify all prerequisites are met
+3. Try running the migration script again (it's designed to be idempotent)
+4. Contact the development team if issues persist
