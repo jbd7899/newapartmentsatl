@@ -1,89 +1,140 @@
-# PostgreSQL Database Integration
+# Database Setup and Migration
 
-This application has been updated to use a PostgreSQL database instead of in-memory storage. This README provides instructions on how to set up and use the PostgreSQL database.
+This document outlines the database structure and migration process for the Real Estate Property Management System.
 
-## Database Connection
+## Database Schema
 
-The application uses the following PostgreSQL database:
+The system uses the following tables:
 
-- **Host**: ep-shiny-frost-a4fq5jvj.us-east-1.aws.neon.tech
-- **Database**: neondb
-- **User**: neondb_owner
-- **Password**: npg_R1LfZB3PsHdp
-- **Connection URL**: `postgresql://neondb_owner:npg_R1LfZB3PsHdp@ep-shiny-frost-a4fq5jvj.us-east-1.aws.neon.tech/neondb?sslmode=require`
+1. **locations** - Geographic locations (cities, neighborhoods)
+2. **neighborhoods** - Detailed information about neighborhoods
+3. **properties** - Real estate properties
+4. **features** - Property features and amenities
+5. **inquiries** - Customer inquiries about properties
+6. **property_images** - Images associated with properties
+7. **property_units** - Units within multifamily properties
+8. **unit_images** - Images associated with property units
+9. **image_storage** - Metadata for images stored in object storage
 
-## Setup Instructions
+## Migration Process
 
-1. **Set the DATABASE_URL environment variable**:
-   ```bash
-   source set-db-env.sh
-   ```
+The migration process involves:
 
-2. **Run database migrations**:
-   ```bash
-   npm run db:migrate
-   ```
+1. **Schema Migration**: Creating or updating database tables
+2. **Data Migration**: Transferring data from in-memory storage to PostgreSQL
+3. **Image Migration**: Moving images from external URLs to object storage
 
-3. **Migrate data from in-memory storage to PostgreSQL** (optional):
-   ```bash
-   npm run db:migrate-data
-   ```
+## Running the Migration
 
-4. **Start the application**:
-   ```bash
-   npm run dev
-   ```
+To execute the migration:
 
-## Implementation Details
+```bash
+# Make the migration script executable
+chmod +x run-migration.sh
 
-The PostgreSQL integration includes:
+# Run the migration
+./run-migration.sh
+```
 
-1. **Database Connection** (`server/db.ts`):
-   - Sets up the connection to the PostgreSQL database using Drizzle ORM
+## Tables and Columns
 
-2. **PostgreSQL Storage Implementation** (`server/pg-storage.ts`):
-   - Implements the `IStorage` interface using PostgreSQL
+### locations
+- id (SERIAL PRIMARY KEY)
+- slug (TEXT UNIQUE NOT NULL)
+- name (TEXT NOT NULL)
+- description (TEXT)
+- imageUrl (TEXT)
+- linkText (TEXT)
 
-3. **Database Migration** (`server/migrate.ts`):
-   - Creates the necessary database tables
+### neighborhoods
+- id (SERIAL PRIMARY KEY)
+- locationId (INTEGER REFERENCES locations(id))
+- mapImageUrl (TEXT)
+- highlights (TEXT)
+- attractions (TEXT)
+- transportationInfo (TEXT)
+- diningOptions (TEXT)
+- schoolsInfo (TEXT)
+- parksAndRecreation (TEXT)
+- historicalInfo (TEXT)
+- exploreDescription (TEXT)
+- exploreMapUrl (TEXT)
+- exploreHotspots (TEXT)
+- createdAt (TIMESTAMP WITH TIME ZONE)
 
-4. **Data Migration** (`server/migrate-data.ts`):
-   - Transfers data from in-memory storage to PostgreSQL
+### properties
+- id (SERIAL PRIMARY KEY)
+- name (TEXT NOT NULL)
+- description (TEXT)
+- address (TEXT)
+- bedrooms (INTEGER)
+- bathrooms (INTEGER)
+- sqft (INTEGER)
+- rent (INTEGER)
+- available (BOOLEAN DEFAULT true)
+- locationId (INTEGER REFERENCES locations(id))
+- imageUrl (TEXT)
+- features (TEXT)
+- propertyType (TEXT DEFAULT 'apartment')
+- isMultifamily (BOOLEAN DEFAULT false)
+- unitCount (INTEGER DEFAULT 0)
 
-5. **Server Integration** (`server/index.ts`):
-   - Replaces the in-memory storage with PostgreSQL storage
+### features
+- id (SERIAL PRIMARY KEY)
+- title (TEXT NOT NULL)
+- description (TEXT)
+- icon (TEXT)
 
-## Switching Between Storage Implementations
+### inquiries
+- id (SERIAL PRIMARY KEY)
+- name (TEXT NOT NULL)
+- email (TEXT NOT NULL)
+- phone (TEXT)
+- message (TEXT)
+- propertyId (INTEGER REFERENCES properties(id))
+- propertyName (TEXT)
+- createdAt (TIMESTAMP WITH TIME ZONE)
+- status (TEXT DEFAULT 'new')
 
-To switch between in-memory storage and PostgreSQL:
+### property_images
+- id (SERIAL PRIMARY KEY)
+- propertyId (INTEGER REFERENCES properties(id))
+- objectKey (TEXT NOT NULL)
+- alt (TEXT)
+- displayOrder (INTEGER DEFAULT 0)
+- isFeatured (BOOLEAN DEFAULT false)
+- mimeType (TEXT)
+- size (INTEGER)
+- createdAt (TIMESTAMP WITH TIME ZONE)
 
-1. **Use PostgreSQL** (default):
-   - Make sure the `(global as any).storage = new PgStorage();` line in `server/index.ts` is uncommented
+### property_units
+- id (SERIAL PRIMARY KEY)
+- propertyId (INTEGER REFERENCES properties(id))
+- unitNumber (TEXT NOT NULL)
+- bedrooms (INTEGER)
+- bathrooms (INTEGER)
+- sqft (INTEGER)
+- rent (INTEGER)
+- available (BOOLEAN DEFAULT true)
+- description (TEXT)
+- features (TEXT)
+- createdAt (TIMESTAMP WITH TIME ZONE)
 
-2. **Use In-Memory Storage**:
-   - Comment out the `(global as any).storage = new PgStorage();` line in `server/index.ts`
+### unit_images
+- id (SERIAL PRIMARY KEY)
+- unitId (INTEGER REFERENCES property_units(id))
+- objectKey (TEXT NOT NULL)
+- alt (TEXT)
+- displayOrder (INTEGER DEFAULT 0)
+- isFeatured (BOOLEAN DEFAULT false)
+- mimeType (TEXT)
+- size (INTEGER)
+- createdAt (TIMESTAMP WITH TIME ZONE)
 
-## Database Operations
-
-The application supports the following database operations:
-
-- **Creating Properties**: Properties can be created and stored in the PostgreSQL database
-- **Editing Properties**: Properties can be edited and updated in the PostgreSQL database
-- **Storing Images**: Images can be stored in the PostgreSQL database
-- **Managing Units**: Property units can be managed in the PostgreSQL database
-
-## Troubleshooting
-
-If you encounter any issues with the PostgreSQL connection:
-
-1. **Check the DATABASE_URL environment variable**:
-   ```bash
-   echo $DATABASE_URL
-   ```
-
-2. **Verify the database connection**:
-   ```bash
-   npm run db:migrate
-   ```
-
-3. **Check the server logs for any database-related errors** 
+### image_storage
+- id (SERIAL PRIMARY KEY)
+- objectKey (TEXT UNIQUE NOT NULL)
+- filename (TEXT NOT NULL)
+- mimeType (TEXT NOT NULL)
+- size (INTEGER NOT NULL)
+- createdAt (TIMESTAMP WITH TIME ZONE)

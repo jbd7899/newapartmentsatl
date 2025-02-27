@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Update all properties to have rent: 0
-sed -i 's/rent: [0-9]\+,/rent: 0,/g' server/storage.ts
+# This script makes the migration scripts executable
 
-echo "Updated all property rent values to 0"
+echo "Making migration scripts executable..."
+
+chmod +x run-migration.sh
+chmod +x set-db-env.sh
+
+echo "Migration scripts are now executable!"

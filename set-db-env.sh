@@ -1,10 +1,20 @@
 #!/bin/bash
-# Script to set the DATABASE_URL environment variable for the application
 
-# Set the DATABASE_URL environment variable
-export DATABASE_URL="postgresql://neondb_owner:npg_R1LfZB3PsHdp@ep-shiny-frost-a4fq5jvj.us-east-1.aws.neon.tech/neondb?sslmode=require"
+# This script sets up the database environment variables
+# from Replit secrets for running migrations
 
-# Print confirmation
-echo "DATABASE_URL environment variable set successfully"
-echo "You can now run the application with: npm run dev"
-echo "Or run database migrations with: npm run db:migrate" 
+echo "Setting up database environment variables..."
+
+# Check if DATABASE_URL is already set
+if [ -n "$DATABASE_URL" ]; then
+  echo "✅ DATABASE_URL is already set"
+else
+  echo "❌ DATABASE_URL is not set"
+  echo "Please make sure your Replit database is properly configured"
+  exit 1
+fi
+
+# Make the database URL available to the script
+export DATABASE_URL
+
+echo "Environment variables set up successfully!"
