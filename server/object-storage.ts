@@ -85,6 +85,7 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
 // List all images in the storage
 export async function listImages(): Promise<string[]> {
   try {
+    console.log("Listing all images in object storage...");
     const { ok, value, error } = await client.list();
     
     if (!ok || !value) {
@@ -92,13 +93,18 @@ export async function listImages(): Promise<string[]> {
       return [];
     }
     
+    console.log("Raw objects from storage:", value);
+    
     // Filter to only include image files
-    return value
+    const imageFiles = value
       .map(obj => String(obj))
       .filter(key => {
         const ext = path.extname(key).toLowerCase();
         return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
       });
+    
+    console.log("Filtered image files:", imageFiles);
+    return imageFiles;
   } catch (error) {
     console.error("Error listing images in storage:", error);
     return [];
