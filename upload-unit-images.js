@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { Client } from '@replit/object-storage';
+import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 
 // Get __dirname equivalent in ESM
@@ -58,7 +59,7 @@ async function createUnitImage(unitId, objectKey, alt, displayOrder, isFeatured)
   console.log(`Creating unit image record for Unit ID: ${unitId}, Object Key: ${objectKey}`);
   
   try {
-    const response = await fetch('http://localhost:5000/api/unit-images', {
+    const response = await fetch('/api/unit-images', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
