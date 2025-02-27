@@ -387,59 +387,6 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
               <p className="text-gray-700 mb-6">
                 {propertyUnits.filter(unit => unit.available).length} unit{propertyUnits.filter(unit => unit.available).length !== 1 ? 's' : ''} available at {property.name}
               </p>
-              
-              {/* Filtering options for units */}
-              {propertyUnits.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-                  <h3 className="text-lg font-bold mb-4">Filter Units</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <div className="text-sm text-gray-500 mb-2">Bedrooms</div>
-                      <div className="flex flex-wrap gap-2">
-                        {propertyUnits
-                            .map(unit => unit.bedrooms)
-                            .filter((value, index, self) => self.indexOf(value) === index)
-                            .sort()
-                            .map((bedCount) => (
-                              <Badge key={bedCount} variant="outline" className="px-3 py-1.5 cursor-pointer hover:bg-orange-500 hover:text-white">
-                                <Bed className="h-3 w-3 mr-1" /> {bedCount}
-                              </Badge>
-                            ))
-                        }
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-sm text-gray-500 mb-2">Bathrooms</div>
-                      <div className="flex flex-wrap gap-2">
-                        {propertyUnits
-                            .map(unit => unit.bathrooms)
-                            .filter((value, index, self) => self.indexOf(value) === index)
-                            .sort()
-                            .map((bathCount) => (
-                              <Badge key={bathCount} variant="outline" className="px-3 py-1.5 cursor-pointer hover:bg-orange-500 hover:text-white">
-                                <Bath className="h-3 w-3 mr-1" /> {bathCount}
-                              </Badge>
-                            ))
-                        }
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-sm text-gray-500 mb-2">Availability</div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="px-3 py-1.5 cursor-pointer bg-orange-500 text-white">
-                          Available Now
-                        </Badge>
-                        <Badge variant="outline" className="px-3 py-1.5 cursor-pointer hover:bg-orange-500 hover:text-white">
-                          All Units
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
             
             {unitsLoading ? (
