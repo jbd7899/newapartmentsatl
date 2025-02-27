@@ -34,231 +34,216 @@ const NeighborhoodSection = ({ locationSlug, locationName }: NeighborhoodSection
   }
 
   return (
-    <section className="py-16 bg-slate-50">
-      <div className="container mx-auto px-4">
-        <h2 className="font-heading font-bold text-3xl text-center mb-4">Discover {locationName}</h2>
-        <p className="text-center text-slate-600 max-w-4xl mx-auto mb-12">
+    <div>
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold tracking-tight mb-4">Discover {locationName}</h2>
+        <p className="text-gray-600 max-w-4xl mb-8 leading-relaxed">
           {neighborhood.highlights}
         </p>
 
         <Tabs defaultValue="explore" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full h-auto">
-            <TabsTrigger value="explore" className="flex flex-col items-center py-3">
-              <CompassIcon className="h-5 w-5 mb-1" />
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 w-full h-auto bg-white rounded-lg p-1 shadow-sm border border-gray-100">
+            <TabsTrigger value="explore" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <CompassIcon className="h-4 w-4" />
               <span>Explore</span>
             </TabsTrigger>
-            <TabsTrigger value="attractions" className="flex flex-col items-center py-3">
-              <LandmarkIcon className="h-5 w-5 mb-1" />
+            <TabsTrigger value="attractions" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <LandmarkIcon className="h-4 w-4" />
               <span>Attractions</span>
             </TabsTrigger>
-            <TabsTrigger value="transportation" className="flex flex-col items-center py-3">
-              <TrainIcon className="h-5 w-5 mb-1" />
-              <span>Transportation</span>
+            <TabsTrigger value="transportation" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <TrainIcon className="h-4 w-4" />
+              <span>Transit</span>
             </TabsTrigger>
-            <TabsTrigger value="dining" className="flex flex-col items-center py-3">
-              <UtensilsIcon className="h-5 w-5 mb-1" />
+            <TabsTrigger value="dining" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <UtensilsIcon className="h-4 w-4" />
               <span>Dining</span>
             </TabsTrigger>
-            <TabsTrigger value="schools" className="flex flex-col items-center py-3">
-              <School className="h-5 w-5 mb-1" />
-              <span>Education</span>
+            <TabsTrigger value="schools" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <School className="h-4 w-4" />
+              <span>Schools</span>
             </TabsTrigger>
-            <TabsTrigger value="parks" className="flex flex-col items-center py-3">
-              <PalmtreeIcon className="h-5 w-5 mb-1" />
-              <span>Parks & Rec</span>
+            <TabsTrigger value="parks" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <PalmtreeIcon className="h-4 w-4" />
+              <span>Parks</span>
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex flex-col items-center py-3">
-              <Building2Icon className="h-5 w-5 mb-1" />
+            <TabsTrigger value="history" className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-500 rounded-md">
+              <Building2Icon className="h-4 w-4" />
               <span>History</span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="attractions" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <LandmarkIcon className="h-5 w-5 mr-2" />
-                  Popular Attractions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <LandmarkIcon className="h-5 w-5 mr-2" />
+                Popular Attractions
+              </h3>
+              <div className="text-gray-700 space-y-4 leading-relaxed">
                 <p className="whitespace-pre-line">
                   {neighborhood.attractions}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="transportation" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrainIcon className="h-5 w-5 mr-2" />
-                  Transportation & Accessibility
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <TrainIcon className="h-5 w-5 mr-2" />
+                Transportation & Accessibility
+              </h3>
+              <div className="text-gray-700 space-y-4 leading-relaxed">
                 <p className="whitespace-pre-line">
                   {neighborhood.transportationInfo}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="dining" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <UtensilsIcon className="h-5 w-5 mr-2" />
-                  Dining & Entertainment
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <UtensilsIcon className="h-5 w-5 mr-2" />
+                Dining & Entertainment
+              </h3>
+              <div className="text-gray-700 space-y-4 leading-relaxed">
                 <p className="whitespace-pre-line">
                   {neighborhood.diningOptions}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="schools" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <School className="h-5 w-5 mr-2" />
-                  Schools & Education
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <School className="h-5 w-5 mr-2" />
+                Schools & Education
+              </h3>
+              <div className="text-gray-700 space-y-4 leading-relaxed">
                 <p className="whitespace-pre-line">
                   {neighborhood.schoolsInfo}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="parks" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <PalmtreeIcon className="h-5 w-5 mr-2" />
-                  Parks & Recreation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <PalmtreeIcon className="h-5 w-5 mr-2" />
+                Parks & Recreation
+              </h3>
+              <div className="text-gray-700 space-y-4 leading-relaxed">
                 <p className="whitespace-pre-line">
                   {neighborhood.parksAndRecreation}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="history" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Building2Icon className="h-5 w-5 mr-2" />
-                  Historical Background
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <Building2Icon className="h-5 w-5 mr-2" />
+                Historical Background
+              </h3>
+              <div className="text-gray-700 space-y-4 leading-relaxed">
                 <p className="whitespace-pre-line">
                   {neighborhood.historicalInfo}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="explore" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CompassIcon className="h-5 w-5 mr-2" />
-                  Explore {locationName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {neighborhood.exploreDescription && (
-                  <div className="mb-6">
-                    <p className="text-lg font-medium mb-2">About the Area</p>
-                    <p className="whitespace-pre-line text-slate-600">
-                      {neighborhood.exploreDescription}
-                    </p>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-orange-600">
+                <CompassIcon className="h-5 w-5 mr-2" />
+                Explore {locationName}
+              </h3>
+              
+              {neighborhood.exploreDescription && (
+                <div className="mb-8">
+                  <h4 className="text-lg font-medium mb-3 text-gray-800">About the Area</h4>
+                  <p className="whitespace-pre-line text-gray-600 leading-relaxed">
+                    {neighborhood.exploreDescription}
+                  </p>
+                </div>
+              )}
+              
+              {neighborhood.exploreMapUrl && (
+                <div className="mb-10">
+                  <h4 className="text-lg font-medium mb-3 text-gray-800">Interactive Map</h4>
+                  <div className="rounded-lg overflow-hidden h-72 w-full shadow-sm border border-gray-100">
+                    <iframe 
+                      src={neighborhood.exploreMapUrl} 
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`Interactive map of ${locationName}`}
+                    ></iframe>
                   </div>
-                )}
-                
-                {neighborhood.exploreMapUrl && (
-                  <div className="mb-8">
-                    <p className="text-lg font-medium mb-2">Interactive Map</p>
-                    <div className="border rounded-lg overflow-hidden h-72 w-full">
-                      <iframe 
-                        src={neighborhood.exploreMapUrl} 
-                        className="w-full h-full border-0"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title={`Interactive map of ${locationName}`}
-                      ></iframe>
-                    </div>
-                  </div>
-                )}
-                
-                {neighborhood.exploreHotspots && (
-                  <div className="mb-6">
-                    <p className="text-lg font-medium mb-4">Local Hotspots</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {(() => {
-                        try {
-                          const hotspots = JSON.parse(neighborhood.exploreHotspots);
-                          return hotspots.map((hotspot: any, index: number) => (
-                            <div key={index} className="border rounded-lg overflow-hidden flex flex-col">
-                              {hotspot.imageUrl && (
-                                <div className="h-40 relative">
-                                  <img 
-                                    src={hotspot.imageUrl}
-                                    alt={hotspot.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x250?text=No+Image';
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              <div className="p-4 flex-grow">
-                                <h3 className="font-medium text-lg">{hotspot.name}</h3>
-                                {hotspot.distance && (
-                                  <p className="text-sm text-slate-500 mb-2">{hotspot.distance}</p>
-                                )}
-                                <p className="text-sm mb-3">{hotspot.description}</p>
-                                {hotspot.link && (
-                                  <a 
-                                    href={hotspot.link}
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-primary inline-flex items-center text-sm hover:underline"
-                                  >
-                                    Visit website <ExternalLinkIcon className="h-3 w-3 ml-1" />
-                                  </a>
-                                )}
+                </div>
+              )}
+              
+              {neighborhood.exploreHotspots && (
+                <div>
+                  <h4 className="text-lg font-medium mb-4 text-gray-800">Local Hotspots</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {(() => {
+                      try {
+                        const hotspots = JSON.parse(neighborhood.exploreHotspots);
+                        return hotspots.map((hotspot: any, index: number) => (
+                          <div key={index} className="bg-white rounded-lg overflow-hidden flex flex-col shadow-sm border border-gray-100 transition-transform hover:-translate-y-1 hover:shadow-md">
+                            {hotspot.imageUrl && (
+                              <div className="h-48 relative">
+                                <img 
+                                  src={hotspot.imageUrl}
+                                  alt={hotspot.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://placehold.co/400x250?text=No+Image';
+                                  }}
+                                />
                               </div>
+                            )}
+                            <div className="p-4 flex-grow">
+                              <h3 className="font-semibold text-lg text-gray-800 mb-1">{hotspot.name}</h3>
+                              {hotspot.distance && (
+                                <p className="text-xs text-orange-500 font-medium mb-2">{hotspot.distance}</p>
+                              )}
+                              <p className="text-sm text-gray-600 mb-3">{hotspot.description}</p>
+                              {hotspot.link && (
+                                <a 
+                                  href={hotspot.link}
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-orange-500 inline-flex items-center text-sm hover:underline"
+                                >
+                                  Visit website <ExternalLinkIcon className="h-3 w-3 ml-1" />
+                                </a>
+                              )}
                             </div>
-                          ));
-                        } catch (e) {
-                          return (
-                            <div className="col-span-3 text-slate-500 italic">
-                              Unable to display hotspots information
-                            </div>
-                          );
-                        }
-                      })()}
-                    </div>
+                          </div>
+                        ));
+                      } catch (e) {
+                        return (
+                          <div className="col-span-3 text-gray-500 italic">
+                            Unable to display hotspots information
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
-    </section>
+    </div>
   );
 };
 

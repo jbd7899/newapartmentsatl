@@ -43,84 +43,74 @@ export default function UnitCard({
   const imageUrl = featuredImage ? featuredImage.url : placeholderImage;
 
   return (
-    <Card className="overflow-hidden h-full flex flex-col transition-all hover:shadow-lg">
-      {/* Unit image */}
-      <div className="relative aspect-video overflow-hidden bg-muted cursor-pointer"
-        onClick={() => onShowGallery && onShowGallery(unit.id)}>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden h-full flex flex-col transition-transform hover:-translate-y-1 hover:shadow-lg">
+      <div className="relative cursor-pointer" onClick={() => onShowGallery && onShowGallery(unit.id)}>
         <img 
           src={imageUrl} 
           alt={`Unit ${unit.unitNumber}`}
-          className="object-cover w-full h-full"
+          className="w-full h-48 object-cover transition-transform hover:scale-105 duration-500"
         />
-        <div className="absolute top-2 right-2">
-          <Badge variant={unit.available ? "default" : "destructive"} className="font-medium">
-            {unit.available ? (
-              <><Check className="h-3 w-3 mr-1" /> Available</>
-            ) : (
-              <><X className="h-3 w-3 mr-1" /> Unavailable</>
-            )}
-          </Badge>
+        <div className={`absolute top-3 right-3 px-2 py-1 rounded text-xs font-semibold uppercase ${unit.available ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+          {unit.available ? 'Available' : 'Unavailable'}
         </div>
         {unitImages.length > 0 && (
-          <Badge variant="outline" className="absolute bottom-2 right-2 bg-white/80 text-black font-medium">
+          <Badge variant="outline" className="absolute bottom-3 right-3 bg-white/80 text-black font-medium">
             <ImageIcon className="h-3 w-3 mr-1" /> {unitImages.length} Photos
           </Badge>
         )}
       </div>
       
-      <CardContent className="p-4 flex-grow">
-        {/* Unit details */}
-        <div className="mb-4">
-          <h3 className="text-xl font-bold tracking-tight mb-1">Unit {unit.unitNumber}</h3>
-          
-          <div className="flex gap-4 mb-3 mt-2 text-sm text-gray-700">
-            <div className="flex items-center">
-              <Bed className="h-4 w-4 mr-1 text-primary" />
-              <span>{unit.bedrooms} {unit.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
-            </div>
-            <div className="flex items-center">
-              <Bath className="h-4 w-4 mr-1 text-primary" />
-              <span>{unit.bathrooms} {unit.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
-            </div>
-            <div className="flex items-center">
-              <Home className="h-4 w-4 mr-1 text-primary" />
-              <span>{unit.sqft} sqft</span>
-            </div>
-          </div>
-          
+      <div className="p-6 flex-grow flex flex-col">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-xl font-bold">Unit {unit.unitNumber}</h3>
           {unit.rent && (
-            <div className="mb-3 text-lg font-semibold flex items-center">
-              <DollarSign className="h-5 w-5 mr-1 text-primary" />
-              {formatCurrency(unit.rent)}<span className="text-sm font-normal">/month</span>
+            <div className="text-xl font-bold text-orange-500">
+              ${formatCurrency(unit.rent)}
+              <span className="text-sm text-gray-500 font-normal">/mo</span>
             </div>
           )}
-          
-          <p className="text-sm mt-2 text-gray-600 line-clamp-3">{unit.description}</p>
         </div>
-      </CardContent>
-      
-      <CardFooter className="p-4 pt-0 gap-2 flex-wrap justify-between">
-        {unit.available && onScheduleTour && (
-          <Button 
-            size="sm" 
-            onClick={() => onScheduleTour(unit.id)}
-            className="flex-1"
-          >
-            <Calendar className="h-4 w-4 mr-2" /> Schedule Tour
-          </Button>
-        )}
         
-        {onRequestInfo && (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => onRequestInfo(unit.id)}
-            className="flex-1"
-          >
-            More Info
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+        <div className="flex gap-4 py-3 border-y border-gray-100 mb-4">
+          <div className="flex items-center text-gray-700">
+            <Bed className="h-4 w-4 mr-1 text-orange-500" />
+            <span>{unit.bedrooms} {unit.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
+          </div>
+          <div className="flex items-center text-gray-700">
+            <Bath className="h-4 w-4 mr-1 text-orange-500" />
+            <span>{unit.bathrooms} {unit.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
+          </div>
+          <div className="flex items-center text-gray-700">
+            <Home className="h-4 w-4 mr-1 text-orange-500" />
+            <span>{unit.sqft} sqft</span>
+          </div>
+        </div>
+        
+        <p className="text-gray-600 text-sm line-clamp-3 mb-4">{unit.description}</p>
+        
+        <div className="mt-auto flex gap-2">
+          {unit.available && onScheduleTour && (
+            <Button 
+              onClick={() => onScheduleTour(unit.id)}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+              size="sm"
+            >
+              <Calendar className="h-4 w-4 mr-2" /> Schedule Tour
+            </Button>
+          )}
+          
+          {onRequestInfo && (
+            <Button 
+              variant="outline" 
+              onClick={() => onRequestInfo(unit.id)}
+              className="flex-1 border-orange-500 text-orange-500 hover:bg-orange-50"
+              size="sm"
+            >
+              More Info
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

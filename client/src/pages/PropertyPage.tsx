@@ -550,10 +550,15 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
       
       {/* Neighborhood Section */}
       {propertyLocation && (
-        <NeighborhoodSection 
-          locationSlug={propertyLocation.slug} 
-          locationName={propertyLocation.name} 
-        />
+        <div ref={neighborhoodRef} className="bg-white py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-8 pb-2 border-b border-gray-200">Explore the Neighborhood</h2>
+            <NeighborhoodSection 
+              locationSlug={propertyLocation.slug} 
+              locationName={propertyLocation.name} 
+            />
+          </div>
+        </div>
       )}
 
       {/* Property Gallery Modal */}
