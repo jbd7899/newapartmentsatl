@@ -483,20 +483,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're getting data URL along with the URL
       const { data, ...restOfBody } = req.body;
       
-      // Process the URL if needed (convert data URLs to file URLs)
-      let processedUrl = req.body.url;
-      if (data && typeof data === 'string') {
-        processedUrl = await processImageData(req.body.url, data);
-      }
-      
-      // Prepare the body with the processed URL
-      const bodyWithProcessedUrl = {
+      // Prepare the image object with the integrated storage approach
+      let imageData: any = {
         ...restOfBody,
-        url: processedUrl
+        url: req.body.url
       };
       
+      // If image data is provided, process it
+      if (data && typeof data === 'string') {
+        const dataMatches = data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        
+        if (dataMatches && dataMatches.length === 3) {
+          const mimeType = dataMatches[1];
+          const base64Data = dataMatches[2];
+          
+          // Determine file extension based on MIME type
+          let extension = '.jpg';
+          if (mimeType === 'image/png') extension = '.png';
+          else if (mimeType === 'image/gif') extension = '.gif';
+          else if (mimeType === 'image/webp') extension = '.webp';
+          else if (mimeType === 'image/svg+xml') extension = '.svg';
+          
+          // Generate a unique object key
+          const timestamp = Date.now();
+          const randomStr = crypto.randomBytes(4).toString('hex');
+          const objectKey = `prop_img_${timestamp}_${randomStr}${extension}`;
+          
+          // Calculate size
+          const bufferSize = Buffer.from(base64Data, 'base64').length;
+          
+          // Create a URL that references the object key
+          const url = `/api/property-images/${objectKey}`;
+          
+          // Update the image data with storage information
+          imageData = {
+            ...imageData,
+            url,
+            objectKey,
+            mimeType,
+            size: bufferSize,
+            imageData: base64Data,
+            storageType: "database"
+          };
+        }
+      }
+      
       // Validate request body
-      const validationResult = insertPropertyImageSchema.safeParse(bodyWithProcessedUrl);
+      const validationResult = insertPropertyImageSchema.safeParse(imageData);
       
       if (!validationResult.success) {
         return res.status(400).json({ 
@@ -506,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify property exists
-      const property = await storage.getProperty(bodyWithProcessedUrl.propertyId);
+      const property = await storage.getProperty(imageData.propertyId);
       if (!property) {
         return res.status(404).json({ message: "Property not found" });
       }
@@ -872,20 +905,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're getting data URL along with the URL
       const { data, ...restOfBody } = req.body;
       
-      // Process the URL if needed (convert data URLs to file URLs)
-      let processedUrl = req.body.url;
-      if (data && typeof data === 'string') {
-        processedUrl = await processImageData(req.body.url, data);
-      }
-      
-      // Prepare the body with the processed URL
-      const bodyWithProcessedUrl = {
+      // Prepare the image object with the integrated storage approach
+      let imageData: any = {
         ...restOfBody,
-        url: processedUrl
+        url: req.body.url
       };
       
+      // If image data is provided, process it
+      if (data && typeof data === 'string') {
+        const dataMatches = data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        
+        if (dataMatches && dataMatches.length === 3) {
+          const mimeType = dataMatches[1];
+          const base64Data = dataMatches[2];
+          
+          // Determine file extension based on MIME type
+          let extension = '.jpg';
+          if (mimeType === 'image/png') extension = '.png';
+          else if (mimeType === 'image/gif') extension = '.gif';
+          else if (mimeType === 'image/webp') extension = '.webp';
+          else if (mimeType === 'image/svg+xml') extension = '.svg';
+          
+          // Generate a unique object key
+          const timestamp = Date.now();
+          const randomStr = crypto.randomBytes(4).toString('hex');
+          const objectKey = `unit_img_${timestamp}_${randomStr}${extension}`;
+          
+          // Calculate size
+          const bufferSize = Buffer.from(base64Data, 'base64').length;
+          
+          // Create a URL that references the object key
+          const url = `/api/unit-images/${objectKey}`;
+          
+          // Update the image data with storage information
+          imageData = {
+            ...imageData,
+            url,
+            objectKey,
+            mimeType,
+            size: bufferSize,
+            imageData: base64Data,
+            storageType: "database"
+          };
+        }
+      }
+      
       // Validate request body
-      const validationResult = insertUnitImageSchema.safeParse(bodyWithProcessedUrl);
+      const validationResult = insertUnitImageSchema.safeParse(imageData);
       
       if (!validationResult.success) {
         return res.status(400).json({ 
@@ -895,7 +961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify unit exists
-      const unit = await storage.getPropertyUnit(bodyWithProcessedUrl.unitId);
+      const unit = await storage.getPropertyUnit(imageData.unitId);
       if (!unit) {
         return res.status(404).json({ message: "Property unit not found" });
       }

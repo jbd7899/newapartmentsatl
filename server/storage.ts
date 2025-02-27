@@ -132,6 +132,12 @@ export class MemStorage implements IStorage {
       alt: image.alt,
       displayOrder: image.displayOrder ?? 0,
       isFeatured: image.isFeatured ?? false,
+      // Include storage fields
+      objectKey: image.objectKey ?? null,
+      mimeType: image.mimeType ?? null,
+      size: image.size ?? null,
+      imageData: image.imageData ?? null,
+      storageType: image.storageType ?? "external",
       createdAt
     };
     
@@ -339,6 +345,12 @@ export class MemStorage implements IStorage {
       alt: image.alt,
       displayOrder: image.displayOrder ?? 0,
       isFeatured: image.isFeatured ?? false,
+      // Include storage fields
+      objectKey: image.objectKey ?? null,
+      mimeType: image.mimeType ?? null,
+      size: image.size ?? null,
+      imageData: image.imageData ?? null,
+      storageType: image.storageType ?? "external",
       createdAt
     };
     
@@ -1204,6 +1216,12 @@ export class MemStorage implements IStorage {
         alt: "Main exterior view of 253 14th St NE",
         displayOrder: 0,
         isFeatured: true,
+        // Storage fields
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       {
@@ -1275,8 +1293,51 @@ export class MemStorage implements IStorage {
       }
     ];
     
-    propertyImages.forEach(image => this.propertyImagesData.set(image.id, image));
+    // Add the storage fields to the other property images
+    propertyImages.forEach(image => {
+      // Add storage fields if they're missing
+      if (!('objectKey' in image)) {
+        image.objectKey = null;
+      }
+      if (!('mimeType' in image)) {
+        image.mimeType = null;
+      }
+      if (!('size' in image)) {
+        image.size = null;
+      }
+      if (!('imageData' in image)) {
+        image.imageData = null;
+      }
+      if (!('storageType' in image)) {
+        image.storageType = "external";
+      }
+      
+      this.propertyImagesData.set(image.id, image as PropertyImage);
+    });
+    
     this.nextPropertyImageId = Math.max(...propertyImages.map(image => image.id)) + 1;
+    
+    // Also add storage fields to unit images if needed
+    unitImages.forEach(image => {
+      // Add storage fields if they're missing
+      if (!('objectKey' in image)) {
+        image.objectKey = null;
+      }
+      if (!('mimeType' in image)) {
+        image.mimeType = null;
+      }
+      if (!('size' in image)) {
+        image.size = null;
+      }
+      if (!('imageData' in image)) {
+        image.imageData = null;
+      }
+      if (!('storageType' in image)) {
+        image.storageType = "external";
+      }
+      
+      this.unitImagesData.set(image.id, image as UnitImage);
+    });
   }
 
   // Add method to get a single property image by ID
