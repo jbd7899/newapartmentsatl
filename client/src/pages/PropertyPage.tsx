@@ -269,11 +269,6 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                   </div>
                 </div>
               )}
-              
-              <div className="flex flex-wrap gap-3 mt-8">
-                <Button className="bg-orange-500 hover:bg-orange-600">Contact Us</Button>
-                <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50">Request Tour</Button>
-              </div>
             </div>
           </div>
           
