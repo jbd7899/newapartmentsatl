@@ -429,18 +429,20 @@ const FileUploadForm = ({ onUpload, properties }: { onUpload: (data: any) => voi
   );
 };
 
-// Add this new component for object storage management
-const ObjectStorageManager = () => {
+// Add this updated component for storage management
+const StorageManager = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Query to fetch all images from object storage
-  const { data: storageImages, isLoading, error, refetch } = useQuery({
+  // Query to fetch all images from storage systems
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/images'],
     queryFn: listStorageImages
   });
   
-  console.log("Storage images from query:", storageImages);
+  const storageData = data || { images: [], counts: { database: 0, objectStorage: 0, total: 0 } };
+  
+  console.log("Storage data from query:", storageData);
   
   // Mutation to delete an image from storage
   const deleteImageMutation = useMutation({
@@ -468,20 +470,22 @@ const ObjectStorageManager = () => {
     }
   };
   
-  // Get image URL for display
-  const getDisplayUrl = (objectKey: string) => {
-    // Make sure the object key is properly formatted
-    console.log("Getting display URL for:", objectKey);
-    return `/api/images/${encodeURIComponent(objectKey)}`;
-  };
-  
-  // Extract filename from object key
-  const getFilename = (objectKey: string) => {
-    return objectKey.split('/').pop() || objectKey;
+  // Get image type badge
+  const getImageTypeBadge = (image: any) => {
+    if (image.source === 'database') {
+      return <Badge variant="outline" className="bg-blue-50">Database</Badge>;
+    } else if (image.source === 'object-storage') {
+      return <Badge variant="outline" className="bg-green-50">Object Storage</Badge>;
+    } else if (image.url && image.url.startsWith('/uploads/')) {
+      return <Badge variant="outline" className="bg-yellow-50">Legacy</Badge>;
+    } else {
+      return <Badge variant="outline">External</Badge>;
+    }
   };
   
   // Format file size
-  const formatFileSize = (size: number) => {
+  const formatFileSize = (size?: number) => {
+    if (!size) return 'Unknown';
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
@@ -491,13 +495,18 @@ const ObjectStorageManager = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <HardDrive className="h-5 w-5" />
-          Object Storage Images
+          <Database className="h-5 w-5" />
+          Image Storage Management
         </CardTitle>
         <CardDescription>
-          Manage all images stored in Replit Object Storage
+          Manage all images stored in the database and object storage
         </CardDescription>
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center mt-2">
+          <div className="flex space-x-2">
+            <Badge variant="outline" className="bg-blue-50">Database: {storageData.counts.database}</Badge>
+            <Badge variant="outline" className="bg-green-50">Object Storage: {storageData.counts.objectStorage}</Badge>
+            <Badge variant="secondary">Total: {storageData.counts.total}</Badge>
+          </div>
           <Button 
             variant="outline" 
             size="sm" 
@@ -518,21 +527,21 @@ const ObjectStorageManager = () => {
           <div className="text-center text-destructive p-4">
             Error loading images: {String(error)}
           </div>
-        ) : !storageImages || storageImages.length === 0 ? (
+        ) : !storageData.images || storageData.images.length === 0 ? (
           <div className="text-center text-muted-foreground p-4">
-            No images found in object storage
+            No images found in storage
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {storageImages.map((objectKey) => (
+            {storageData.images.map((image: any) => (
               <div 
-                key={objectKey} 
+                key={image.key} 
                 className="border rounded-md overflow-hidden flex flex-col"
               >
                 <div className="relative aspect-video bg-muted">
                   <img 
-                    src={getDisplayUrl(objectKey)}
-                    alt={getFilename(objectKey)}
+                    src={image.url}
+                    alt={image.key}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Error+Loading+Image';
@@ -540,20 +549,30 @@ const ObjectStorageManager = () => {
                   />
                 </div>
                 <div className="p-3 flex-1 flex flex-col">
-                  <div className="text-sm font-medium truncate mb-1" title={getFilename(objectKey)}>
-                    {getFilename(objectKey)}
+                  <div className="text-sm font-medium truncate mb-1" title={image.key}>
+                    {image.key.split('/').pop() || image.key}
                   </div>
-                  <div className="text-xs text-muted-foreground mb-2">
-                    <Badge variant="outline" className="mr-2">
-                      {objectKey.startsWith('images/') ? 'Object Storage' : 'External'}
-                    </Badge>
+                  <div className="text-xs text-muted-foreground space-y-1 mb-2">
+                    <div className="flex items-center justify-between">
+                      {getImageTypeBadge(image)}
+                      {image.size && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatFileSize(image.size)}
+                        </span>
+                      )}
+                    </div>
+                    {image.type && (
+                      <div className="text-xs text-muted-foreground">
+                        Type: {image.type}
+                      </div>
+                    )}
                   </div>
                   <div className="mt-auto flex justify-between items-center">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        navigator.clipboard.writeText(objectKey);
+                        navigator.clipboard.writeText(image.key);
                         toast({
                           title: "Copied",
                           description: "Image key copied to clipboard",
@@ -565,7 +584,7 @@ const ObjectStorageManager = () => {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteImage(objectKey)}
+                      onClick={() => handleDeleteImage(image.key)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -1100,7 +1119,7 @@ const AdminImagesPage = () => {
             </TabsTrigger>
             <TabsTrigger value="storage" className="flex items-center gap-1">
               <Database className="h-4 w-4" />
-              Object Storage
+              Image Storage
             </TabsTrigger>
           </TabsList>
           
@@ -1143,7 +1162,7 @@ const AdminImagesPage = () => {
           </TabsContent>
           
           <TabsContent value="storage">
-            <ObjectStorageManager />
+            <StorageManager />
           </TabsContent>
         </Tabs>
       </div>

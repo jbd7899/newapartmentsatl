@@ -253,17 +253,33 @@ export async function deleteUnitImage(id: number): Promise<void> {
   });
 }
 
-// Object Storage API functions
-export async function listStorageImages(): Promise<string[]> {
-  console.log("Fetching images from object storage...");
+// Storage API functions
+export async function listStorageImages(): Promise<{
+  images: Array<{
+    key: string;
+    url: string;
+    size?: number;
+    type?: string;
+    source: 'database' | 'object-storage' | 'external';
+  }>;
+  counts: {
+    database: number;
+    objectStorage: number;
+    total: number;
+  };
+}> {
+  console.log("Fetching images from all storage systems...");
   const response = await fetch('/api/images');
   if (!response.ok) {
-    console.error("Failed to fetch images from object storage:", response.status, response.statusText);
-    throw new Error('Failed to fetch images from object storage');
+    console.error("Failed to fetch images:", response.status, response.statusText);
+    throw new Error('Failed to fetch images from storage');
   }
   const data = await response.json();
-  console.log("Received object storage images:", data);
-  return data.images || [];
+  console.log("Received storage images data:", data);
+  return {
+    images: data.images || [],
+    counts: data.counts || { database: 0, objectStorage: 0, total: 0 }
+  };
 }
 
 export async function deleteStorageImage(objectKey: string): Promise<void> {
