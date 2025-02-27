@@ -1,6 +1,6 @@
 import { 
   locations, properties, features, inquiries, propertyImages, neighborhoods,
-  propertyUnits, unitImages, imageStorage,
+  propertyUnits, unitImages,
   type Location, type InsertLocation, 
   type Property, type InsertProperty,
   type Feature, type InsertFeature,
@@ -8,8 +8,7 @@ import {
   type PropertyImage, type InsertPropertyImage,
   type Neighborhood, type InsertNeighborhood,
   type PropertyUnit, type InsertPropertyUnit,
-  type UnitImage, type InsertUnitImage,
-  type ImageStorage, type InsertImageStorage
+  type UnitImage, type InsertUnitImage
 } from "@shared/schema";
 
 // Storage Interface

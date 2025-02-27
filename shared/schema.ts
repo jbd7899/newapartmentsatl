@@ -109,20 +109,16 @@ export const insertInquirySchema = createInsertSchema(inquiries).omit({
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
 
-// Property Images table with integrated storage
+// Property Images table - using only Object Storage
 export const propertyImages = pgTable("property_images", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").notNull(),
-  url: text("url").notNull(),
+  objectKey: text("object_key").notNull(),  // Storage key in object storage
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
-  // Storage fields
-  objectKey: text("object_key"),  // Storage key (used when image is stored in object storage)
   mimeType: text("mime_type"),    // MIME type of the image
   size: integer("size"),          // Size in bytes
-  imageData: text("image_data"),  // Base64 encoded image data for database storage
-  storageType: text("storage_type").default("external"), // "external", "object-storage", or "database"
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -157,20 +153,16 @@ export const insertPropertyUnitSchema = createInsertSchema(propertyUnits).omit({
 export type PropertyUnit = typeof propertyUnits.$inferSelect;
 export type InsertPropertyUnit = z.infer<typeof insertPropertyUnitSchema>;
 
-// Unit Images table with integrated storage
+// Unit Images table - using only Object Storage
 export const unitImages = pgTable("unit_images", {
   id: serial("id").primaryKey(),
   unitId: integer("unit_id").notNull(),
-  url: text("url").notNull(),
+  objectKey: text("object_key").notNull(),  // Storage key in object storage
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
-  // Storage fields (same as property images)
-  objectKey: text("object_key"),  // Storage key (used when image is stored in object storage)
   mimeType: text("mime_type"),    // MIME type of the image
   size: integer("size"),          // Size in bytes
-  imageData: text("image_data"),  // Base64 encoded image data for database storage
-  storageType: text("storage_type").default("external"), // "external", "object-storage", or "database"
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -182,20 +174,4 @@ export const insertUnitImageSchema = createInsertSchema(unitImages).omit({
 export type UnitImage = typeof unitImages.$inferSelect;
 export type InsertUnitImage = z.infer<typeof insertUnitImageSchema>;
 
-// Image Storage table for storing binary data
-export const imageStorage = pgTable("image_storage", {
-  id: serial("id").primaryKey(),
-  objectKey: text("object_key").notNull().unique(),
-  mimeType: text("mime_type").notNull(),
-  data: text("data").notNull(), // Base64 encoded image data
-  size: integer("size").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertImageStorageSchema = createInsertSchema(imageStorage).omit({
-  id: true,
-  createdAt: true
-});
-
-export type ImageStorage = typeof imageStorage.$inferSelect;
-export type InsertImageStorage = z.infer<typeof insertImageStorageSchema>;
+// No database image storage - using only object storage
