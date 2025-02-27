@@ -132,14 +132,22 @@ export function getFilenameFromObjectKey(objectKey: string): string {
  * Check if an image URL is from database, object storage, or external
  * 
  * @param url - The image URL to check
- * @returns 'database', 'object-storage', 'legacy', or 'external'
+ * @returns 'database', 'object-storage', 'property-image', 'unit-image', 'legacy', or 'external'
  */
-export function getImageSourceType(url: string): 'database' | 'object-storage' | 'legacy' | 'external' {
+export function getImageSourceType(url: string): 'database' | 'object-storage' | 'property-image' | 'unit-image' | 'legacy' | 'external' {
   if (!url) {
     return 'external';
   }
   
-  if (isDatabaseImageUrl(url)) {
+  if (url.startsWith('/api/property-images/')) {
+    return 'property-image';
+  }
+  
+  if (url.startsWith('/api/unit-images/')) {
+    return 'unit-image';
+  }
+  
+  if (url.startsWith('/api/db-images/') || url.startsWith('dbimg_')) {
     return 'database';
   }
   
