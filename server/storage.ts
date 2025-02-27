@@ -104,6 +104,7 @@ export class MemStorage implements IStorage {
     this.neighborhoodsData = new Map();
     this.propertyUnitsData = new Map();
     this.unitImagesData = new Map();
+    this.imageStorageData = new Map();
     
     // Seed initial data
     this.seedData();
@@ -440,6 +441,7 @@ export class MemStorage implements IStorage {
     this.propertyImagesData = new Map();
     this.propertyUnitsData = new Map();
     this.unitImagesData = new Map();
+    this.imageStorageData = new Map();
     // Locations
     const locations: Location[] = [
       {
@@ -1318,6 +1320,56 @@ export class MemStorage implements IStorage {
   // Get all property units
   async getAllPropertyUnits(): Promise<PropertyUnit[]> {
     return Array.from(this.propertyUnitsData.values());
+  }
+
+  // Image Storage methods for storing images directly in the database
+  private imageStorageData: Map<number, ImageStorage> = new Map();
+  private nextImageId: number = 1;
+
+  // Save image data to database
+  async saveImageData(data: InsertImageStorage): Promise<ImageStorage> {
+    const id = this.nextImageId++;
+    const createdAt = new Date();
+    
+    const newImage: ImageStorage = {
+      id,
+      objectKey: data.objectKey,
+      mimeType: data.mimeType,
+      data: data.data,
+      size: data.size,
+      createdAt
+    };
+    
+    this.imageStorageData.set(id, newImage);
+    return newImage;
+  }
+  
+  // Get image data by object key
+  async getImageDataByObjectKey(objectKey: string): Promise<ImageStorage | undefined> {
+    return Array.from(this.imageStorageData.values()).find(
+      image => image.objectKey === objectKey
+    );
+  }
+  
+  // Delete image data by object key
+  async deleteImageDataByObjectKey(objectKey: string): Promise<boolean> {
+    const image = Array.from(this.imageStorageData.values()).find(
+      image => image.objectKey === objectKey
+    );
+    
+    if (image) {
+      return this.imageStorageData.delete(image.id);
+    }
+    
+    return false;
+  }
+  
+  // Get all stored images
+  async getAllStoredImages(): Promise<ImageStorage[]> {
+    return Array.from(this.imageStorageData.values()).sort((a, b) => {
+      // Sort by createdAt descending (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }
 }
 
