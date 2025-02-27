@@ -449,6 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageData = {
         propertyId,
         url,
+        objectKey: url, // Store the URL as objectKey too for consistent display
         alt: alt || '',
         displayOrder: displayOrder || 0,
         isFeatured: isFeatured || false
@@ -812,6 +813,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageData = {
         unitId,
         url,
+        objectKey: url, // Store the URL as objectKey too for consistent display
         alt: alt || '',
         displayOrder: displayOrder || 0,
         isFeatured: isFeatured || false
