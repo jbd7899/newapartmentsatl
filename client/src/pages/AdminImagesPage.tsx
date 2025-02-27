@@ -470,6 +470,8 @@ const ObjectStorageManager = () => {
   
   // Get image URL for display
   const getDisplayUrl = (objectKey: string) => {
+    // Make sure the object key is properly formatted
+    console.log("Getting display URL for:", objectKey);
     return `/api/images/${encodeURIComponent(objectKey)}`;
   };
   
