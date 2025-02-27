@@ -1,6 +1,9 @@
 /**
  * Script to upload images to a property unit
  * Usage: node upload-unit-images.js
+ * 
+ * This script uploads images from attached_assets directory to object storage
+ * and creates database records for unit ID 4 (965 Myrtle St Apartment 1)
  */
 
 import fs from 'fs';
@@ -59,7 +62,9 @@ async function createUnitImage(unitId, objectKey, alt, displayOrder, isFeatured)
   console.log(`Creating unit image record for Unit ID: ${unitId}, Object Key: ${objectKey}`);
   
   try {
-    const response = await fetch('/api/unit-images', {
+    // Use absolute URL to the API endpoint
+    const baseUrl = 'http://localhost:5000';
+    const response = await fetch(`${baseUrl}/api/unit-images`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
