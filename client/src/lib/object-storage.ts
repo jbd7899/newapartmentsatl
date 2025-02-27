@@ -37,17 +37,21 @@ export function isDatabaseImageUrl(url: string): boolean {
     return false;
   }
   
-  // Database images use the /api/db-images/ endpoint
-  return url.startsWith('/api/db-images/') || url.startsWith('dbimg_');
+  // Database images use the /api/db-images/ endpoint or the integrated property-images endpoint
+  return url.startsWith('/api/db-images/') || 
+         url.startsWith('dbimg_') || 
+         url.startsWith('/api/property-images/') || 
+         url.startsWith('/api/unit-images/');
 }
 
 /**
- * Generate a URL for an image stored in object storage or database
+ * Generate a URL for an image stored in object storage, database, or integrated image storage
  * 
  * @param objectKey - The key of the image or image URL
+ * @param type - Optional type hint ('property' or 'unit') for integrated image storage
  * @returns The URL to access the image
  */
-export function getImageUrl(objectKey: string): string {
+export function getImageUrl(objectKey: string, type?: 'property' | 'unit'): string {
   if (!objectKey) {
     return '';
   }
@@ -62,14 +66,36 @@ export function getImageUrl(objectKey: string): string {
     return objectKey;
   }
   
-  // If it's already a database image URL, return it as is
-  if (objectKey.startsWith('/api/db-images/')) {
+  // If it's already an API image URL, return it as is
+  if (objectKey.startsWith('/api/db-images/') || 
+      objectKey.startsWith('/api/property-images/') || 
+      objectKey.startsWith('/api/unit-images/')) {
     return objectKey;
+  }
+  
+  // If it's an integrated property image key with type hint
+  if (type === 'property') {
+    return `/api/property-images/${encodeURIComponent(objectKey)}`;
+  }
+  
+  // If it's an integrated unit image key with type hint
+  if (type === 'unit') {
+    return `/api/unit-images/${encodeURIComponent(objectKey)}`;
   }
   
   // If it's a database image key without the full path
   if (objectKey.startsWith('dbimg_')) {
     return `/api/db-images/${objectKey}`;
+  }
+  
+  // If it's a property image key without the full path
+  if (objectKey.startsWith('propimg_')) {
+    return `/api/property-images/${objectKey}`;
+  }
+  
+  // If it's a unit image key without the full path
+  if (objectKey.startsWith('unitimg_')) {
+    return `/api/unit-images/${objectKey}`;
   }
   
   // If it's an object storage key, use the API endpoint

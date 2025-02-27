@@ -1184,6 +1184,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to list images" });
     }
   });
+  
+  // Serve property images with integrated storage
+  app.get('/api/property-images/:objectKey(*)', async (req: Request, res: Response) => {
+    try {
+      const objectKey = req.params.objectKey;
+      console.log(`Serving property image with objectKey: ${objectKey}`);
+      
+      // Find property image with this objectKey
+      const images = await storage.getPropertyImages();
+      const image = images.find(img => img.objectKey === objectKey);
+      
+      if (!image) {
+        return res.status(404).send('Property image not found');
+      }
+      
+      // If image has data directly stored, serve it
+      if (image.imageData) {
+        // Determine content type
+        const mimeType = image.mimeType || 'image/jpeg';
+        
+        // Convert base64 to buffer and serve
+        const buffer = Buffer.from(image.imageData, 'base64');
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        return res.send(buffer);
+      }
+      
+      return res.status(404).send('Image data not found');
+    } catch (error) {
+      console.error('Error serving property image:', error);
+      res.status(500).send('Error serving image');
+    }
+  });
+  
+  // Serve unit images with integrated storage
+  app.get('/api/unit-images/:objectKey(*)', async (req: Request, res: Response) => {
+    try {
+      const objectKey = req.params.objectKey;
+      console.log(`Serving unit image with objectKey: ${objectKey}`);
+      
+      // Find unit image with this objectKey
+      const allUnits = await storage.getAllPropertyUnits();
+      let unitImage = null;
+      
+      for (const unit of allUnits) {
+        const images = await storage.getUnitImages(unit.id);
+        const image = images.find(img => img.objectKey === objectKey);
+        if (image) {
+          unitImage = image;
+          break;
+        }
+      }
+      
+      if (!unitImage) {
+        return res.status(404).send('Unit image not found');
+      }
+      
+      // If image has data directly stored, serve it
+      if (unitImage.imageData) {
+        // Determine content type
+        const mimeType = unitImage.mimeType || 'image/jpeg';
+        
+        // Convert base64 to buffer and serve
+        const buffer = Buffer.from(unitImage.imageData, 'base64');
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        return res.send(buffer);
+      }
+      
+      return res.status(404).send('Image data not found');
+    } catch (error) {
+      console.error('Error serving unit image:', error);
+      res.status(500).send('Error serving image');
+    }
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);

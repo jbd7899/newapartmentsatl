@@ -1125,7 +1125,12 @@ export class MemStorage implements IStorage {
         alt: "Living room of Unit 101",
         displayOrder: 0,
         isFeatured: true,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       },
       {
         id: 2,
@@ -1134,7 +1139,12 @@ export class MemStorage implements IStorage {
         alt: "Kitchen of Unit 101",
         displayOrder: 1,
         isFeatured: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       },
       {
         id: 3,
@@ -1143,7 +1153,12 @@ export class MemStorage implements IStorage {
         alt: "Living room of Unit 102",
         displayOrder: 0,
         isFeatured: true,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       },
       {
         id: 4,
@@ -1152,7 +1167,12 @@ export class MemStorage implements IStorage {
         alt: "Kitchen of Unit 102",
         displayOrder: 1,
         isFeatured: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       },
       {
         id: 5,
@@ -1161,7 +1181,12 @@ export class MemStorage implements IStorage {
         alt: "Living room of Unit 201",
         displayOrder: 0,
         isFeatured: true,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       },
       {
         id: 6,
@@ -1170,7 +1195,12 @@ export class MemStorage implements IStorage {
         alt: "Kitchen of Unit 201",
         displayOrder: 1,
         isFeatured: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       },
       {
         id: 7,
@@ -1179,7 +1209,12 @@ export class MemStorage implements IStorage {
         alt: "Bathroom of Unit 201",
         displayOrder: 2,
         isFeatured: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external"
       }
     ];
 
@@ -1216,7 +1251,6 @@ export class MemStorage implements IStorage {
         alt: "Main exterior view of 253 14th St NE",
         displayOrder: 0,
         isFeatured: true,
-        // Storage fields
         objectKey: null,
         mimeType: null,
         size: null,
@@ -1231,6 +1265,11 @@ export class MemStorage implements IStorage {
         alt: "Living room of 253 14th St NE",
         displayOrder: 1,
         isFeatured: false,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       {
@@ -1240,6 +1279,11 @@ export class MemStorage implements IStorage {
         alt: "Kitchen of 253 14th St NE",
         displayOrder: 2,
         isFeatured: false,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       
@@ -1251,6 +1295,11 @@ export class MemStorage implements IStorage {
         alt: "Main exterior view of 965 Myrtle St NE",
         displayOrder: 0,
         isFeatured: true,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       {
@@ -1260,6 +1309,11 @@ export class MemStorage implements IStorage {
         alt: "Bedroom of 965 Myrtle St NE",
         displayOrder: 1,
         isFeatured: false,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       
@@ -1271,6 +1325,11 @@ export class MemStorage implements IStorage {
         alt: "Main exterior view of 903 Myrtle St NE",
         displayOrder: 0,
         isFeatured: true,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       {
@@ -1280,6 +1339,11 @@ export class MemStorage implements IStorage {
         alt: "Living room of 903 Myrtle St NE",
         displayOrder: 1,
         isFeatured: false,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       },
       {
@@ -1289,6 +1353,11 @@ export class MemStorage implements IStorage {
         alt: "Bathroom of 903 Myrtle St NE",
         displayOrder: 2,
         isFeatured: false,
+        objectKey: null,
+        mimeType: null,
+        size: null,
+        imageData: null,
+        storageType: "external",
         createdAt: new Date()
       }
     ];
