@@ -486,7 +486,7 @@ const AdminImagesPage = () => {
                               <div key={image.id} className="border rounded-lg overflow-hidden">
                                 <div className="relative aspect-video bg-muted">
                                   <img 
-                                    src={getImageUrl(image.url)} 
+                                    src={getImageUrl(image.objectKey || image.url)} 
                                     alt={image.alt || "Property image"}
                                     className="object-cover w-full h-full"
                                   />

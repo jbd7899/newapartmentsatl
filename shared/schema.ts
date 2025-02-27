@@ -109,14 +109,17 @@ export const insertInquirySchema = createInsertSchema(inquiries).omit({
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
 
-// Property Images table - using only external URLs now
+// Property Images table - using both URLs and object storage
 export const propertyImages = pgTable("property_images", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").notNull(),
-  url: text("url").notNull(),     // External URL to the image
+  url: text("url"),                // External URL to the image (legacy)
+  objectKey: text("object_key"),   // Object storage key
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
+  mimeType: text("mime_type"),     // MIME type for object storage
+  size: integer("size"),           // File size in bytes
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -151,14 +154,17 @@ export const insertPropertyUnitSchema = createInsertSchema(propertyUnits).omit({
 export type PropertyUnit = typeof propertyUnits.$inferSelect;
 export type InsertPropertyUnit = z.infer<typeof insertPropertyUnitSchema>;
 
-// Unit Images table - using only external URLs now
+// Unit Images table - using both URLs and object storage
 export const unitImages = pgTable("unit_images", {
   id: serial("id").primaryKey(),
   unitId: integer("unit_id").notNull(),
-  url: text("url").notNull(),     // External URL to the image
+  url: text("url"),                // External URL to the image (legacy)
+  objectKey: text("object_key"),   // Object storage key
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
+  mimeType: text("mime_type"),     // MIME type for object storage
+  size: integer("size"),           // File size in bytes
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
