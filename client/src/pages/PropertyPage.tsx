@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getProperty, getLocations, getPropertyImagesByProperty, getPropertyUnits, getUnitImages } from "@/lib/data";
@@ -224,148 +224,224 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         </div>
       </section>
 
-      {/* Property Details */}
-      <div className="container mx-auto px-4 py-16">
+      {/* Property Details - Overview Section */}
+      <div ref={overviewRef} className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="font-heading font-bold text-3xl mb-6">About This Property</h2>
-                <p className="text-lg text-slate-700 mb-8">{property.description}</p>
-                
-                <h3 className="font-heading font-bold text-2xl mb-4">Property Highlights</h3>
-                
+            <div className="bg-white rounded-lg shadow-sm p-8">
+              <h2 className="text-2xl font-bold mb-6 pb-2 border-b border-gray-200">About This Property</h2>
+              <p className="text-gray-700 mb-6 leading-relaxed">{property.description}</p>
+              
+              <div className="bg-gray-50 p-6 rounded-lg mb-8">
+                <h3 className="text-xl font-bold mb-4">Property Details</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-gray-500 text-sm mb-1">Property Type</p>
+                    <p className="font-semibold capitalize">
+                      {property.propertyType ? property.propertyType.replace('-', ' ') : 'Multi Family'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm mb-1">Year Built</p>
+                    <p className="font-semibold">1930 (Renovated)</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm mb-1">Units</p>
+                    <p className="font-semibold">{property.isMultifamily ? `${property.unitCount || 0} Units` : 'Single Family'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm mb-1">Status</p>
+                    <p className="font-semibold text-green-600">{property.available ? 'Available' : 'Unavailable'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4">Property Highlights</h3>
                 {property.isMultifamily ? (
-                  <div className="grid grid-cols-1 gap-4 mb-8">
-                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                      <Building className="h-6 w-6 text-primary mr-3" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mr-3">
+                        <Building size={20} />
+                      </div>
                       <div>
-                        <div className="text-sm text-slate-500">Property Type</div>
-                        <div className="font-semibold">
-                          Multi-family Property • {property.unitCount || 0} {property.unitCount === 1 ? 'Unit' : 'Units'}
-                        </div>
+                        <p className="font-medium">Multi-family Property</p>
+                        <p className="text-sm text-gray-500">{property.unitCount || 0} separate units</p>
                       </div>
                     </div>
-                    <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                      <p className="text-blue-700">
-                        This is a multi-family property. For details on bedrooms, bathrooms, square footage, and pricing, 
-                        please see the individual units listed below.
-                      </p>
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mr-3">
+                        <MapPin size={20} />
+                      </div>
+                      <div>
+                        <p className="font-medium">Prime Location</p>
+                        <p className="text-sm text-gray-500">{propertyLocation?.name || 'Great area'}</p>
+                      </div>
                     </div>
+                    {featuresList.slice(0, 2).map((feature, index) => (
+                      <div key={index} className="flex items-center">
+                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mr-3">
+                          <Check size={20} />
+                        </div>
+                        <div>
+                          <p className="font-medium">{feature}</p>
+                          <p className="text-sm text-gray-500">Featured amenity</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                      <Building className="h-6 w-6 text-primary mr-3" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mr-3">
+                        <Building size={20} />
+                      </div>
                       <div>
-                        <div className="text-sm text-slate-500">Bedrooms</div>
-                        <div className="font-semibold">{property.bedrooms}</div>
+                        <p className="font-medium">{property.bedrooms} Bedrooms</p>
+                        <p className="text-sm text-gray-500">{property.bathrooms} Bathrooms</p>
                       </div>
                     </div>
-                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                      <ParkingCircle className="h-6 w-6 text-primary mr-3" />
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mr-3">
+                        <Home size={20} />
+                      </div>
                       <div>
-                        <div className="text-sm text-slate-500">Bathrooms</div>
-                        <div className="font-semibold">{property.bathrooms}</div>
+                        <p className="font-medium">{property.sqft} sq ft</p>
+                        <p className="text-sm text-gray-500">Spacious layout</p>
                       </div>
                     </div>
-                    <div className="flex items-center p-4 bg-slate-50 rounded-lg">
-                      <Home className="h-6 w-6 text-primary mr-3" />
-                      <div>
-                        <div className="text-sm text-slate-500">Square Footage</div>
-                        <div className="font-semibold">{property.sqft} sq ft</div>
+                    {featuresList.slice(0, 2).map((feature, index) => (
+                      <div key={index} className="flex items-center">
+                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 mr-3">
+                          <Check size={20} />
+                        </div>
+                        <div>
+                          <p className="font-medium">{feature}</p>
+                          <p className="text-sm text-gray-500">Featured amenity</p>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 )}
-
-                {!property.isMultifamily && (
-                  <>
-                    <h3 className="font-heading font-bold text-2xl mb-4">Features & Amenities</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-                      {featuresList.map((feature, index) => (
-                        <div key={index} className="flex items-center">
-                          <Check className="h-5 w-5 text-green-500 mr-2" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              
+              {!property.isMultifamily && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold mb-4">Features & Amenities</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                    {featuresList.map((feature, index) => (
+                      <div key={index} className="flex items-center p-2 bg-gray-50 rounded">
+                        <Check className="h-5 w-5 text-green-500 mr-2" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex flex-wrap gap-3 mt-8">
+                <Button className="bg-orange-500 hover:bg-orange-600">Contact Us</Button>
+                <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50">Request Tour</Button>
+              </div>
+            </div>
           </div>
           
           <div>
-            <Card>
-              <CardContent className="p-6">
-                {property.isMultifamily ? (
-                  <div className="text-center mb-6">
-                    <div className="text-lg font-medium text-slate-700">Multiple unit options</div>
-                    <div className="text-slate-500">See unit details below</div>
-                  </div>
-                ) : property.rent ? (
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-primary">${property.rent}</div>
-                    <div className="text-slate-500">per month</div>
-                  </div>
-                ) : (
-                  <div className="text-center mb-6">
-                    <div className="text-lg font-medium text-slate-700">Contact for Pricing</div>
-                    <div className="text-slate-500">Pricing details available on request</div>
-                  </div>
-                )}
-                
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Status</span>
-                    <span className="font-semibold">
-                      {property.available ? 
-                        <span className="text-green-600">Available</span> : 
-                        <span className="text-red-600">Unavailable</span>
-                      }
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Property Type</span>
-                    <span className="font-semibold capitalize">
-                      {property.propertyType ? property.propertyType.replace('-', ' ') : 'Multi Family'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Year Built</span>
-                    <span className="font-semibold">1930 (Renovated)</span>
-                  </div>
+            {/* Pricing Card */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              {property.isMultifamily ? (
+                <div className="mb-4">
+                  <div className="text-xl font-semibold text-gray-700 mb-1">Multiple Unit Options</div>
+                  <div className="text-gray-500 mb-3">See unit details below</div>
+                  <Button 
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2"
+                    onClick={() => scrollToSection('units')}
+                  >
+                    View Available Units
+                  </Button>
                 </div>
-                
-                <Button className="w-full mb-3">Schedule a Tour</Button>
-                <Button variant="outline" className="w-full mb-3">Request Info</Button>
+              ) : property.rent ? (
+                <div className="mb-4">
+                  <div className="text-3xl font-bold text-orange-500 mb-1">${property.rent}</div>
+                  <div className="text-gray-500 mb-3">per month</div>
+                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2">
+                    Schedule a Tour
+                  </Button>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <div className="text-xl font-semibold text-gray-700 mb-1">Contact for Pricing</div>
+                  <div className="text-gray-500 mb-3">Pricing details available on request</div>
+                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2">
+                    Request Information
+                  </Button>
+                </div>
+              )}
+              
+              <div className="space-y-4 mb-2">
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-500">Status</span>
+                  <span className="font-semibold">
+                    {property.available ? 
+                      <span className="text-green-600">Available Now</span> : 
+                      <span className="text-red-600">Unavailable</span>
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-t border-gray-100">
+                  <span className="text-gray-500">Property Type</span>
+                  <span className="font-semibold capitalize">
+                    {property.propertyType ? property.propertyType.replace('-', ' ') : 'Multi Family'}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-t border-gray-100">
+                  <span className="text-gray-500">Year Built</span>
+                  <span className="font-semibold">1930 (Renovated)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Image Gallery Card */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+              <div className="aspect-video bg-gray-100 overflow-hidden">
+                <img 
+                  src={featuredImage} 
+                  alt={property.name} 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="font-bold text-lg mb-2">Photo Gallery</h3>
+                <p className="text-gray-500 mb-3">View all {galleryImages.length} photos of this property</p>
                 <Button 
-                  variant="secondary" 
-                  className="w-full flex items-center justify-center"
+                  variant="outline" 
+                  className="w-full border-orange-500 text-orange-500 hover:bg-orange-50"
                   onClick={() => setShowGallery(true)}
                 >
                   <ImageIcon className="mr-2 h-4 w-4" />
-                  View Property Gallery
+                  View All Photos
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
+            {/* Neighborhood Preview */}
             {propertyLocation && (
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <h3 className="font-heading font-bold text-xl mb-4">
-                    <MapPin className="inline-block h-5 w-5 mr-2 text-primary" />
-                    Neighborhood
-                  </h3>
-                  <p className="text-slate-700 mb-4">
-                    This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
-                  </p>
-                  <Button variant="link" onClick={() => setLocation(`/${propertyLocation.slug}`)}>
-                    Explore {propertyLocation.name}
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h3 className="font-bold text-lg flex items-center mb-3">
+                  <MapPin className="h-5 w-5 mr-2 text-orange-500" />
+                  Neighborhood
+                </h3>
+                <p className="text-gray-700 mb-4">
+                  This property is located in {propertyLocation.name}, a desirable area known for its charm and amenities.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="border-orange-500 text-orange-500 hover:bg-orange-50"
+                  onClick={() => scrollToSection('neighborhood')}
+                >
+                  Explore {propertyLocation.name}
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -373,94 +449,102 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
       
       {/* Display available units if this is a multifamily property */}
       {property.isMultifamily && (
-        <div className="container mx-auto px-4 py-16">
-          <div className="mb-8">
-            <h2 className="font-heading font-bold text-3xl mb-4">Available Units</h2>
-            <p className="text-slate-700">
-              {propertyUnits.filter(unit => unit.available).length} unit{propertyUnits.filter(unit => unit.available).length !== 1 ? 's' : ''} available at {property.name}
-            </p>
-          </div>
-          
-          {unitsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-80 bg-gray-200 animate-pulse rounded-lg"></div>
-              ))}
-            </div>
-          ) : propertyUnits.length === 0 ? (
-            <div className="text-center py-12 bg-slate-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-2">No Units Available</h3>
-              <p className="text-slate-600">Check back soon for new availability.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertyUnits.map((unit) => (
-                <UnitCard 
-                  key={unit.id}
-                  unit={unit}
-                  unitImages={unitImagesMap[unit.id] || []}
-                  onShowGallery={() => setSelectedUnitId(unit.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Filtering options for units */}
-      {property.isMultifamily && propertyUnits.length > 0 && (
-        <div className="container mx-auto px-4 pb-16">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-heading font-bold text-xl mb-6">Filter Available Units</h3>
+        <div ref={unitsRef} className="bg-gray-50 py-16">
+          <div className="container mx-auto px-4">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Available Units</h2>
+              <p className="text-gray-700 mb-6">
+                {propertyUnits.filter(unit => unit.available).length} unit{propertyUnits.filter(unit => unit.available).length !== 1 ? 's' : ''} available at {property.name}
+              </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <div className="text-sm text-slate-500 mb-2">Bedrooms</div>
-                  <div className="flex gap-2">
-                    {propertyUnits
-                        .map(unit => unit.bedrooms)
-                        .filter((value, index, self) => self.indexOf(value) === index)
-                        .sort()
-                        .map((bedCount) => (
-                          <Badge key={bedCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
-                            <Bed className="h-3 w-3 mr-1" /> {bedCount}
-                          </Badge>
-                        ))
-                    }
+              {/* Filtering options for units */}
+              {propertyUnits.length > 0 && (
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                  <h3 className="text-lg font-bold mb-4">Filter Units</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <div className="text-sm text-gray-500 mb-2">Bedrooms</div>
+                      <div className="flex flex-wrap gap-2">
+                        {propertyUnits
+                            .map(unit => unit.bedrooms)
+                            .filter((value, index, self) => self.indexOf(value) === index)
+                            .sort()
+                            .map((bedCount) => (
+                              <Badge key={bedCount} variant="outline" className="px-3 py-1.5 cursor-pointer hover:bg-orange-500 hover:text-white">
+                                <Bed className="h-3 w-3 mr-1" /> {bedCount}
+                              </Badge>
+                            ))
+                        }
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-gray-500 mb-2">Bathrooms</div>
+                      <div className="flex flex-wrap gap-2">
+                        {propertyUnits
+                            .map(unit => unit.bathrooms)
+                            .filter((value, index, self) => self.indexOf(value) === index)
+                            .sort()
+                            .map((bathCount) => (
+                              <Badge key={bathCount} variant="outline" className="px-3 py-1.5 cursor-pointer hover:bg-orange-500 hover:text-white">
+                                <Bath className="h-3 w-3 mr-1" /> {bathCount}
+                              </Badge>
+                            ))
+                        }
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-gray-500 mb-2">Availability</div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="px-3 py-1.5 cursor-pointer bg-orange-500 text-white">
+                          Available Now
+                        </Badge>
+                        <Badge variant="outline" className="px-3 py-1.5 cursor-pointer hover:bg-orange-500 hover:text-white">
+                          All Units
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <div className="text-sm text-slate-500 mb-2">Bathrooms</div>
-                  <div className="flex gap-2">
-                    {propertyUnits
-                        .map(unit => unit.bathrooms)
-                        .filter((value, index, self) => self.indexOf(value) === index)
-                        .sort()
-                        .map((bathCount) => (
-                          <Badge key={bathCount} variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
-                            <Bath className="h-3 w-3 mr-1" /> {bathCount}
-                          </Badge>
-                        ))
-                    }
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="text-sm text-slate-500 mb-2">Availability</div>
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-green-500 hover:text-white">
-                      Available Now
-                    </Badge>
-                    <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-primary hover:text-white">
-                      All Units
-                    </Badge>
-                  </div>
-                </div>
+              )}
+            </div>
+            
+            {unitsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-80 bg-gray-200 animate-pulse rounded-lg"></div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            ) : propertyUnits.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-2">No Units Available</h3>
+                <p className="text-gray-600">Check back soon for new availability.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {propertyUnits.map((unit) => (
+                  <UnitCard 
+                    key={unit.id}
+                    unit={unit}
+                    unitImages={unitImagesMap[unit.id] || []}
+                    onShowGallery={() => setSelectedUnitId(unit.id)}
+                    onRequestInfo={() => {}}
+                    onScheduleTour={() => {}}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {propertyUnits.length > 0 && (
+              <div className="mt-10 text-center">
+                <Button className="bg-orange-500 hover:bg-orange-600">
+                  Contact Agent for More Information
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
       
