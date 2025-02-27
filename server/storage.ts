@@ -1403,13 +1403,13 @@ export class MemStorage implements IStorage {
   }
 
   // Update property image URL
-  async updatePropertyImageUrl(id: number, url: string): Promise<PropertyImage | undefined> {
+  async updatePropertyImageObjectKey(id: number, objectKey: string): Promise<PropertyImage | undefined> {
     const image = this.propertyImagesData.get(id);
     if (!image) return undefined;
     
     const updatedImage: PropertyImage = {
       ...image,
-      url
+      objectKey
     };
     
     this.propertyImagesData.set(id, updatedImage);
@@ -1417,13 +1417,13 @@ export class MemStorage implements IStorage {
   }
   
   // Update unit image URL
-  async updateUnitImageUrl(id: number, url: string): Promise<UnitImage | undefined> {
+  async updateUnitImageObjectKey(id: number, objectKey: string): Promise<UnitImage | undefined> {
     const image = this.unitImagesData.get(id);
     if (!image) return undefined;
     
     const updatedImage: UnitImage = {
       ...image,
-      url
+      objectKey
     };
     
     this.unitImagesData.set(id, updatedImage);
