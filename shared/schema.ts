@@ -113,7 +113,8 @@ export type InsertInquiry = z.infer<typeof insertInquirySchema>;
 export const propertyImages = pgTable("property_images", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").notNull(),
-  objectKey: text("object_key").notNull(),  // Storage key in object storage
+  url: text("url").notNull(),     // URL to display the image
+  objectKey: text("object_key"),  // Storage key in object storage - can be null for external URLs
   alt: text("alt").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
   isFeatured: boolean("is_featured").notNull().default(false),
