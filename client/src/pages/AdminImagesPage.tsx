@@ -533,15 +533,15 @@ const StorageManager = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {storageData.images.map((image: any) => (
+            {storageData.images.map((image: any, index: number) => (
               <div 
-                key={image.key} 
+                key={image.key || `image-${index}`} 
                 className="border rounded-md overflow-hidden flex flex-col"
               >
                 <div className="relative aspect-video bg-muted">
                   <img 
                     src={image.url}
-                    alt={image.key}
+                    alt={image.key || 'Image'}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Error+Loading+Image';
@@ -572,11 +572,19 @@ const StorageManager = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        navigator.clipboard.writeText(image.key);
-                        toast({
-                          title: "Copied",
-                          description: "Image key copied to clipboard",
-                        });
+                        if (image.key) {
+                          navigator.clipboard.writeText(image.key);
+                          toast({
+                            title: "Copied",
+                            description: "Image key copied to clipboard",
+                          });
+                        } else {
+                          toast({
+                            title: "Error", 
+                            description: "No key available to copy",
+                            variant: "destructive"
+                          });
+                        }
                       }}
                     >
                       Copy Key
@@ -584,7 +592,11 @@ const StorageManager = () => {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteImage(image.key)}
+                      onClick={() => image.key ? handleDeleteImage(image.key) : toast({
+                        title: "Error",
+                        description: "No image key available to delete",
+                        variant: "destructive" 
+                      })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
