@@ -925,7 +925,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Simplified image serving endpoint - only from object storage
-  app.get('/api/images/:objectKey(*)', async (req, res) => {
+  // THIS ROUTE IS DEPRECATED - USE /api/direct-images/ INSTEAD
+  app.get('/api/images_old/:objectKey(*)', async (req, res) => {
     try {
       // Get the object key from the request params
       let objectKey = req.params.objectKey;
@@ -985,28 +986,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log all paths we're going to try
       console.log(`[Image API] Will try these paths:`, pathsToTry);
       
-      // Try each path until we find the image
-      let imageData = null;
+      // Try each path directly with the client instead of using getImageData
+      let imageBuffer: Buffer | null = null;
       let successPath = null;
       
       for (const path of pathsToTry) {
         console.log(`[Image API] Trying path: ${path}`);
-        const data = await getImageData(path);
-        if (data) {
-          imageData = data;
-          successPath = path;
-          console.log(`[Image API] Found image at path: ${path}`);
-          break;
+        try {
+          const result = await client.downloadAsBytes(path);
+          
+          if (result.ok && result.value) {
+            console.log(`[Image API] Found image at path: ${path}, size: ${result.value.length} bytes`);
+            console.log(`[Image API] Data type: ${typeof result.value}, isArray: ${Array.isArray(result.value)}, isBuffer: ${Buffer.isBuffer(result.value)}`);
+            
+            // DIRECT BUFFER CONVERSION
+            if (Buffer.isBuffer(result.value)) {
+              imageBuffer = result.value;
+              console.log('[Image API] Already a Buffer');
+            } else if (Array.isArray(result.value)) {
+              // Convert using Uint8Array - the cleanest way to handle array of bytes
+              const uint8Array = new Uint8Array(result.value.length);
+              for (let i = 0; i < result.value.length; i++) {
+                uint8Array[i] = result.value[i];
+              }
+              imageBuffer = Buffer.from(uint8Array);
+              console.log(`[Image API] Converted Array to Buffer via Uint8Array, length: ${imageBuffer.length}`);
+            } else {
+              // Fallback for other types
+              imageBuffer = Buffer.from(String(result.value));
+              console.log(`[Image API] Converted to Buffer via string, length: ${imageBuffer.length}`);
+            }
+            
+            successPath = path;
+            break;
+          }
+        } catch (error: any) {
+          console.log(`[Image API] Error trying path ${path}: ${error.message}`);
+          // Continue to next path
         }
       }
 
-      if (!imageData) {
-        // If all attempts failed, try listing all objects to find similar keys
+      // If all direct attempts failed, try listing all objects to find similar keys
+      if (!imageBuffer) {
         console.log(`[Image API] Image not found after trying all paths, listing all objects...`);
         const listResult = await client.list();
+        
         if (listResult.ok && listResult.value) {
           const allKeys = listResult.value.map(obj => obj.name || String(obj));
-          console.log(`[Image API] All keys in storage:`, allKeys);
           
           // Try to find similar keys
           const filename = path.basename(objectKey);
@@ -1020,25 +1046,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Try the first similar key as a last resort
             if (similarKeys.length > 0) {
-              console.log(`[Image API] Trying first similar key: ${similarKeys[0]}`);
-              const data = await getImageData(similarKeys[0]);
-              if (data) {
-                imageData = data;
-                successPath = similarKeys[0];
-                console.log(`[Image API] Found image with similar key: ${similarKeys[0]}`);
+              const similarKey = similarKeys[0];
+              console.log(`[Image API] Trying similar key: ${similarKey}`);
+              
+              try {
+                const result = await client.downloadAsBytes(similarKey);
+                
+                if (result.ok && result.value) {
+                  console.log(`[Image API] Found image with similar key: ${similarKey}, size: ${result.value.length} bytes`);
+                  
+                  // DIRECT BUFFER CONVERSION
+                  if (Buffer.isBuffer(result.value)) {
+                    imageBuffer = result.value;
+                  } else if (Array.isArray(result.value)) {
+                    const uint8Array = new Uint8Array(result.value.length);
+                    for (let i = 0; i < result.value.length; i++) {
+                      uint8Array[i] = result.value[i];
+                    }
+                    imageBuffer = Buffer.from(uint8Array);
+                  } else {
+                    imageBuffer = Buffer.from(String(result.value));
+                  }
+                  
+                  successPath = similarKey;
+                }
+              } catch (error: any) {
+                console.log(`[Image API] Error trying similar key ${similarKey}: ${error.message}`);
               }
             }
           }
         }
       }
 
-      if (!imageData) {
+      if (!imageBuffer) {
         console.log(`[Image API] Image not found after trying all paths`);
         return res.status(404).send('Image not found');
       }
 
-      console.log(`[Image API] Successfully found image at path: ${successPath}`);
-      return sendImageResponse(res, successPath || objectKey, imageData);
+      console.log(`[Image API] Successfully found image at path: ${successPath}, sending response`);
+      
+      // Set appropriate MIME type
+      const ext = path.extname(successPath || objectKey).toLowerCase();
+      let contentType = 'image/jpeg'; // Default
+      
+      if (ext === '.png') contentType = 'image/png';
+      else if (ext === '.gif') contentType = 'image/gif';
+      else if (ext === '.webp') contentType = 'image/webp';
+      else if (ext === '.svg') contentType = 'image/svg+xml';
+      
+      // Set response headers directly
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', imageBuffer.length);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      
+      // Send the buffer directly
+      console.log(`[Image API] Serving image with content type: ${contentType}, size: ${imageBuffer.length} bytes`);
+      return res.send(imageBuffer);
     } catch (error) {
       console.error('[Image API] Error serving image:', error);
       return res.status(500).send('Error serving image');
@@ -1192,12 +1255,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // NEW DIRECT IMAGE SERVING ENDPOINT
+  // This endpoint uses the most direct approach possible to serve images from object storage
+  app.get('/api/images/:objectKey(*)', async (req, res) => {
+    try {
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      console.log(`[Direct API] Serving image with objectKey: ${objectKey}`);
+      
+      try {
+        const result = await client.downloadAsBytes(objectKey);
+        
+        if (!result.ok || !result.value) {
+          // Try with 'images/' prefix if not already there
+          if (!objectKey.startsWith('images/')) {
+            const withPrefix = `images/${objectKey}`;
+            console.log(`[Direct API] Trying with images/ prefix: ${withPrefix}`);
+            const prefixResult = await client.downloadAsBytes(withPrefix);
+            
+            if (prefixResult.ok && prefixResult.value) {
+              // Successfully retrieved with prefix
+              const bufferData = Buffer.from(prefixResult.value);
+              console.log(`[Direct API] Retrieved image with prefix, size: ${bufferData.length} bytes`);
+              
+              // Set MIME type
+              const ext = path.extname(objectKey).toLowerCase();
+              let contentType = 'image/jpeg'; // Default
+              if (ext === '.png') contentType = 'image/png';
+              else if (ext === '.gif') contentType = 'image/gif';
+              else if (ext === '.webp') contentType = 'image/webp';
+              else if (ext === '.svg') contentType = 'image/svg+xml';
+              
+              res.setHeader('Content-Type', contentType);
+              res.setHeader('Content-Length', bufferData.length);
+              res.setHeader('Cache-Control', 'public, max-age=86400');
+              
+              return res.end(bufferData);
+            }
+          }
+          
+          console.log(`[Direct API] Image not found: ${objectKey}`);
+          return res.status(404).send('Image not found');
+        }
+        
+        // Convert the result.value to Buffer explicitly
+        const bufferData = Buffer.from(result.value);
+        console.log(`[Direct API] Retrieved image, size: ${bufferData.length} bytes`);
+        
+        // Set MIME type
+        const ext = path.extname(objectKey).toLowerCase();
+        let contentType = 'image/jpeg'; // Default
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.gif') contentType = 'image/gif';
+        else if (ext === '.webp') contentType = 'image/webp';
+        else if (ext === '.svg') contentType = 'image/svg+xml';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Length', bufferData.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        
+        return res.end(bufferData);
+      } catch (error) {
+        console.error(`[Direct API] Error serving image: ${error}`);
+        return res.status(500).send('Error serving image');
+      }
+    } catch (error) {
+      console.error(`[Direct API] Server error: ${error}`);
+      return res.status(500).send('Server error');
+    }
+  });
 
-  // Serve property images from object storage
+  // Serve property images from object storage - direct approach
   app.get('/api/property-images/:objectKey(*)', async (req: Request, res: Response) => {
     try {
       const objectKey = req.params.objectKey;
-      console.log(`Serving property image with objectKey: ${objectKey}`);
+      console.log(`[Property Images API] Serving property image with objectKey: ${objectKey}`);
 
       // Find property image with this objectKey
       const images = await storage.getPropertyImages();
@@ -1207,26 +1341,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send('Property image not found');
       }
 
-      // Get the image data from object storage
-      const imageData = await getImageData(objectKey);
-      
-      if (!imageData) {
-        return res.status(404).send('Image data not found in object storage');
+      // Direct download from object storage
+      try {
+        console.log(`[Property Images API] Downloading image data directly for: ${objectKey}`);
+        const result = await client.downloadAsBytes(objectKey);
+        
+        if (!result.ok || !result.value) {
+          console.log(`[Property Images API] Direct download failed, error: ${result.error}`);
+          return res.status(404).send('Image data not found in object storage');
+        }
+        
+        console.log(`[Property Images API] Successfully downloaded image data, size: ${result.value.length} bytes`);
+        console.log(`[Property Images API] Data type: ${typeof result.value}, isArray: ${Array.isArray(result.value)}, isBuffer: ${Buffer.isBuffer(result.value)}`);
+        
+        // DIRECT BUFFER CONVERSION
+        let imageBuffer: Buffer;
+        
+        if (Buffer.isBuffer(result.value)) {
+          imageBuffer = result.value;
+          console.log('[Property Images API] Already a Buffer');
+        } else if (Array.isArray(result.value)) {
+          // Convert using Uint8Array for array of bytes
+          const uint8Array = new Uint8Array(result.value.length);
+          for (let i = 0; i < result.value.length; i++) {
+            uint8Array[i] = result.value[i];
+          }
+          imageBuffer = Buffer.from(uint8Array);
+          console.log(`[Property Images API] Converted Array to Buffer via Uint8Array, length: ${imageBuffer.length}`);
+        } else {
+          // Fallback for other types
+          imageBuffer = Buffer.from(String(result.value));
+          console.log(`[Property Images API] Converted to Buffer via string, length: ${imageBuffer.length}`);
+        }
+        
+        // Verify buffer is valid
+        console.log(`[Property Images API] Final Buffer valid: ${Buffer.isBuffer(imageBuffer)}, length: ${imageBuffer.length}`);
+        
+        // Set appropriate MIME type
+        const ext = path.extname(objectKey).toLowerCase();
+        let contentType = 'image/jpeg'; // Default
+        
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.gif') contentType = 'image/gif';
+        else if (ext === '.webp') contentType = 'image/webp';
+        else if (ext === '.svg') contentType = 'image/svg+xml';
+        
+        // Set response headers directly
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Length', imageBuffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        
+        // Send the buffer directly
+        console.log(`[Property Images API] Serving image with content type: ${contentType}, size: ${imageBuffer.length} bytes`);
+        return res.send(imageBuffer);
+      } catch (error: any) {
+        console.error(`[Property Images API] Error downloading image: ${error.message}`);
+        return res.status(500).send(`Error downloading image: ${error.message}`);
       }
-
-      // Use the common image response handler to ensure proper Buffer conversion
-      return sendImageResponse(res, objectKey, imageData);
     } catch (error) {
       console.error('Error serving property image:', error);
       res.status(500).send('Error serving image');
     }
   });
 
-  // Serve unit images from object storage
+  // Serve unit images from object storage - direct approach
   app.get('/api/unit-images/:objectKey(*)', async (req: Request, res: Response) => {
     try {
       const objectKey = req.params.objectKey;
-      console.log(`Serving unit image with objectKey: ${objectKey}`);
+      console.log(`[Unit Images API] Serving unit image with objectKey: ${objectKey}`);
 
       // Find unit image with this objectKey
       const allUnits = await storage.getAllPropertyUnits();
@@ -1245,15 +1427,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send('Unit image not found');
       }
 
-      // Get the image data from object storage
-      const imageData = await getImageData(objectKey);
-      
-      if (!imageData) {
-        return res.status(404).send('Image data not found in object storage');
+      // Direct download from object storage
+      try {
+        console.log(`[Unit Images API] Downloading image data directly for: ${objectKey}`);
+        const result = await client.downloadAsBytes(objectKey);
+        
+        if (!result.ok || !result.value) {
+          console.log(`[Unit Images API] Direct download failed, error: ${result.error}`);
+          return res.status(404).send('Image data not found in object storage');
+        }
+        
+        console.log(`[Unit Images API] Successfully downloaded image data, size: ${result.value.length} bytes`);
+        console.log(`[Unit Images API] Data type: ${typeof result.value}, isArray: ${Array.isArray(result.value)}, isBuffer: ${Buffer.isBuffer(result.value)}`);
+        
+        // DIRECT BUFFER CONVERSION
+        let imageBuffer: Buffer;
+        
+        if (Buffer.isBuffer(result.value)) {
+          imageBuffer = result.value;
+          console.log('[Unit Images API] Already a Buffer');
+        } else if (Array.isArray(result.value)) {
+          // Convert using Uint8Array for array of bytes
+          const uint8Array = new Uint8Array(result.value.length);
+          for (let i = 0; i < result.value.length; i++) {
+            uint8Array[i] = result.value[i];
+          }
+          imageBuffer = Buffer.from(uint8Array);
+          console.log(`[Unit Images API] Converted Array to Buffer via Uint8Array, length: ${imageBuffer.length}`);
+        } else {
+          // Fallback for other types
+          imageBuffer = Buffer.from(String(result.value));
+          console.log(`[Unit Images API] Converted to Buffer via string, length: ${imageBuffer.length}`);
+        }
+        
+        // Verify buffer is valid
+        console.log(`[Unit Images API] Final Buffer valid: ${Buffer.isBuffer(imageBuffer)}, length: ${imageBuffer.length}`);
+        
+        // Set appropriate MIME type
+        const ext = path.extname(objectKey).toLowerCase();
+        let contentType = 'image/jpeg'; // Default
+        
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.gif') contentType = 'image/gif';
+        else if (ext === '.webp') contentType = 'image/webp';
+        else if (ext === '.svg') contentType = 'image/svg+xml';
+        
+        // Set response headers directly
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Length', imageBuffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        
+        // Send the buffer directly
+        console.log(`[Unit Images API] Serving image with content type: ${contentType}, size: ${imageBuffer.length} bytes`);
+        return res.send(imageBuffer);
+      } catch (error: any) {
+        console.error(`[Unit Images API] Error downloading image: ${error.message}`);
+        return res.status(500).send(`Error downloading image: ${error.message}`);
       }
-
-      // Use the common image response handler to ensure proper Buffer conversion
-      return sendImageResponse(res, objectKey, imageData);
     } catch (error) {
       console.error('Error serving unit image:', error);
       res.status(500).send('Error serving image');
@@ -1388,7 +1618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Raw bucket access endpoint for images
+  // Raw bucket access endpoint for images with direct buffer conversion
   app.get('/api/raw-images/:objectKey(*)', async (req, res) => {
     try {
       // Get the object key from the request params
@@ -1425,9 +1655,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (result.ok && result.value) {
           console.log(`[Raw Image API] Successfully retrieved image: ${objectKey}, size: ${result.value.length} bytes`);
+          console.log(`[Raw Image API] Data type: ${typeof result.value}, isArray: ${Array.isArray(result.value)}, isBuffer: ${Buffer.isBuffer(result.value)}`);
           
-          // Use the common image response handler to ensure proper Buffer conversion
-          return sendImageResponse(res, objectKey, result.value);
+          // DIRECT BUFFER CONVERSION - Using Node's Buffer.from with explicit type handling
+          let imageBuffer: Buffer;
+          
+          if (Buffer.isBuffer(result.value)) {
+            imageBuffer = result.value;
+            console.log('[Raw Image API] Already a Buffer');
+          } else if (Array.isArray(result.value)) {
+            // Convert using Uint8Array first - the cleanest way to handle an array of bytes
+            const uint8Array = new Uint8Array(result.value.length);
+            for (let i = 0; i < result.value.length; i++) {
+              uint8Array[i] = result.value[i];
+            }
+            imageBuffer = Buffer.from(uint8Array);
+            console.log(`[Raw Image API] Converted Array to Buffer via Uint8Array, length: ${imageBuffer.length}`);
+          } else {
+            // Fallback for other types
+            imageBuffer = Buffer.from(String(result.value));
+            console.log(`[Raw Image API] Converted to Buffer via string, length: ${imageBuffer.length}`);
+          }
+          
+          // Verify buffer is valid
+          console.log(`[Raw Image API] Final Buffer valid: ${Buffer.isBuffer(imageBuffer)}, length: ${imageBuffer.length}`);
+          
+          // Set appropriate MIME type
+          const ext = path.extname(objectKey).toLowerCase();
+          let contentType = 'image/jpeg'; // Default
+          
+          if (ext === '.png') contentType = 'image/png';
+          else if (ext === '.gif') contentType = 'image/gif';
+          else if (ext === '.webp') contentType = 'image/webp';
+          else if (ext === '.svg') contentType = 'image/svg+xml';
+          
+          // Set response headers
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Content-Length', imageBuffer.length);
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          
+          // Send the buffer directly
+          return res.send(imageBuffer);
         } else {
           console.log(`[Raw Image API] Failed to retrieve image: ${objectKey}, error: ${result.error}`);
           return res.status(404).send('Image not found');
