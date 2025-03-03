@@ -196,21 +196,62 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
           let data: Buffer;
           
           try {
-            // First try to directly use it if it's already a Buffer
+            console.log(`[getImageData] Data type: ${typeof result.value}, is Array: ${Array.isArray(result.value)}, is Buffer: ${Buffer.isBuffer(result.value)}`);
+            console.log(`[getImageData] Object constructor name: ${result.value?.constructor?.name || 'unknown'}`);
+            
             if (Buffer.isBuffer(result.value)) {
+              // Already a Buffer, use it directly
               data = result.value;
-              console.log(`[getImageData] Using existing Buffer`);
-            } else {
-              // Use a safer conversion method that works with many formats
-              const tempBuffer = Buffer.alloc(result.value.length);
+              console.log(`[getImageData] Using existing Buffer of length ${data.length}`);
+            } else if (Array.isArray(result.value)) {
+              // Handle array data
+              console.log(`[getImageData] Converting Array of length ${result.value.length} to Buffer`);
               
-              // Copy bytes manually to ensure we're getting the right data
-              for (let i = 0; i < result.value.length; i++) {
-                tempBuffer[i] = result.value[i];
+              // Try to use Uint8Array as an intermediate step
+              try {
+                // Create a proper Uint8Array first
+                const uint8Array = Uint8Array.from(result.value);
+                data = Buffer.from(uint8Array);
+                console.log(`[getImageData] Successfully converted Array to Buffer via Uint8Array, length: ${data.length}`);
+              } catch (arrayError) {
+                console.error(`[getImageData] Error converting Array to Uint8Array: ${arrayError}`);
+                
+                // Fallback to manual byte-by-byte copy
+                const tempBuffer = Buffer.alloc(result.value.length);
+                for (let i = 0; i < result.value.length; i++) {
+                  tempBuffer[i] = Number(result.value[i]);
+                }
+                data = tempBuffer;
+                console.log(`[getImageData] Converted Array to Buffer using manual number copy, length: ${data.length}`);
               }
+            } else if (result.value instanceof Uint8Array) {
+              // Convert Uint8Array directly to Buffer
+              data = Buffer.from(result.value);
+              console.log(`[getImageData] Converted Uint8Array to Buffer, length: ${data.length}`);
+            } else if (typeof result.value === 'string') {
+              // Handle string data, assuming it's binary
+              data = Buffer.from(result.value, 'binary');
+              console.log(`[getImageData] Converted string to Buffer, length: ${data.length}`);
+            } else {
+              // Unknown type, try using Buffer.from with object
+              console.log(`[getImageData] Attempting conversion of unknown type`);
               
-              data = tempBuffer;
-              console.log(`[getImageData] Converted data to Buffer using manual copy`);
+              // Try to create a Buffer from the object directly
+              try {
+                data = Buffer.from(result.value);
+                console.log(`[getImageData] Created Buffer from unknown type, length: ${data.length}`);
+              } catch (conversionError) {
+                console.error(`[getImageData] Error creating Buffer from unknown type: ${conversionError}`);
+                
+                // Last resort - stringify and convert
+                data = Buffer.from(JSON.stringify(result.value));
+                console.log(`[getImageData] Created Buffer from stringified object, length: ${data.length}`);
+              }
+            }
+            
+            // Validate the buffer is usable
+            if (!data || data.length === 0) {
+              console.error(`[getImageData] Warning: Created an empty buffer`);
             }
           } catch (e) {
             console.error(`[getImageData] Error during Buffer conversion: ${e}`);
@@ -219,11 +260,13 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
             try {
               // For some result types this might be the only viable method
               data = Buffer.from(String(result.value));
-              console.log(`[getImageData] Fallback to string-based conversion`);
+              console.log(`[getImageData] Fallback to string-based conversion, length: ${data.length}`);
             } catch (e2) {
               console.error(`[getImageData] All Buffer conversion methods failed: ${e2}`);
-              // Return empty buffer as we can't proceed
+              
+              // Create an empty buffer as we can't proceed
               data = Buffer.alloc(0);
+              console.error(`[getImageData] Returning empty buffer`);
             }
           }
           
@@ -263,21 +306,62 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
               let data: Buffer;
               
               try {
-                // First try to directly use it if it's already a Buffer
+                console.log(`[getImageData] Data type for similar key: ${typeof result.value}, is Array: ${Array.isArray(result.value)}, is Buffer: ${Buffer.isBuffer(result.value)}`);
+                console.log(`[getImageData] Object constructor name for similar key: ${result.value?.constructor?.name || 'unknown'}`);
+                
                 if (Buffer.isBuffer(result.value)) {
+                  // Already a Buffer, use it directly
                   data = result.value;
-                  console.log(`[getImageData] Using existing Buffer for similar key`);
-                } else {
-                  // Use a safer conversion method that works with many formats
-                  const tempBuffer = Buffer.alloc(result.value.length);
+                  console.log(`[getImageData] Using existing Buffer of length ${data.length} for similar key`);
+                } else if (Array.isArray(result.value)) {
+                  // Handle array data
+                  console.log(`[getImageData] Converting Array of length ${result.value.length} to Buffer for similar key`);
                   
-                  // Copy bytes manually to ensure we're getting the right data
-                  for (let i = 0; i < result.value.length; i++) {
-                    tempBuffer[i] = result.value[i];
+                  // Try to use Uint8Array as an intermediate step
+                  try {
+                    // Create a proper Uint8Array first
+                    const uint8Array = Uint8Array.from(result.value);
+                    data = Buffer.from(uint8Array);
+                    console.log(`[getImageData] Successfully converted Array to Buffer via Uint8Array, length: ${data.length} for similar key`);
+                  } catch (arrayError) {
+                    console.error(`[getImageData] Error converting Array to Uint8Array for similar key: ${arrayError}`);
+                    
+                    // Fallback to manual byte-by-byte copy
+                    const tempBuffer = Buffer.alloc(result.value.length);
+                    for (let i = 0; i < result.value.length; i++) {
+                      tempBuffer[i] = Number(result.value[i]);
+                    }
+                    data = tempBuffer;
+                    console.log(`[getImageData] Converted Array to Buffer using manual number copy, length: ${data.length} for similar key`);
                   }
+                } else if (result.value instanceof Uint8Array) {
+                  // Convert Uint8Array directly to Buffer
+                  data = Buffer.from(result.value);
+                  console.log(`[getImageData] Converted Uint8Array to Buffer, length: ${data.length} for similar key`);
+                } else if (typeof result.value === 'string') {
+                  // Handle string data, assuming it's binary
+                  data = Buffer.from(result.value, 'binary');
+                  console.log(`[getImageData] Converted string to Buffer, length: ${data.length} for similar key`);
+                } else {
+                  // Unknown type, try using Buffer.from with object
+                  console.log(`[getImageData] Attempting conversion of unknown type for similar key`);
                   
-                  data = tempBuffer;
-                  console.log(`[getImageData] Converted similar key data to Buffer using manual copy`);
+                  // Try to create a Buffer from the object directly
+                  try {
+                    data = Buffer.from(result.value);
+                    console.log(`[getImageData] Created Buffer from unknown type, length: ${data.length} for similar key`);
+                  } catch (conversionError) {
+                    console.error(`[getImageData] Error creating Buffer from unknown type for similar key: ${conversionError}`);
+                    
+                    // Last resort - stringify and convert
+                    data = Buffer.from(JSON.stringify(result.value));
+                    console.log(`[getImageData] Created Buffer from stringified object, length: ${data.length} for similar key`);
+                  }
+                }
+                
+                // Validate the buffer is usable
+                if (!data || data.length === 0) {
+                  console.error(`[getImageData] Warning: Created an empty buffer for similar key`);
                 }
               } catch (e) {
                 console.error(`[getImageData] Error during Buffer conversion for similar key: ${e}`);
@@ -286,11 +370,13 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
                 try {
                   // For some result types this might be the only viable method
                   data = Buffer.from(String(result.value));
-                  console.log(`[getImageData] Fallback to string-based conversion for similar key`);
+                  console.log(`[getImageData] Fallback to string-based conversion, length: ${data.length} for similar key`);
                 } catch (e2) {
                   console.error(`[getImageData] All Buffer conversion methods failed for similar key: ${e2}`);
-                  // Return empty buffer as we can't proceed
+                  
+                  // Create an empty buffer as we can't proceed
                   data = Buffer.alloc(0);
+                  console.error(`[getImageData] Returning empty buffer for similar key`);
                 }
               }
               

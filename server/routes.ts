@@ -931,7 +931,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let objectKey = req.params.objectKey;
       
       // Log the raw object key for debugging
-      console.log(`[Image API] Raw object key from request: ${objectKey}`);
+      console.log(`[Image API] Requested image with key: "${objectKey}"`);
+      console.log(`[Image API] Request URL: ${req.url}`);
       
       // Try to decode the object key if it's encoded
       try {
@@ -1251,19 +1252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send('Image data not found in object storage');
       }
 
-      // Determine content type based on file extension or default to JPEG
-      let mimeType = 'image/jpeg';
-      if (objectKey.toLowerCase().endsWith('.png')) {
-        mimeType = 'image/png';
-      } else if (objectKey.toLowerCase().endsWith('.gif')) {
-        mimeType = 'image/gif';
-      } else if (objectKey.toLowerCase().endsWith('.webp')) {
-        mimeType = 'image/webp';
-      }
-
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-      return res.send(imageData);
+      // Use the common image response handler to ensure proper Buffer conversion
+      return sendImageResponse(res, objectKey, imageData);
     } catch (error) {
       console.error('Error serving unit image:', error);
       res.status(500).send('Error serving image');
@@ -1436,21 +1426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (result.ok && result.value) {
           console.log(`[Raw Image API] Successfully retrieved image: ${objectKey}, size: ${result.value.length} bytes`);
           
-          // Determine content type based on file extension
-          const ext = path.extname(objectKey).toLowerCase();
-          let contentType = 'image/jpeg'; // Default
-          
-          if (ext === '.png') contentType = 'image/png';
-          else if (ext === '.gif') contentType = 'image/gif';
-          else if (ext === '.webp') contentType = 'image/webp';
-          else if (ext === '.svg') contentType = 'image/svg+xml';
-          
-          // Set headers
-          res.setHeader('Content-Type', contentType);
-          res.setHeader('Content-Length', result.value.length);
-          
-          // Send the image data directly
-          return res.send(result.value);
+          // Use the common image response handler to ensure proper Buffer conversion
+          return sendImageResponse(res, objectKey, result.value);
         } else {
           console.log(`[Raw Image API] Failed to retrieve image: ${objectKey}, error: ${result.error}`);
           return res.status(404).send('Image not found');
