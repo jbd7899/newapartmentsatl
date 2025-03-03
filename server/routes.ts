@@ -1045,34 +1045,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Helper function to send image response with proper headers
-  function sendImageResponse(res: Response, objectKey: string, imageData: Buffer) {
-    // Determine content type based on file extension
-    const ext = path.extname(objectKey).toLowerCase();
-    let contentType = 'image/jpeg'; // Default
+  function sendImageResponse(res: Response, objectKey: string, imageData: any) {
+    try {
+      // Ensure imageData is a proper Buffer
+      let processedData: Buffer;
+      
+      if (Buffer.isBuffer(imageData)) {
+        // Already a Buffer, use it directly
+        processedData = imageData;
+        console.log(`[sendImageResponse] Using existing Buffer for image data`);
+      } else if (Array.isArray(imageData)) {
+        // Handle array data by converting to Buffer
+        console.log(`[sendImageResponse] Converting array data to Buffer, length: ${imageData.length}`);
+        
+        // Manual copy to a new Buffer to ensure proper conversion
+        const tempBuffer = Buffer.alloc(imageData.length);
+        for (let i = 0; i < imageData.length; i++) {
+          tempBuffer[i] = imageData[i];
+        }
+        processedData = tempBuffer;
+        console.log(`[sendImageResponse] Converted array to Buffer using manual copy`);
+      } else if (typeof imageData === 'string') {
+        // Handle string data
+        processedData = Buffer.from(imageData);
+        console.log(`[sendImageResponse] Converted string to Buffer`);
+      } else {
+        // Try to convert to a string first as a fallback
+        console.log(`[sendImageResponse] Unknown data type, using String conversion fallback`);
+        processedData = Buffer.from(String(imageData));
+      }
 
-    if (ext === '.png') contentType = 'image/png';
-    else if (ext === '.gif') contentType = 'image/gif';
-    else if (ext === '.webp') contentType = 'image/webp';
-    else if (ext === '.svg') contentType = 'image/svg+xml';
+      // Determine content type based on file extension
+      const ext = path.extname(objectKey).toLowerCase();
+      let contentType = 'image/jpeg'; // Default
 
-    // Log detailed information about the image data
-    console.log(`[sendImageResponse] Sending image response for: ${objectKey}`);
-    console.log(`[sendImageResponse] Content type: ${contentType}`);
-    console.log(`[sendImageResponse] Image data size: ${imageData.length} bytes`);
-    console.log(`[sendImageResponse] Image data buffer valid: ${Buffer.isBuffer(imageData)}`);
-    
-    if (imageData.length < 100) {
-      // If the image data is suspiciously small, log the actual data
-      console.log(`[sendImageResponse] WARNING: Image data is very small (${imageData.length} bytes)`);
-      console.log(`[sendImageResponse] Image data (hex): ${imageData.toString('hex')}`);
+      if (ext === '.png') contentType = 'image/png';
+      else if (ext === '.gif') contentType = 'image/gif';
+      else if (ext === '.webp') contentType = 'image/webp';
+      else if (ext === '.svg') contentType = 'image/svg+xml';
+
+      // Log detailed information about the image data
+      console.log(`[sendImageResponse] Sending image response for: ${objectKey}`);
+      console.log(`[sendImageResponse] Content type: ${contentType}`);
+      console.log(`[sendImageResponse] Image data size: ${processedData.length} bytes`);
+      console.log(`[sendImageResponse] Image data buffer valid: ${Buffer.isBuffer(processedData)}`);
+      
+      if (processedData.length < 100) {
+        // If the image data is suspiciously small, log the actual data
+        console.log(`[sendImageResponse] WARNING: Image data is very small (${processedData.length} bytes)`);
+        console.log(`[sendImageResponse] Image data (hex): ${processedData.toString('hex')}`);
+      }
+
+      // Set cache headers (cache for 1 day)
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', processedData.length);
+
+      return res.send(processedData);
+    } catch (error) {
+      console.error(`[Image API] Server error:`, error);
+      return res.status(500).send('Error processing image data');
     }
-
-    // Set cache headers (cache for 1 day)
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Length', imageData.length);
-
-    return res.send(imageData);
   }
 
   // Delete an image from object storage
@@ -1180,19 +1213,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send('Image data not found in object storage');
       }
 
-      // Determine content type based on file extension or default to JPEG
-      let mimeType = 'image/jpeg';
-      if (objectKey.toLowerCase().endsWith('.png')) {
-        mimeType = 'image/png';
-      } else if (objectKey.toLowerCase().endsWith('.gif')) {
-        mimeType = 'image/gif';
-      } else if (objectKey.toLowerCase().endsWith('.webp')) {
-        mimeType = 'image/webp';
-      }
-
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-      return res.send(imageData);
+      // Use the common image response handler to ensure proper Buffer conversion
+      return sendImageResponse(res, objectKey, imageData);
     } catch (error) {
       console.error('Error serving property image:', error);
       res.status(500).send('Error serving image');
