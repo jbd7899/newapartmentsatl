@@ -259,29 +259,39 @@ export async function getImageData(objectKey: string): Promise<Buffer | null> {
             if (result.ok && result.value) {
               console.log(`[getImageData] Successfully retrieved image data using similar key: ${similarKey}, size: ${result.value.length} bytes`);
               
-              // Convert the retrieved data to a proper Buffer
+              // Handle buffer conversion with a more reliable approach
               let data: Buffer;
               
-              // Simplify the handling - use Buffer.from with a string if needed
               try {
+                // First try to directly use it if it's already a Buffer
                 if (Buffer.isBuffer(result.value)) {
-                  // Already a Buffer, use it directly
                   data = result.value;
-                } else if (Array.isArray(result.value)) {
-                  // For array data, JSON stringify and parse to get a proper array
-                  const bytes = JSON.parse(JSON.stringify(result.value));
-                  data = Buffer.from(bytes);
-                } else if (typeof result.value === 'string') {
-                  // String data can be directly converted
-                  data = Buffer.from(result.value);
+                  console.log(`[getImageData] Using existing Buffer for similar key`);
                 } else {
-                  // Try generic buffer conversion
-                  data = Buffer.from(String(result.value));
+                  // Use a safer conversion method that works with many formats
+                  const tempBuffer = Buffer.alloc(result.value.length);
+                  
+                  // Copy bytes manually to ensure we're getting the right data
+                  for (let i = 0; i < result.value.length; i++) {
+                    tempBuffer[i] = result.value[i];
+                  }
+                  
+                  data = tempBuffer;
+                  console.log(`[getImageData] Converted similar key data to Buffer using manual copy`);
                 }
               } catch (e) {
-                console.error(`[getImageData] Error converting to Buffer: ${e}`);
-                // As a last resort, convert to string
-                data = Buffer.from(String(result.value));
+                console.error(`[getImageData] Error during Buffer conversion for similar key: ${e}`);
+                
+                // Last resort - try again with a different approach
+                try {
+                  // For some result types this might be the only viable method
+                  data = Buffer.from(String(result.value));
+                  console.log(`[getImageData] Fallback to string-based conversion for similar key`);
+                } catch (e2) {
+                  console.error(`[getImageData] All Buffer conversion methods failed for similar key: ${e2}`);
+                  // Return empty buffer as we can't proceed
+                  data = Buffer.alloc(0);
+                }
               }
               
               console.log(`[getImageData] Converted similar key data to proper Buffer, is Buffer: ${Buffer.isBuffer(data)}, size: ${data.length} bytes`);
