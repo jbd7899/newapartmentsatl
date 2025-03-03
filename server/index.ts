@@ -13,7 +13,8 @@ import { PgStorage } from "./pg-storage";
 import { storage } from "./storage";
 import cors from 'cors';
 import path from 'path';
-import { getImageData } from './storage-utils'; // Import the object storage utilities
+import { getImageData, client } from './object-storage'; // Import the object storage utilities and client
+import multer from 'multer';
 
 // Create Express app
 const app = express();
@@ -204,72 +205,195 @@ app.get('/api/property-images/:propertyId', async (req, res) => {
   }
 });
 
-// Property Units
-app.get('/api/property-units/:propertyId', async (req, res) => {
+// Simple image serving endpoint using Replit Object Storage
+app.get('/api/images/:key(*)', async (req, res) => {
+  // Get the key parameter from the URL
+  const key = req.params.key;
+  
+  console.log(`[Image API] Requested image with key: "${key}"`);
+  
   try {
-    const propertyId = parseInt(req.params.propertyId);
-    const units = await pgStorage.getPropertyUnits(propertyId);
-    res.json(units);
-  } catch (error) {
-    console.error('Error fetching property units:', error);
-    res.status(500).json({ error: 'Failed to fetch property units' });
-  }
-});
-
-app.get('/api/property-units/unit/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const unit = await pgStorage.getPropertyUnit(id);
-    if (!unit) {
-      return res.status(404).json({ error: 'Property unit not found' });
-    }
-    res.json(unit);
-  } catch (error) {
-    console.error('Error fetching property unit:', error);
-    res.status(500).json({ error: 'Failed to fetch property unit' });
-  }
-});
-
-// Unit Images
-app.get('/api/unit-images/:unitId', async (req, res) => {
-  try {
-    const unitId = parseInt(req.params.unitId);
-    const images = await pgStorage.getUnitImages(unitId);
-    res.json(images);
-  } catch (error) {
-    console.error('Error fetching unit images:', error);
-    res.status(500).json({ error: 'Failed to fetch unit images' });
-  }
-});
-
-// Image API endpoint to serve images from object storage
-app.get('/api/images/:objectKey', async (req, res) => {
-  try {
-    const objectKey = decodeURIComponent(req.params.objectKey);
+    // Use the Replit client directly to download the image as bytes
+    const { ok, value, error } = await client.downloadAsBytes(key);
     
-    // Get image data from object storage
-    const imageData = await getImageData(objectKey);
-    
-    if (!imageData) {
-      return res.status(404).json({ error: 'Image not found' });
+    // If download failed
+    if (!ok || !value) {
+      console.error(`[Image API] Failed to get image: ${error}`);
+      return res.status(404).send('Image not found');
     }
     
     // Determine content type based on file extension
-    const ext = path.extname(objectKey).toLowerCase();
-    let contentType = 'image/jpeg'; // Default
+    const ext = path.extname(key).toLowerCase();
+    let contentType = 'application/octet-stream'; // Default for binary data
     
-    if (ext === '.png') contentType = 'image/png';
+    if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+    else if (ext === '.png') contentType = 'image/png';
     else if (ext === '.gif') contentType = 'image/gif';
     else if (ext === '.webp') contentType = 'image/webp';
+    else if (ext === '.svg') contentType = 'image/svg+xml';
     
-    // Set content type and send image data
+    console.log(`[Image API] Serving image with content type: ${contentType}, size: ${value.length} bytes`);
+    
+    // Set basic headers
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    res.send(imageData);
+    res.setHeader('Content-Length', value.length);
+    
+    // Send the raw binary data directly
+    res.end(value);
   } catch (error) {
-    console.error('Error serving image:', error);
-    res.status(500).json({ error: 'Failed to serve image' });
+    console.error(`[Image API] Server error: ${error}`);
+    res.status(500).send('Server error');
   }
+});
+
+// Debug endpoint for testing image loading
+app.get('/api/debug/image-test', async (req, res) => {
+  const key = req.query.key as string;
+  
+  if (!key) {
+    return res.status(400).json({
+      error: "Missing key parameter",
+      message: "Please provide an image key to test"
+    });
+  }
+  
+  console.log(`[DEBUG] Testing direct image loading for: "${key}"`);
+  
+  try {
+    // Attempt to list all objects first to check what's available
+    const listResult = await client.list();
+    const availableObjects = listResult.ok && listResult.value ? 
+      listResult.value.map(obj => obj.name || String(obj)) : [];
+    
+    console.log(`[DEBUG] Available objects (${availableObjects.length}):`);
+    console.log(availableObjects.slice(0, 10)); // Show first 10 for brevity
+    
+    // Try to download the requested key
+    console.log(`[DEBUG] Attempting to download: "${key}"`);
+    const result = await client.downloadAsBytes(key);
+    
+    // Return detailed information about the result
+    return res.json({
+      requestedKey: key,
+      success: result.ok,
+      error: result.error ? String(result.error) : null,
+      dataSize: result.value ? result.value.length : 0,
+      availableObjectCount: availableObjects.length,
+      sampleObjects: availableObjects.slice(0, 5),
+      keyExists: availableObjects.includes(key),
+      similarKeys: availableObjects.filter(obj => 
+        obj.includes(key) || key.includes(obj)
+      ).slice(0, 5)
+    });
+  } catch (error) {
+    console.error(`[DEBUG] Error in debug endpoint:`, error);
+    return res.status(500).json({
+      error: String(error),
+      message: "An error occurred during testing"
+    });
+  }
+});
+
+// Import multer for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Test upload endpoint
+app.post('/api/debug/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'No file uploaded'
+    });
+  }
+  
+  try {
+    const filename = req.file.originalname;
+    const buffer = req.file.buffer;
+    
+    console.log(`[DEBUG] Uploading test file: ${filename}, size: ${buffer.length} bytes`);
+    
+    // Get a clean filename
+    const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
+    // Upload file with direct key (no folder structure)
+    const { ok, error } = await client.uploadFromBytes(cleanFilename, buffer);
+    
+    if (!ok) {
+      console.error(`[DEBUG] Upload failed:`, error);
+      return res.status(500).json({
+        success: false,
+        message: `Upload failed: ${error}`
+      });
+    }
+    
+    console.log(`[DEBUG] Upload successful: ${cleanFilename}`);
+    
+    // Return the uploaded file information
+    return res.json({
+      success: true,
+      filename: cleanFilename,
+      size: buffer.length,
+      url: `/api/images/${cleanFilename}`
+    });
+  } catch (error) {
+    console.error(`[DEBUG] Upload error:`, error);
+    return res.status(500).json({
+      success: false,
+      message: String(error)
+    });
+  }
+});
+
+// Simple HTML test page for direct image viewing
+app.get('/test-image', (req, res) => {
+  const imageName = req.query.image || 'Test.png';
+  
+  // Create a simple HTML page with the image
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Image Test Page</title>
+    <style>
+      body { font-family: sans-serif; padding: 20px; }
+      .image-container { margin: 20px 0; border: 1px solid #ccc; padding: 10px; }
+      .error { color: red; }
+      pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Image Test Page</h1>
+    <p>Testing direct image loading from Object Storage</p>
+    
+    <h2>Test Image</h2>
+    <div class="image-container">
+      <p>Image URL: <code>/api/images/${imageName}</code></p>
+      <img 
+        src="/api/images/${imageName}" 
+        alt="Test Image" 
+        style="max-width: 100%;"
+        onerror="document.getElementById('error').style.display='block'"
+      />
+      <div id="error" class="error" style="display:none; margin-top: 10px;">
+        Error: Image failed to load
+      </div>
+    </div>
+    
+    <h2>Try Another Image</h2>
+    <form>
+      <label for="image">Image name or path:</label>
+      <input type="text" id="image" name="image" value="${imageName}" style="width: 300px; padding: 5px;">
+      <button type="submit">Test Image</button>
+    </form>
+    
+    <h2>Raw Image Response</h2>
+    <p>Open this URL directly to see raw response:</p>
+    <pre><a href="/api/images/${imageName}" target="_blank">/api/images/${imageName}</a></pre>
+  </body>
+  </html>
+  `;
+  
+  res.send(html);
 });
 
 (async () => {

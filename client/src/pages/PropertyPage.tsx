@@ -63,7 +63,16 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
   // Fetch property units if this is a multifamily property
   const { data: propertyUnits = [], isLoading: unitsLoading } = useQuery({
     queryKey: ['/api/properties', parseInt(id), 'units'],
-    queryFn: () => getPropertyUnits(parseInt(id)),
+    queryFn: () => {
+      console.log('Fetching property units for property ID:', parseInt(id));
+      return getPropertyUnits(parseInt(id)).then(units => {
+        console.log('Fetched property units:', units);
+        return units;
+      }).catch(error => {
+        console.error('Error fetching property units:', error);
+        return [];
+      });
+    },
     enabled: !!property && !!property.isMultifamily
   });
   
@@ -99,12 +108,12 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
   const galleryImages: GalleryImage[] = propertyImages
     .sort((a: PropertyImage, b: PropertyImage) => a.displayOrder - b.displayOrder)
     .map((image: PropertyImage) => ({
-      url: image.url,
+      url: image.url || '',
       alt: image.alt || property?.name || 'Property image'
     }));
   
   // Use sample images as fallback if no images are found
-  const sampleImages = [
+  const sampleImages: GalleryImage[] = [
     { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907976/6463_Trammel_Dr_1_vdvnqs.jpg', alt: 'Living Room' },
     { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_10_usc1cr.jpg', alt: 'Kitchen' },
     { url: 'https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907981/6463_Trammel_Dr_11_ticwqa.jpg', alt: 'Bathroom' },
@@ -298,10 +307,10 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-2"
                     onClick={() => scrollToSection('units')}
                   >
-                    View Available Units
+                    View All Units
                   </Button>
                 </div>
-              ) : property.rent ? (
+              ) : property.rent && property.rent > 0 ? (
                 <div className="mb-4">
                   <div className="text-3xl font-bold text-orange-500 mb-1">${property.rent}</div>
                   <div className="text-gray-500 mb-3">per month</div>
@@ -378,14 +387,16 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         </div>
       </div>
       
-      {/* Display available units if this is a multifamily property */}
+      {/* Display all units if this is a multifamily property */}
       {property.isMultifamily && (
         <div ref={unitsRef} className="bg-gray-50 py-16">
           <div className="container mx-auto px-4">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Available Units</h2>
+              <h2 className="text-2xl font-bold mb-4 pb-2 border-b border-gray-200">All Units</h2>
               <p className="text-gray-700 mb-6">
-                {propertyUnits.filter(unit => unit.available).length} unit{propertyUnits.filter(unit => unit.available).length !== 1 ? 's' : ''} available at {property.name}
+                {propertyUnits.length} unit{propertyUnits.length !== 1 ? 's' : ''} at {property.name}
+                {propertyUnits.filter(unit => unit.available).length > 0 && 
+                  ` (${propertyUnits.filter(unit => unit.available).length} available)`}
               </p>
             </div>
             
@@ -453,7 +464,7 @@ const PropertyPage = ({ id }: PropertyPageProps) => {
         <UnitGallery
           images={
             unitImagesMap[selectedUnitId]?.map(img => ({
-              url: img.url,
+              url: img.url || '',
               alt: img.alt || `Unit Image`
             })) || sampleImages
           }

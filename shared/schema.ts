@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, varchar, timestamp, decimal } from "drizzle-orm/pg-core";
+import { numeric } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -146,13 +147,14 @@ export const propertyUnits = pgTable("property_units", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertPropertyUnitSchema = createInsertSchema(propertyUnits).omit({
+export const insertPropertyUnitSchema = createInsertSchema(propertyUnits)
+.omit({
   id: true,
   createdAt: true
+})
+.extend({
+  bathrooms: z.coerce.number() // This will coerce strings to numbers
 });
-
-export type PropertyUnit = typeof propertyUnits.$inferSelect;
-export type InsertPropertyUnit = z.infer<typeof insertPropertyUnitSchema>;
 
 // Unit Images table - using both URLs and object storage
 export const unitImages = pgTable("unit_images", {

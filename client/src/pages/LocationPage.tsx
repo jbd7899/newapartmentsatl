@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Property } from "@shared/schema";
 import { MapIcon, Building, Bike, ParkingCircle, Utensils, Library } from "lucide-react";
 import NeighborhoodSection from "@/components/NeighborhoodSection";
+import { formatCurrency } from "@/lib/utils";
 
 interface LocationPageProps {
   location: string;
@@ -271,7 +272,11 @@ const LocationPage = ({ location }: LocationPageProps) => {
                       {property.isMultifamily ? (
                         <div className="text-lg text-slate-700">See unit details</div>
                       ) : property.rent ? (
-                        <div className="text-xl font-semibold">${property.rent}/month</div>
+                        property.rent > 0 ? (
+                          <div className="text-xl font-semibold">${property.rent}/month</div>
+                        ) : (
+                          <div className="text-lg text-slate-700">Contact for Pricing</div>
+                        )
                       ) : (
                         <div className="text-lg text-slate-700">Contact for Pricing</div>
                       )}

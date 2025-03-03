@@ -533,8 +533,8 @@ export class MemStorage implements IStorage {
         imageUrl: "https://i.imgur.com/9L78Ghe.png",
         features: "Historic details, updated kitchen, period moldings, high ceilings",
         propertyType: "apartment",
-        isMultifamily: false,
-        unitCount: null
+        isMultifamily: true,
+        unitCount: 4
       },
       {
         id: 3,
@@ -1101,6 +1101,59 @@ export class MemStorage implements IStorage {
         available: true,
         description: "Luxury 2 bedroom, 2 bath unit with premium finishes and spacious living area.",
         features: "Waterfall quartz countertops, stainless appliances, smart home features, walk-in shower, soaking tub",
+        createdAt: new Date()
+      },
+      // Add units for property ID 2
+      {
+        id: 4,
+        propertyId: 2,
+        unitNumber: "101",
+        bedrooms: 1,
+        bathrooms: 1,
+        sqft: 650,
+        rent: 1200,
+        available: true,
+        description: "Cozy one-bedroom apartment with modern finishes and great natural light.",
+        features: "Stainless steel appliances, Hardwood floors, In-unit laundry, Central AC",
+        createdAt: new Date()
+      },
+      {
+        id: 5,
+        propertyId: 2,
+        unitNumber: "102",
+        bedrooms: 2,
+        bathrooms: 1.5,
+        sqft: 850,
+        rent: 1500,
+        available: true,
+        description: "Spacious two-bedroom apartment with an open floor plan and updated kitchen.",
+        features: "Granite countertops, Walk-in closets, Balcony, Pet-friendly",
+        createdAt: new Date()
+      },
+      {
+        id: 6,
+        propertyId: 2,
+        unitNumber: "201",
+        bedrooms: 2,
+        bathrooms: 2,
+        sqft: 950,
+        rent: 1700,
+        available: true,
+        description: "Luxury two-bedroom apartment with two full bathrooms and a large living area.",
+        features: "Quartz countertops, Stainless steel appliances, In-unit laundry, Smart home features",
+        createdAt: new Date()
+      },
+      {
+        id: 7,
+        propertyId: 2,
+        unitNumber: "202",
+        bedrooms: 3,
+        bathrooms: 2,
+        sqft: 1200,
+        rent: 2100,
+        available: false,
+        description: "Premium three-bedroom corner unit with abundant natural light and city views.",
+        features: "Floor-to-ceiling windows, Hardwood floors, Walk-in closets, Balcony, In-unit laundry",
         createdAt: new Date()
       }
     ];

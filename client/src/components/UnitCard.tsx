@@ -12,7 +12,8 @@ import {
   DollarSign,
   Check, 
   X, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Bell
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
@@ -41,10 +42,12 @@ export default function UnitCard({
   const placeholderImage = "https://res.cloudinary.com/dlbgrsaal/image/upload/v1736907976/6463_Trammel_Dr_1_vdvnqs.jpg";
   
   // Get the appropriate image URL
-  const rawImageUrl = featuredImage ? featuredImage.url : placeholderImage;
+  const imageUrl = featuredImage && featuredImage.url 
+    ? getOptimizedCardImage(featuredImage.url) 
+    : getOptimizedCardImage(placeholderImage);
   
   // Optimize Cloudinary URLs for cards
-  const getOptimizedCardImage = (url: string): string => {
+  function getOptimizedCardImage(url: string): string {
     if (url && url.includes('cloudinary.com')) {
       const parts = url.split('/upload/');
       if (parts.length === 2) {
@@ -53,19 +56,20 @@ export default function UnitCard({
       }
     }
     return getImageUrl(url);
-  };
-  
-  const imageUrl = getOptimizedCardImage(rawImageUrl);
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden h-full flex flex-col transition-transform hover:-translate-y-1 hover:shadow-lg">
+    <div className={`bg-white rounded-lg shadow-sm overflow-hidden h-full flex flex-col transition-transform hover:-translate-y-1 hover:shadow-lg ${!unit.available ? 'opacity-90' : ''}`}>
       <div className="relative cursor-pointer" onClick={() => onShowGallery && onShowGallery(unit.id)}>
         <img 
           src={imageUrl} 
           alt={`Unit ${unit.unitNumber}`}
-          className="w-full h-48 object-cover transition-transform hover:scale-105 duration-500"
+          className={`w-full h-48 object-cover transition-transform hover:scale-105 duration-500 ${!unit.available ? 'filter grayscale-[30%]' : ''}`}
         />
-        <div className={`absolute top-3 right-3 px-2 py-1 rounded text-xs font-semibold uppercase ${unit.available ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+        {!unit.available && (
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-20"></div>
+        )}
+        <div className={`absolute top-3 right-3 px-2 py-1 rounded text-xs font-semibold uppercase ${unit.available ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
           {unit.available ? 'Available' : 'Unavailable'}
         </div>
         {unitImages.length > 0 && (
@@ -78,10 +82,14 @@ export default function UnitCard({
       <div className="p-6 flex-grow flex flex-col">
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-xl font-bold">Unit {unit.unitNumber}</h3>
-          {unit.rent && (
+          {typeof unit.rent === 'number' && unit.rent > 0 ? (
             <div className="text-xl font-bold text-orange-500">
               ${formatCurrency(unit.rent)}
               <span className="text-sm text-gray-500 font-normal">/mo</span>
+            </div>
+          ) : (
+            <div className="text-xl font-bold text-orange-500">
+              Contact for pricing
             </div>
           )}
         </div>
@@ -93,7 +101,7 @@ export default function UnitCard({
           </div>
           <div className="flex items-center text-gray-700">
             <Bath className="h-4 w-4 mr-1 text-orange-500" />
-            <span>{unit.bathrooms} {unit.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
+            <span>{unit.bathrooms} {Number(unit.bathrooms) === 1 ? 'Bath' : 'Baths'}</span>
           </div>
           <div className="flex items-center text-gray-700">
             <Home className="h-4 w-4 mr-1 text-orange-500" />
@@ -111,6 +119,16 @@ export default function UnitCard({
               size="sm"
             >
               <Calendar className="h-4 w-4 mr-2" /> Schedule Tour
+            </Button>
+          )}
+          
+          {!unit.available && onRequestInfo && (
+            <Button 
+              onClick={() => onRequestInfo(unit.id)}
+              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
+              size="sm"
+            >
+              <Bell className="h-4 w-4 mr-2" /> Notify When Available
             </Button>
           )}
           

@@ -153,6 +153,15 @@ export class PgStorage implements IStorage {
   }
 
   async deletePropertyUnit(id: number): Promise<boolean> {
+    // First, delete all associated unit images
+    const unitImagesToDelete = await db.select().from(schema.unitImages)
+      .where(eq(schema.unitImages.unitId, id));
+    
+    for (const image of unitImagesToDelete) {
+      await this.deleteUnitImage(image.id);
+    }
+    
+    // Then delete the property unit
     const results = await db.delete(schema.propertyUnits).where(eq(schema.propertyUnits.id, id)).returning();
     return results.length > 0;
   }

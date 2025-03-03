@@ -64,6 +64,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -88,6 +89,7 @@ import {
 // Define the form validation schema extending the insert schema
 const formSchema = insertPropertyUnitSchema.extend({
   propertyId: z.number().min(1, "Please select a property"),
+  bathrooms: z.string().min(1, "Bathrooms is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -369,7 +371,7 @@ const AdminPropertyUnitsPage = () => {
         propertyId: selectedProperty || 0,
         unitNumber: "",
         bedrooms: 1,
-        bathrooms: 1,
+        bathrooms: "1.0",
         sqft: 750,
         rent: 1500,
         available: true,
@@ -477,7 +479,10 @@ const AdminPropertyUnitsPage = () => {
                   <FormLabel>Bathrooms</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} 
-                      onChange={e => field.onChange(parseInt(e.target.value) || 0)} 
+                      // This conversion ensures the value is properly handled
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      value={field.value}
+                      step="0.5"
                     />
                   </FormControl>
                   <FormMessage />
@@ -509,10 +514,18 @@ const AdminPropertyUnitsPage = () => {
               <FormItem>
                 <FormLabel>Monthly Rent ($)</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} 
-                    onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                  <Input type="number" 
+                    value={field.value === null ? '' : field.value}
+                    onChange={e => {
+                      const value = e.target.value === '' ? null : parseInt(e.target.value);
+                      field.onChange(value);
+                    }}
+                    min="0"
                   />
                 </FormControl>
+                <FormDescription>
+                  Set to $0 to display "Contact for pricing" on the website
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

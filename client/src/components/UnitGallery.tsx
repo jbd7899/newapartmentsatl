@@ -132,10 +132,10 @@ const UnitGallery: React.FC<UnitGalleryProps> = ({
                     key={`${rowIndex}-${imgIndex}`} 
                     className={`gallery-item flex-${flexValue} mb-4 md:mb-0 w-full md:w-auto overflow-hidden rounded-lg cursor-pointer transition-transform hover:scale-[1.02]`}
                     style={{ flex: flexValue }}
-                    onClick={() => setModalImage(image.objectKey || image.url)}
+                    onClick={() => setModalImage(image.url)}
                   >
                     <img 
-                      src={getOptimizedImageUrl(image.objectKey || image.url, flexValue === 1 ? 400 : 800)} 
+                      src={getOptimizedImageUrl(image.url, flexValue === 1 ? 400 : 800)} 
                       alt={image.alt} 
                       className="w-full h-full object-cover transition-transform hover:scale-[1.05]"
                       loading="lazy"

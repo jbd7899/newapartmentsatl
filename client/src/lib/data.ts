@@ -175,11 +175,17 @@ export async function updateNeighborhood(slug: string, data: any): Promise<Neigh
 
 // Property Units functions
 export async function getPropertyUnits(propertyId: number): Promise<PropertyUnit[]> {
+  console.log(`Making API request to: /api/properties/${propertyId}/units`);
   const response = await fetch(`/api/properties/${propertyId}/units`);
+  console.log('API response status:', response.status);
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('API error response:', errorText);
     throw new Error(`Failed to fetch units for property: ${propertyId}`);
   }
-  return response.json();
+  const data = await response.json();
+  console.log('API response data:', data);
+  return data;
 }
 
 export async function getPropertyUnit(id: number): Promise<PropertyUnit> {
@@ -268,18 +274,41 @@ export async function listStorageImages(): Promise<{
     total: number;
   };
 }> {
-  console.log("Fetching images from all storage systems...");
-  const response = await fetch('/api/images');
-  if (!response.ok) {
-    console.error("Failed to fetch images:", response.status, response.statusText);
-    throw new Error('Failed to fetch images from storage');
+  // Updated: Minimal implementation with detailed logging
+  console.log("Fetching images from storage...");
+  
+  try {
+    const response = await fetch('/api/images');
+    
+    if (!response.ok) {
+      console.error("API Error:", response.status, response.statusText);
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Get the JSON response
+    const data = await response.json();
+    
+    // Log the raw API response for debugging
+    console.log("===== API RESPONSE =====");
+    console.log("Status:", response.status);
+    console.log("Raw data:", data);
+    
+    // If there are images, log some sample keys
+    if (data.images && data.images.length > 0) {
+      console.log("Sample image keys:");
+      data.images.slice(0, 5).forEach((img: any, i: number) => {
+        console.log(`${i+1}. "${img.key}" (${img.source})`);
+      });
+    }
+    
+    return {
+      images: data.images || [],
+      counts: data.counts || { database: 0, objectStorage: 0, total: 0 }
+    };
+  } catch (error) {
+    console.error("Error fetching images:", error);
+    throw error;
   }
-  const data = await response.json();
-  console.log("Received storage images data:", data);
-  return {
-    images: data.images || [],
-    counts: data.counts || { database: 0, objectStorage: 0, total: 0 }
-  };
 }
 
 export async function deleteStorageImage(objectKey: string): Promise<void> {

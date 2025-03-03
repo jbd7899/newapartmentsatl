@@ -1,7 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+// Import storage module
+import { storage as defaultStorage } from './storage';
 // Use the global storage instance which can be either in-memory or PostgreSQL
-const storage = (global as any).storage || await import('./storage').then(m => m.storage);
+const storage = (global as any).storage || defaultStorage;
 import { z } from "zod";
 import { 
   insertInquirySchema, 
@@ -15,7 +17,8 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { uploadImage, deleteImage, getImageData, getFilenameFromObjectKey, imageExists, listImages, isObjectStorageKey } from "./object-storage";
+import { uploadImage, deleteImage, getImageData, getFilenameFromObjectKey, imageExists, listImages, isObjectStorageKey, checkStorageConfig, imageExistsWithVariations } from "./object-storage";
+import { client } from "./object-storage";
 import { upload, handleUploadErrors } from "./upload-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -924,39 +927,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simplified image serving endpoint - only from object storage
   app.get('/api/images/:objectKey(*)', async (req, res) => {
     try {
-      const objectKey = req.params.objectKey;
-      console.log(`Serving image from object storage: ${objectKey}`);
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      // Log the raw object key for debugging
+      console.log(`[Image API] Raw object key from request: ${objectKey}`);
+      
+      // Try to decode the object key if it's encoded
+      try {
+        // Decode multiple times to handle double-encoding scenarios
+        let decodedKey = objectKey;
+        let previousKey;
+        
+        do {
+          previousKey = decodedKey;
+          decodedKey = decodeURIComponent(previousKey);
+        } while (decodedKey !== previousKey);
+        
+        if (decodedKey !== objectKey) {
+          console.log(`[Image API] Decoded object key: ${decodedKey}`);
+          objectKey = decodedKey;
+        }
+      } catch (e) {
+        console.log(`[Image API] Error decoding object key: ${e}`);
+        // Continue with the original key if decoding fails
+      }
+      
+      console.log(`[Image API] Attempting to serve image from object storage: ${objectKey}`);
 
-      // Import from new storage-utils
-      const { getImageData } = await import('./storage-utils');
-
-      // Get the image data
-      const imageData = await getImageData(objectKey);
+      // Create an array of possible paths to try
+      const BUCKET_ID = 'replit-objstore-8f3f1a22-cdd2-4088-9bff-f7887f5d323d';
+      const pathsToTry = [
+        objectKey,
+        objectKey.startsWith('images/') ? objectKey : `images/${objectKey}`,
+        objectKey.startsWith('images/') ? objectKey.substring(7) : objectKey,
+        // Direct bucket access paths
+        `${BUCKET_ID}/${objectKey}`,
+        `${BUCKET_ID}/images/${objectKey}`,
+      ];
+      
+      // If the path has multiple segments, also try with different separators
+      if (objectKey.includes('/')) {
+        // Try with URL-encoded slashes
+        pathsToTry.push(objectKey.replace(/\//g, '%2F'));
+        
+        // Try with the last segment only (the filename)
+        const filename = objectKey.split('/').pop() || '';
+        pathsToTry.push(filename);
+        pathsToTry.push(`images/${filename}`);
+        
+        // Direct bucket access with just the filename
+        pathsToTry.push(`${BUCKET_ID}/${filename}`);
+        pathsToTry.push(`${BUCKET_ID}/images/${filename}`);
+      }
+      
+      // Log all paths we're going to try
+      console.log(`[Image API] Will try these paths:`, pathsToTry);
+      
+      // Try each path until we find the image
+      let imageData = null;
+      let successPath = null;
+      
+      for (const path of pathsToTry) {
+        console.log(`[Image API] Trying path: ${path}`);
+        const data = await getImageData(path);
+        if (data) {
+          imageData = data;
+          successPath = path;
+          console.log(`[Image API] Found image at path: ${path}`);
+          break;
+        }
+      }
 
       if (!imageData) {
-        console.log(`Image not found: ${objectKey}`);
+        // If all attempts failed, try listing all objects to find similar keys
+        console.log(`[Image API] Image not found after trying all paths, listing all objects...`);
+        const listResult = await client.list();
+        if (listResult.ok && listResult.value) {
+          const allKeys = listResult.value.map(obj => obj.name || String(obj));
+          console.log(`[Image API] All keys in storage:`, allKeys);
+          
+          // Try to find similar keys
+          const filename = path.basename(objectKey);
+          const similarKeys = allKeys.filter(key => 
+            key.includes(filename) || 
+            filename.includes(path.basename(key))
+          );
+          
+          if (similarKeys.length > 0) {
+            console.log(`[Image API] Found similar keys:`, similarKeys);
+            
+            // Try the first similar key as a last resort
+            if (similarKeys.length > 0) {
+              console.log(`[Image API] Trying first similar key: ${similarKeys[0]}`);
+              const data = await getImageData(similarKeys[0]);
+              if (data) {
+                imageData = data;
+                successPath = similarKeys[0];
+                console.log(`[Image API] Found image with similar key: ${similarKeys[0]}`);
+              }
+            }
+          }
+        }
+      }
+
+      if (!imageData) {
+        console.log(`[Image API] Image not found after trying all paths`);
         return res.status(404).send('Image not found');
       }
 
-      // Determine content type based on file extension
-      const ext = path.extname(objectKey).toLowerCase();
-      let contentType = 'image/jpeg'; // Default
-
-      if (ext === '.png') contentType = 'image/png';
-      else if (ext === '.gif') contentType = 'image/gif';
-      else if (ext === '.webp') contentType = 'image/webp';
-      else if (ext === '.svg') contentType = 'image/svg+xml';
-
-      // Set cache headers (cache for 1 day)
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      res.setHeader('Content-Type', contentType);
-
-      return res.send(imageData);
+      console.log(`[Image API] Successfully found image at path: ${successPath}`);
+      return sendImageResponse(res, successPath || objectKey, imageData);
     } catch (error) {
-      console.error('Error serving image:', error);
+      console.error('[Image API] Error serving image:', error);
       return res.status(500).send('Error serving image');
     }
   });
+  
+  // Helper function to send image response with proper headers
+  function sendImageResponse(res: Response, objectKey: string, imageData: Buffer) {
+    // Determine content type based on file extension
+    const ext = path.extname(objectKey).toLowerCase();
+    let contentType = 'image/jpeg'; // Default
+
+    if (ext === '.png') contentType = 'image/png';
+    else if (ext === '.gif') contentType = 'image/gif';
+    else if (ext === '.webp') contentType = 'image/webp';
+    else if (ext === '.svg') contentType = 'image/svg+xml';
+
+    // Log detailed information about the image data
+    console.log(`[sendImageResponse] Sending image response for: ${objectKey}`);
+    console.log(`[sendImageResponse] Content type: ${contentType}`);
+    console.log(`[sendImageResponse] Image data size: ${imageData.length} bytes`);
+    console.log(`[sendImageResponse] Image data buffer valid: ${Buffer.isBuffer(imageData)}`);
+    
+    if (imageData.length < 100) {
+      // If the image data is suspiciously small, log the actual data
+      console.log(`[sendImageResponse] WARNING: Image data is very small (${imageData.length} bytes)`);
+      console.log(`[sendImageResponse] Image data (hex): ${imageData.toString('hex')}`);
+    }
+
+    // Set cache headers (cache for 1 day)
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Length', imageData.length);
+
+    return res.send(imageData);
+  }
 
   // Delete an image from object storage
   app.delete('/api/images/:objectKey(*)', async (req, res) => {
@@ -1016,6 +1133,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error listing images:', error);
       res.status(500).json({ message: "Failed to list images" });
+    }
+  });
+
+  // Check if the object storage is properly configured
+  app.get("/api/storage/check-config", async (req: Request, res: Response) => {
+    try {
+      console.log("[API] Checking object storage configuration...");
+      const isValid = await checkStorageConfig();
+      
+      console.log(`[API] Object storage configuration is ${isValid ? 'valid' : 'invalid'}`);
+      
+      res.json({
+        isValid,
+        message: isValid 
+          ? "Object storage is properly configured and working" 
+          : "Object storage configuration is invalid. Please check your Replit Object Storage setup."
+      });
+    } catch (error) {
+      console.error("[API] Error checking object storage configuration:", error);
+      res.status(500).json({
+        isValid: false,
+        message: `Error checking object storage configuration: ${error}`
+      });
     }
   });
 
@@ -1105,6 +1245,363 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving unit image:', error);
       res.status(500).send('Error serving image');
+    }
+  });
+
+  // Direct bucket access endpoint for images
+  app.get('/api/direct-images/:objectKey(*)', async (req, res) => {
+    try {
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      // Log the raw object key for debugging
+      console.log(`[Direct Image API] Raw object key from request: ${objectKey}`);
+      
+      // Try to decode the object key if it's encoded
+      try {
+        // Decode multiple times to handle double-encoding scenarios
+        let decodedKey = objectKey;
+        let previousKey;
+        
+        do {
+          previousKey = decodedKey;
+          decodedKey = decodeURIComponent(previousKey);
+        } while (decodedKey !== previousKey);
+        
+        if (decodedKey !== objectKey) {
+          console.log(`[Direct Image API] Decoded object key: ${decodedKey}`);
+          objectKey = decodedKey;
+        }
+      } catch (e) {
+        console.log(`[Direct Image API] Error decoding object key: ${e}`);
+        // Continue with the original key if decoding fails
+      }
+      
+      console.log(`[Direct Image API] Attempting to serve image directly from bucket: ${objectKey}`);
+
+      // Use the bucket ID directly
+      const BUCKET_ID = 'replit-objstore-8f3f1a22-cdd2-4088-9bff-f7887f5d323d';
+      
+      // Try direct access with the bucket ID
+      const directPath = `${BUCKET_ID}/${objectKey}`;
+      console.log(`[Direct Image API] Trying direct bucket access: ${directPath}`);
+      
+      try {
+        // Try to download directly using the client
+        const result = await client.downloadAsBytes(directPath);
+        
+        if (result.ok && result.value) {
+          console.log(`[Direct Image API] Successfully retrieved image with direct bucket access: ${directPath}, size: ${result.value.length} bytes`);
+          return sendImageResponse(res, directPath, result.value as unknown as Buffer);
+        } else {
+          console.log(`[Direct Image API] Failed to retrieve image with direct bucket access: ${directPath}`);
+        }
+      } catch (error: any) {
+        console.log(`[Direct Image API] Error with direct bucket access: ${error.message}`);
+      }
+      
+      // If direct access failed, try with just the filename
+      const filename = path.basename(objectKey);
+      const filenameDirectPath = `${BUCKET_ID}/${filename}`;
+      console.log(`[Direct Image API] Trying direct bucket access with filename: ${filenameDirectPath}`);
+      
+      try {
+        const result = await client.downloadAsBytes(filenameDirectPath);
+        
+        if (result.ok && result.value) {
+          console.log(`[Direct Image API] Successfully retrieved image with filename direct access: ${filenameDirectPath}, size: ${result.value.length} bytes`);
+          return sendImageResponse(res, filenameDirectPath, result.value as unknown as Buffer);
+        } else {
+          console.log(`[Direct Image API] Failed to retrieve image with filename direct access: ${filenameDirectPath}`);
+        }
+      } catch (error: any) {
+        console.log(`[Direct Image API] Error with filename direct access: ${error.message}`);
+      }
+      
+      // If all direct attempts failed, fall back to the standard getImageData function
+      console.log(`[Direct Image API] Direct attempts failed, falling back to getImageData`);
+      const imageData = await getImageData(objectKey);
+      
+      if (!imageData) {
+        console.log(`[Direct Image API] Image not found after trying all paths`);
+        return res.status(404).send('Image not found');
+      }
+
+      console.log(`[Direct Image API] Successfully found image using fallback method`);
+      return sendImageResponse(res, objectKey, imageData);
+    } catch (error) {
+      console.error('[Direct Image API] Error serving image:', error);
+      return res.status(500).send('Error serving image');
+    }
+  });
+  
+  // Endpoint to check if an image exists with multiple path variations
+  app.get('/api/images/exists/:objectKey(*)', async (req, res) => {
+    try {
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      // Log the raw object key for debugging
+      console.log(`[Image Exists API] Raw object key from request: ${objectKey}`);
+      
+      // Try to decode the object key if it's encoded
+      try {
+        // Decode multiple times to handle double-encoding scenarios
+        let decodedKey = objectKey;
+        let previousKey;
+        
+        do {
+          previousKey = decodedKey;
+          decodedKey = decodeURIComponent(previousKey);
+        } while (decodedKey !== previousKey);
+        
+        if (decodedKey !== objectKey) {
+          console.log(`[Image Exists API] Decoded object key: ${decodedKey}`);
+          objectKey = decodedKey;
+        }
+      } catch (e) {
+        console.log(`[Image Exists API] Error decoding object key: ${e}`);
+        // Continue with the original key if decoding fails
+      }
+      
+      console.log(`[Image Exists API] Checking if image exists: ${objectKey}`);
+      
+      // Check if the image exists with multiple path variations
+      const exists = await imageExistsWithVariations(objectKey);
+      
+      return res.json({ exists, objectKey });
+    } catch (error) {
+      console.error('[Image Exists API] Error checking if image exists:', error);
+      return res.status(500).json({ error: 'Error checking if image exists' });
+    }
+  });
+
+  // Raw bucket access endpoint for images
+  app.get('/api/raw-images/:objectKey(*)', async (req, res) => {
+    try {
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      // Log the raw object key for debugging
+      console.log(`[Raw Image API] Raw object key from request: ${objectKey}`);
+      
+      // Try to decode the object key if it's encoded
+      try {
+        // Decode multiple times to handle double-encoding scenarios
+        let decodedKey = objectKey;
+        let previousKey;
+        
+        do {
+          previousKey = decodedKey;
+          decodedKey = decodeURIComponent(previousKey);
+        } while (decodedKey !== previousKey);
+        
+        if (decodedKey !== objectKey) {
+          console.log(`[Raw Image API] Decoded object key: ${decodedKey}`);
+          objectKey = decodedKey;
+        }
+      } catch (e) {
+        console.log(`[Raw Image API] Error decoding object key: ${e}`);
+        // Continue with the original key if decoding fails
+      }
+      
+      console.log(`[Raw Image API] Attempting to serve image directly from client: ${objectKey}`);
+
+      // Try to download directly using the client
+      try {
+        const result = await client.downloadAsBytes(objectKey);
+        
+        if (result.ok && result.value) {
+          console.log(`[Raw Image API] Successfully retrieved image: ${objectKey}, size: ${result.value.length} bytes`);
+          
+          // Determine content type based on file extension
+          const ext = path.extname(objectKey).toLowerCase();
+          let contentType = 'image/jpeg'; // Default
+          
+          if (ext === '.png') contentType = 'image/png';
+          else if (ext === '.gif') contentType = 'image/gif';
+          else if (ext === '.webp') contentType = 'image/webp';
+          else if (ext === '.svg') contentType = 'image/svg+xml';
+          
+          // Set headers
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Content-Length', result.value.length);
+          
+          // Send the image data directly
+          return res.send(result.value);
+        } else {
+          console.log(`[Raw Image API] Failed to retrieve image: ${objectKey}, error: ${result.error}`);
+          return res.status(404).send('Image not found');
+        }
+      } catch (error: any) {
+        console.log(`[Raw Image API] Error retrieving image: ${error.message}`);
+        return res.status(500).send(`Error retrieving image: ${error.message}`);
+      }
+    } catch (error: any) {
+      console.error('[Raw Image API] Error serving image:', error);
+      return res.status(500).send(`Error serving image: ${error.message}`);
+    }
+  });
+
+  // Direct bucket ID endpoint for images
+  app.get('/api/bucket/:objectKey(*)', async (req, res) => {
+    try {
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      // Log the raw object key for debugging
+      console.log(`[Bucket API] Raw object key from request: ${objectKey}`);
+      
+      // Try to decode the object key if it's encoded
+      try {
+        // Decode multiple times to handle double-encoding scenarios
+        let decodedKey = objectKey;
+        let previousKey;
+        
+        do {
+          previousKey = decodedKey;
+          decodedKey = decodeURIComponent(previousKey);
+        } while (decodedKey !== previousKey);
+        
+        if (decodedKey !== objectKey) {
+          console.log(`[Bucket API] Decoded object key: ${decodedKey}`);
+          objectKey = decodedKey;
+        }
+      } catch (e) {
+        console.log(`[Bucket API] Error decoding object key: ${e}`);
+        // Continue with the original key if decoding fails
+      }
+      
+      // Prepend the bucket ID to the object key
+      const BUCKET_ID = 'replit-objstore-8f3f1a22-cdd2-4088-9bff-f7887f5d323d';
+      const fullKey = `${BUCKET_ID}/${objectKey}`;
+      
+      console.log(`[Bucket API] Attempting to serve image with bucket ID: ${fullKey}`);
+      
+      // Try to download directly using the client
+      try {
+        const result = await client.downloadAsBytes(fullKey);
+        
+        if (result.ok && result.value) {
+          console.log(`[Bucket API] Successfully retrieved image: ${fullKey}, size: ${result.value.length} bytes`);
+          return sendImageResponse(res, fullKey, result.value as unknown as Buffer);
+        } else {
+          console.log(`[Bucket API] Failed to retrieve image: ${fullKey}, error: ${result.error}`);
+          
+          // Try with just the filename as a fallback
+          const filename = path.basename(objectKey);
+          const filenameKey = `${BUCKET_ID}/${filename}`;
+          
+          console.log(`[Bucket API] Trying with just filename: ${filenameKey}`);
+          const filenameResult = await client.downloadAsBytes(filenameKey);
+          
+          if (filenameResult.ok && filenameResult.value) {
+            console.log(`[Bucket API] Successfully retrieved image with filename: ${filenameKey}, size: ${filenameResult.value.length} bytes`);
+            return sendImageResponse(res, filenameKey, filenameResult.value as unknown as Buffer);
+          } else {
+            console.log(`[Bucket API] Failed to retrieve image with filename: ${filenameKey}, error: ${filenameResult.error}`);
+            return res.status(404).send('Image not found');
+          }
+        }
+      } catch (error: any) {
+        console.log(`[Bucket API] Error retrieving image: ${error.message}`);
+        return res.status(500).send(`Error retrieving image: ${error.message}`);
+      }
+    } catch (error: any) {
+      console.error('[Bucket API] Error serving image:', error);
+      return res.status(500).send(`Error serving image: ${error.message}`);
+    }
+  });
+
+  // List all objects in the bucket
+  app.get('/api/bucket/list', async (req, res) => {
+    try {
+      console.log(`[Bucket List API] Listing all objects in the bucket`);
+      
+      const result = await client.list();
+      
+      if (result.ok && result.value) {
+        const objects = result.value.map(obj => ({
+          name: obj.name || '',
+        }));
+        
+        console.log(`[Bucket List API] Found ${objects.length} objects`);
+        return res.json({ success: true, objects });
+      } else {
+        console.log(`[Bucket List API] Failed to list objects: ${result.error}`);
+        return res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error: any) {
+      console.error('[Bucket List API] Error listing objects:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Check if an image exists in the bucket with the bucket ID
+  app.get('/api/bucket/exists/:objectKey(*)', async (req, res) => {
+    try {
+      // Get the object key from the request params
+      let objectKey = req.params.objectKey;
+      
+      // Log the raw object key for debugging
+      console.log(`[Bucket Exists API] Raw object key from request: ${objectKey}`);
+      
+      // Try to decode the object key if it's encoded
+      try {
+        // Decode multiple times to handle double-encoding scenarios
+        let decodedKey = objectKey;
+        let previousKey;
+        
+        do {
+          previousKey = decodedKey;
+          decodedKey = decodeURIComponent(previousKey);
+        } while (decodedKey !== previousKey);
+        
+        if (decodedKey !== objectKey) {
+          console.log(`[Bucket Exists API] Decoded object key: ${decodedKey}`);
+          objectKey = decodedKey;
+        }
+      } catch (e) {
+        console.log(`[Bucket Exists API] Error decoding object key: ${e}`);
+        // Continue with the original key if decoding fails
+      }
+      
+      // Prepend the bucket ID to the object key
+      const BUCKET_ID = 'replit-objstore-8f3f1a22-cdd2-4088-9bff-f7887f5d323d';
+      const fullKey = `${BUCKET_ID}/${objectKey}`;
+      
+      console.log(`[Bucket Exists API] Checking if image exists with bucket ID: ${fullKey}`);
+      
+      // Try to check if the object exists
+      try {
+        const exists = await imageExists(fullKey);
+        console.log(`[Bucket Exists API] Image exists check result for ${fullKey}: ${exists}`);
+        
+        // If the full path doesn't exist, try with just the filename
+        if (!exists) {
+          const filename = path.basename(objectKey);
+          const filenameKey = `${BUCKET_ID}/${filename}`;
+          
+          console.log(`[Bucket Exists API] Checking with just filename: ${filenameKey}`);
+          const filenameExists = await imageExists(filenameKey);
+          console.log(`[Bucket Exists API] Image exists check result for ${filenameKey}: ${filenameExists}`);
+          
+          if (filenameExists) {
+            return res.json({ exists: true, key: filenameKey });
+          }
+        } else {
+          return res.json({ exists, key: fullKey });
+        }
+        
+        // If we get here, the image doesn't exist with either path
+        return res.json({ exists: false });
+      } catch (error: any) {
+        console.log(`[Bucket Exists API] Error checking if image exists: ${error.message}`);
+        return res.status(500).json({ exists: false, error: error.message });
+      }
+    } catch (error: any) {
+      console.error('[Bucket Exists API] Error checking if image exists:', error);
+      return res.status(500).json({ exists: false, error: error.message });
     }
   });
 

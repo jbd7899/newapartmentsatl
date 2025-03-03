@@ -51,7 +51,7 @@ const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  rent: z.coerce.number().min(500, "Rent must be at least $500").nullable(),
+  rent: z.coerce.number().min(0, "Rent must be 0 or more").nullable(),
   bedrooms: z.coerce.number().min(0, "Must be 0 or more"),
   bathrooms: z.coerce.number().min(0, "Must be 0 or more"),
   sqft: z.coerce.number().min(200, "Size must be at least 200 sq. ft."),

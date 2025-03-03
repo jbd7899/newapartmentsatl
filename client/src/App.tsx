@@ -20,6 +20,7 @@ import AdminImagesPage from "./pages/AdminImagesPage";
 import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import AdminNeighborhoodsPage from "./pages/AdminNeighborhoodsPage";
 import AdminPlaceholderPage from "./pages/AdminPlaceholderPage";
+import AdminObjectStoragePage from "./pages/AdminObjectStoragePage";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/admin/properties" component={AdminPropertiesPage} />
       <Route path="/admin/property-units" component={AdminPropertyUnitsPage} />
       <Route path="/admin/images" component={AdminImagesPage} />
+      <Route path="/admin/object-storage" component={AdminObjectStoragePage} />
       <Route path="/admin/inquiries" component={AdminInquiriesPage} />
       <Route path="/admin/neighborhoods" component={AdminNeighborhoodsPage} />
       <Route path="/admin/users" component={AdminPlaceholderPage} />
